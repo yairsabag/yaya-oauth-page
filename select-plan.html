@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Select Your Plan</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #f9fafb;
+      margin: 0;
+      padding: 2em;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 2em;
+    }
+
+    .plan {
+      background: white;
+      border: 1px solid #ccc;
+      padding: 2em;
+      border-radius: 12px;
+      width: 280px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .plan h2 {
+      margin-top: 0;
+    }
+
+    .price {
+      font-size: 24px;
+      margin: 0.5em 0;
+    }
+
+    .features {
+      list-style: none;
+      padding: 0;
+      margin: 1em 0;
+      text-align: left;
+    }
+
+    .features li {
+      margin-bottom: 0.5em;
+    }
+
+    .btn {
+      background: #0070f3;
+      color: white;
+      border: none;
+      padding: 0.8em 1.2em;
+      font-size: 1em;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: #0059c1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="plan">
+    <h2>Free</h2>
+    <p class="price">₪0</p>
+    <ul class="features">
+      <li>✅ תזכורות</li>
+      <li>✅ הודעות חינם</li>
+      <li>❌ אין חיבור ליומן</li>
+    </ul>
+    <button class="btn" onclick="selectPlan('free')">בחר מסלול</button>
+  </div>
+
+  <div class="plan">
+    <h2>Executive</h2>
+    <p class="price">₪15/חודש</p>
+    <ul class="features">
+      <li>✅ תזכורות חוזרות</li>
+      <li>✅ חיבור ליומן Google</li>
+      <li>✅ חיפוש באינטרנט</li>
+    </ul>
+    <button class="btn" onclick="selectPlan('executive')">בחר מסלול</button>
+  </div>
+
+  <div class="plan">
+    <h2>Ultimate</h2>
+    <p class="price">₪45/חודש</p>
+    <ul class="features">
+      <li>✅ כל האפשרויות של Executive</li>
+      <li>✅ עד 500 תזכורות קוליות</li>
+      <li>✅ ניתוח תמונות</li>
+    </ul>
+    <button class="btn" onclick="selectPlan('ultimate')">בחר מסלול</button>
+  </div>
+
+  <script>
+    function getQueryParam(key) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(key);
+    }
+
+    function selectPlan(plan) {
+      const code = getQueryParam('code');
+      const redirectUrl = `https://n8nsabagi.com/register?code=${code}&plan=${plan}`;
+      window.location.href = redirectUrl;
+    }
+  </script>
+</body>
+</html>
