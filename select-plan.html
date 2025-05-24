@@ -3,71 +3,282 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Select Your Plan - Yaya</title>
+  <title>Simple Pricing</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
     body {
-      background: #f0f2f5;
-      font-family: 'Segoe UI', sans-serif;
+      background: #f7f1e7;
+      font-family: 'Roboto', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 32px 48px 0 48px;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+    }
+    .logo-home {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+    }
+    .logo-home img {
+      height: 48px;
+      width: 48px;
+      margin-right: 12px;
+    }
+    .logo-home span {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: #1a2e1a;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .header-right {
+      display: flex;
+      gap: 16px;
+    }
+    .header-btn {
+      background: #1a3d2c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: 'Roboto', Arial, sans-serif;
+    }
+    .header-btn.secondary {
+      background: #fff;
+      color: #1a3d2c;
+      border: 1.5px solid #1a3d2c;
+    }
+    .pricing-section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    .pricing-title {
+      text-align: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      color: #1a3d2c;
+      margin-top: 32px;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .billing-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .toggle-label {
+      font-size: 1.1rem;
+      color: #1a3d2c;
+      font-weight: 500;
+    }
+    .toggle-switch {
+      width: 48px;
+      height: 24px;
+      background: #e6e6e6;
+      border-radius: 12px;
+      position: relative;
+      margin: 0 8px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .toggle-switch::before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      transition: left 0.2s;
+    }
+    .pricing-cards {
       display: flex;
       justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
+      gap: 32px;
+      margin-top: 32px;
+      flex-wrap: nowrap;
+      width: 100%;
+      max-width: 1100px;
+      box-sizing: border-box;
     }
-    .container {
+    .pricing-card {
       background: #fff;
-      padding: 40px;
       border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
+      box-shadow: 0 2px 8px rgba(60,64,67,.08);
+      padding: 32px 32px 28px 32px;
+      width: 320px;
+      max-width: 95vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-top: 6px solid transparent;
+      transition: box-shadow 0.2s, border-top 0.2s;
     }
-    h1 {
-      margin-bottom: 20px;
+    .pricing-card.highlight {
+      border-top: 6px solid #1a3d2c;
+      box-shadow: 0 4px 16px rgba(26,61,44,0.12);
     }
-    .plan-btn {
-      display: block;
-      background: #007bff;
-      color: #fff;
-      padding: 12px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 16px;
-      transition: background 0.2s;
+    .plan-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1a3d2c;
+      letter-spacing: 1px;
+      margin-bottom: 18px;
+      text-transform: uppercase;
     }
-    .plan-btn:hover {
-      background: #0056b3;
+    .plan-price {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+    .plan-trial {
+      font-size: 1rem;
+      color: #4d6654;
+      margin-bottom: 18px;
+      margin-top: 0;
+      font-weight: 500;
+    }
+    .plan-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 18px 0;
+      color: #3a4d3a;
+      font-size: 1.05rem;
+      font-weight: 400;
+      text-align: left;
+      line-height: 1.7;
+    }
+    .plan-badge {
+      background: #f7f1e7;
+      color: #1a3d2c;
+      border-radius: 18px;
+      padding: 6px 18px;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: 10px;
+      display: inline-block;
+    }
+    @media (max-width: 1100px) {
+      .pricing-cards {
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .pricing-card {
+        padding: 24px 8px 20px 8px;
+        width: 95vw;
+        min-width: 260px;
+      }
+    }
+    @media (max-width: 700px) {
+      .header {
+        flex-direction: column;
+        gap: 16px;
+        padding: 24px 8px 0 8px;
+      }
+      .pricing-cards {
+        flex-direction: column;
+        align-items: center;
+      }
+      .pricing-card {
+        width: 98vw;
+        min-width: 0;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Select Your Plan</h1>
-    <p>Please choose a plan to continue:</p>
-
-    <a class="plan-btn" href="#" onclick="selectPlan('free')">Free Plan</a>
-    <a class="plan-btn" href="#" onclick="selectPlan('executive')">Executive ($4/mo)</a>
-    <a class="plan-btn" href="#" onclick="selectPlan('ultimate')">Ultimate ($12/mo)</a>
+  <div class="header">
+    <div class="header-left">
+      <a href="index.html" class="logo-home">
+        <img src="Logo.png" alt="Home" />
+        <span>Yaya</span>
+      </a>
+    </div>
+    <div class="header-right">
+      <button class="header-btn">Get Started</button>
+      <button class="header-btn secondary">Login</button>
+    </div>
   </div>
-
-  <script>
-    function getQueryParam(name) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(name);
-    }
-
-    function selectPlan(plan) {
-      const code = getQueryParam("code");
-      if (!code) {
-        alert("Missing code parameter.");
-        return;
-      }
-      // redirect to OAuth callback or registration endpoint with plan and code
-      window.location.href = `https://login.yayagent.com/register?code=${code}&plan=${plan}`;
-    }
-  </script>
+  <div class="pricing-section">
+    <div class="pricing-title">Simple Pricing</div>
+    <div class="billing-toggle">
+      <span class="toggle-label">Yearly Billing</span>
+      <span class="toggle-switch"></span>
+      <span class="toggle-label">Monthly Billing</span>
+    </div>
+    <div class="pricing-cards">
+      <div class="pricing-card">
+        <div class="plan-title">Basic Plan</div>
+        <div class="plan-price">FREE</div>
+        <ul class="plan-features">
+          <li>Unlimited messages</li>
+          <li>Unlimited one-time reminders</li>
+          <li>100+ languages supported</li>
+          <li>ChatGPT</li>
+          <li>5 Voice Notes / Month</li>
+          <li>5 Image Analysis / Month</li>
+          <li>Receive reminders from friends</li>
+        </ul>
+      </div>
+      <div class="pricing-card highlight">
+        <div class="plan-title">Executive Plan</div>
+        <div class="plan-price">$4/MONTH</div>
+        <div class="plan-trial">7 DAY TRIAL</div>
+        <ul class="plan-features">
+          <li>Unlimited messages</li>
+          <li>Unlimited one-time reminders</li>
+          <li>100+ languages supported</li>
+          <li>ChatGPT</li>
+          <li>Repeat reminders</li>
+          <li>Google / Outlook Calendar</li>
+          <li>100 Voice Notes / Month</li>
+          <li>20 Image Analysis / Month</li>
+          <li>20 Internet Searches</li>
+          <li>Send/Receive reminders with friends</li>
+          <li>AI Memory of You</li>
+          <li>Create Lists</li>
+        </ul>
+        <div class="plan-badge">4,100+ users loving this plan</div>
+      </div>
+      <div class="pricing-card">
+        <div class="plan-title">Ultimate Plan</div>
+        <div class="plan-price">$12/MONTH</div>
+        <div class="plan-trial">7 DAY TRIAL</div>
+        <ul class="plan-features">
+          <li>Unlimited messages</li>
+          <li>Unlimited one-time reminders</li>
+          <li>100+ languages supported</li>
+          <li>ChatGPT</li>
+          <li>Repeat reminders</li>
+          <li>Google / Outlook Calendar</li>
+          <li>500 Voice Notes / Month</li>
+          <li>100 Image Analysis / Month</li>
+          <li>100 Internet Searches</li>
+          <li>Send/Receive reminders with friends</li>
+          <li>AI Memory of You</li>
+          <li>Create Lists</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 </body>
-</html>
+</html> 
