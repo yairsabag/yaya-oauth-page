@@ -3,109 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Select Your Plan</title>
+  <title>Select Your Plan - Yaya</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background: #f9fafb;
-      margin: 0;
-      padding: 2em;
+      background: #f0f2f5;
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
-      gap: 2em;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
     }
-
-    .plan {
-      background: white;
-      border: 1px solid #ccc;
-      padding: 2em;
+    .container {
+      background: #fff;
+      padding: 40px;
       border-radius: 12px;
-      width: 280px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 400px;
       text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-
-    .plan h2 {
-      margin-top: 0;
+    h1 {
+      margin-bottom: 20px;
     }
-
-    .price {
-      font-size: 24px;
-      margin: 0.5em 0;
-    }
-
-    .features {
-      list-style: none;
-      padding: 0;
-      margin: 1em 0;
-      text-align: left;
-    }
-
-    .features li {
-      margin-bottom: 0.5em;
-    }
-
-    .btn {
-      background: #0070f3;
-      color: white;
+    .plan-btn {
+      display: block;
+      background: #007bff;
+      color: #fff;
+      padding: 12px;
+      margin: 10px 0;
       border: none;
-      padding: 0.8em 1.2em;
-      font-size: 1em;
-      border-radius: 8px;
-      cursor: pointer;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 16px;
+      transition: background 0.2s;
     }
-
-    .btn:hover {
-      background: #0059c1;
+    .plan-btn:hover {
+      background: #0056b3;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>Select Your Plan</h1>
+    <p>Please choose a plan to continue:</p>
 
-  <div class="plan">
-    <h2>Free</h2>
-    <p class="price">₪0</p>
-    <ul class="features">
-      <li>✅ תזכורות</li>
-      <li>✅ הודעות חינם</li>
-      <li>❌ אין חיבור ליומן</li>
-    </ul>
-    <button class="btn" onclick="selectPlan('free')">בחר מסלול</button>
-  </div>
-
-  <div class="plan">
-    <h2>Executive</h2>
-    <p class="price">₪15/חודש</p>
-    <ul class="features">
-      <li>✅ תזכורות חוזרות</li>
-      <li>✅ חיבור ליומן Google</li>
-      <li>✅ חיפוש באינטרנט</li>
-    </ul>
-    <button class="btn" onclick="selectPlan('executive')">בחר מסלול</button>
-  </div>
-
-  <div class="plan">
-    <h2>Ultimate</h2>
-    <p class="price">₪45/חודש</p>
-    <ul class="features">
-      <li>✅ כל האפשרויות של Executive</li>
-      <li>✅ עד 500 תזכורות קוליות</li>
-      <li>✅ ניתוח תמונות</li>
-    </ul>
-    <button class="btn" onclick="selectPlan('ultimate')">בחר מסלול</button>
+    <a class="plan-btn" href="#" onclick="selectPlan('free')">Free Plan</a>
+    <a class="plan-btn" href="#" onclick="selectPlan('executive')">Executive ($4/mo)</a>
+    <a class="plan-btn" href="#" onclick="selectPlan('ultimate')">Ultimate ($12/mo)</a>
   </div>
 
   <script>
-    function getQueryParam(key) {
+    function getQueryParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(key);
+      return urlParams.get(name);
     }
 
     function selectPlan(plan) {
-      const code = getQueryParam('code');
-      const redirectUrl = `https://n8nsabagi.com/register?code=${code}&plan=${plan}`;
-      window.location.href = redirectUrl;
+      const code = getQueryParam("code");
+      if (!code) {
+        alert("Missing code parameter.");
+        return;
+      }
+      // redirect to OAuth callback or registration endpoint with plan and code
+      window.location.href = `https://login.yayagent.com/register?code=${code}&plan=${plan}`;
     }
   </script>
 </body>
