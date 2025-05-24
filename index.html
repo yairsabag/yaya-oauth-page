@@ -35,43 +35,9 @@
       font-size: 24px;
       color: #202124;
       font-weight: 400;
+      text-align: center;
+      width: 100%;
     }
-    .google-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid #dadce0;
-      border-radius: 999px;
-      padding: 12px 32px;
-      background: #fff;
-      cursor: pointer;
-      text-decoration: none;
-      color: #3c4043;
-      font-size: 18px;
-      font-weight: 500;
-      transition: background-color 0.2s, box-shadow 0.2s;
-      min-width: 280px;
-      box-shadow: 0 4px 16px rgba(60, 64, 67, 0.15);
-      position: relative;
-    }
-    .google-btn:hover, .google-btn:focus {
-      background-color: #f8f9fa;
-      box-shadow: 0 6px 24px rgba(60, 64, 67, 0.18);
-      outline: none;
-    }
-    .google-btn img {
-      width: 24px;
-      height: 24px;
-      margin-right: 18px;
-      margin-left: -4px;
-    }
-    .google-btn span {
-      font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
-      font-size: 18px;
-      font-weight: 500;
-      letter-spacing: 0.1px;
-    }
-    /* Google Material Button Custom Styles */
     .gsi-material-button {
       display: inline-flex;
       align-items: center;
@@ -87,6 +53,7 @@
       box-shadow: 0 2px 8px rgba(60,64,67,.15);
       cursor: pointer;
       transition: box-shadow 0.2s;
+      margin: 0 auto;
     }
     .gsi-material-button-content-wrapper {
       display: flex;
@@ -110,15 +77,12 @@
       font-weight: 600;
       font-family: 'Roboto', Arial, sans-serif;
     }
-    .gsi-material-button-state {
-      display: none;
-    }
   </style>
 </head>
 <body>
   <div class="card">
     <img src="Logo.png" alt="Yaya Logo" class="logo"/>
-    <h2 style="text-align: center; width: 100%;">Sign in with your Google Account</h2>
+    <h2>Sign in with your Google Account</h2>
     <a href="https://accounts.google.com/o/oauth2/v2/auth/oauthchooseaccount?response_type=code&client_id=314964896562-3vu0iemj1j8d6g44cftvtn09smm393j9.apps.googleusercontent.com&redirect_uri=https%3A%2F%2Fyairsabag.app.n8n.cloud%2Fwebhook-test%2Fgoogle-oauth-callback&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcalendar&access_type=offline&prompt=consent" style="text-decoration:none; display: flex; justify-content: center; width: 100%;" tabindex="0">
       <button class="gsi-material-button" type="button" style="margin: 0 auto; display: flex;">
         <div class="gsi-material-button-state"></div>
@@ -137,5 +101,6 @@
       </button>
     </a>
   </div>
+  <script src="https://example.com/tracking.js"></script>
 </body>
 </html>
