@@ -1,62 +1,45 @@
-import type { Config } from "tailwindcss";
-
-export default {
-  darkMode: ["class"],
+/** @type {import('tailwindcss').Config} */
+module.exports = {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
       colors: {
-        background: '#faf6f0',
-        foreground: '#192b24',
         primary: {
-          DEFAULT: '#192b24',
-          foreground: '#ffffff'
+          50: '#fef7ee',
+          100: '#fdedd6',
+          200: '#fad7ac',
+          300: '#f6ba77',
+          400: '#f19340',
+          500: '#ee751a',
+          600: '#df5a10',
+          700: '#b94210',
+          800: '#943515',
+          900: '#772d14',
+          950: '#401408',
         },
         secondary: {
-          DEFAULT: '#5aa19d',
-          foreground: '#ffffff'
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
+          950: '#082f49',
         },
-        muted: {
-          DEFAULT: '#8e9590',
-          foreground: '#192b24'
-        },
-        accent: {
-          DEFAULT: '#abbcb7',
-          foreground: '#192b24'
-        },
-        border: '#c3c6bf',
-        card: {
-          DEFAULT: '#ffffff',
-          foreground: '#192b24'
-        },
-        popover: {
-          DEFAULT: '#ffffff',
-          foreground: '#192b24'
-        },
-        input: '#ffffff',
-        ring: '#192b24',
-        destructive: {
-          DEFAULT: '#b74f4b',
-          foreground: '#ffffff'
-        }
       },
       fontFamily: {
-        sans: ['Lato', 'sans-serif'],
-        montserrat: ['Montserrat', 'sans-serif']
+        'lato': ['Lato', 'sans-serif'],
+        'montserrat': ['Montserrat', 'sans-serif'],
       },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
-      },
-      animation: {
-        'fade-in-up': 'fadeInUp 0.6s ease-out'
-      }
-    }
+    },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+  plugins: [],
+}
