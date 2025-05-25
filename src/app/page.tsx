@@ -74,7 +74,7 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
         {/* Chat Messages */}
         <div style={{
           padding: '16px',
-          height: 'calc(100% - 100px)',
+          height: 'calc(100% - 130px)',
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
@@ -128,8 +128,27 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
           ))}
         </div>
 
-        {/* Input Area - Removed since phone is shorter */}
+        {/* Input Area */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: '#f0f2f5',
+          padding: '8px 16px',
+          borderTop: '1px solid #e4e6ea'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '20px',
+            padding: '8px 16px',
+            fontSize: '12px',
+            color: '#667781'
+          }}>
+            Type a message...
+          </div>
         </div>
+      </div>
 
       <style jsx>{`
         @keyframes slideInMessage {
@@ -236,7 +255,7 @@ export default function Home() {
             <img
               src="/yaya-logo.png"
               alt="Yaya Assistant Logo"
-              style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+              style={{ width: '80px', height: '80px', objectFit: 'contain' }}
             />
             <span style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
           </div>
