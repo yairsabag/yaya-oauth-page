@@ -30,7 +30,7 @@ export default function Home() {
             <img 
               src="/yaya-logo.png" 
               alt="Yaya Logo" 
-              style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+              style={{ width: '80px', height: '80px', objectFit: 'contain' }}
             />
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#a67c5a' }}>
               Yaya
