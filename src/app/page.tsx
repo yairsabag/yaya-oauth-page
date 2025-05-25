@@ -26,7 +26,7 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
   return (
     <div style={{
       width: '280px',
-      height: '560px',
+      height: '420px',
       background: '#000',
       borderRadius: '30px',
       padding: '8px',
@@ -74,7 +74,7 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
         {/* Chat Messages */}
         <div style={{
           padding: '16px',
-          height: 'calc(100% - 130px)',
+          height: 'calc(100% - 100px)',
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
@@ -96,11 +96,13 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
                 color: '#333',
                 padding: '8px 12px',
                 borderRadius: message.sender === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                maxWidth: '75%',
-                fontSize: '14px',
-                lineHeight: '1.4',
+                maxWidth: '80%',
+                fontSize: '13px',
+                lineHeight: '1.3',
                 boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                position: 'relative'
+                position: 'relative',
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap'
               }}>
                 {message.text}
                 <div style={{
@@ -126,27 +128,8 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
           ))}
         </div>
 
-        {/* Input Area */}
-        <div style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: '#f0f2f5',
-          padding: '8px 16px',
-          borderTop: '1px solid #e4e6ea'
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '20px',
-            padding: '8px 16px',
-            fontSize: '14px',
-            color: '#667781'
-          }}>
-            Type a message...
-          </div>
+        {/* Input Area - Removed since phone is shorter */}
         </div>
-      </div>
 
       <style jsx>{`
         @keyframes slideInMessage {
@@ -167,6 +150,7 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
 export default function Home() {
   const [currentTextIndex, setCurrentTextIndex] = useState(0)
   const [isClient, setIsClient] = useState(false)
+  const [billingType, setBillingType] = useState('monthly')
 
   const heroTexts = [
     'calendar.',
@@ -252,8 +236,9 @@ export default function Home() {
             <img
               src="/yaya-logo.png"
               alt="Yaya Assistant Logo"
-              style={{ width: '80px', height: 'auto', objectFit: 'contain' }}
+              style={{ width: '40px', height: '40px', objectFit: 'contain' }}
             />
+            <span style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <span style={{
@@ -538,21 +523,46 @@ export default function Home() {
           {/* Billing Toggle */}
           <div className="animate-on-scroll" style={{
             display: 'flex',
-            gap: '2rem',
+            gap: '4px',
             justifyContent: 'center',
             marginBottom: '4rem',
-            fontSize: '1.1rem'
+            background: '#f7fafc',
+            borderRadius: '8px',
+            padding: '4px',
+            width: 'fit-content',
+            margin: '0 auto 4rem',
+            cursor: 'pointer'
           }}>
-            <span style={{
-              color: '#999',
-              fontWeight: '400'
-            }}>
+            <span 
+              onClick={() => setBillingType('yearly')}
+              style={{
+                background: billingType === 'yearly' ? 'white' : 'transparent',
+                color: billingType === 'yearly' ? '#8B5E3C' : '#999',
+                padding: '8px 20px',
+                borderRadius: '6px',
+                fontSize: '1.1rem',
+                fontWeight: '500',
+                boxShadow: billingType === 'yearly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
               Yearly Billing
             </span>
-            <span style={{
-              color: '#8B5E3C',
-              fontWeight: '500'
-            }}>
+            <span 
+              onClick={() => setBillingType('monthly')}
+              style={{
+                background: billingType === 'monthly' ? 'white' : 'transparent',
+                color: billingType === 'monthly' ? '#8B5E3C' : '#999',
+                padding: '8px 20px',
+                borderRadius: '6px',
+                fontSize: '1.1rem',
+                fontWeight: '500',
+                boxShadow: billingType === 'monthly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
               Monthly Billing
             </span>
           </div>
@@ -666,7 +676,7 @@ export default function Home() {
                 alignItems: 'baseline',
                 gap: '8px'
               }}>
-                $5<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
+                ${billingType === 'yearly' ? '4' : '5'}<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
               </div>
               
               <div style={{ marginBottom: '2rem' }}>
@@ -773,7 +783,7 @@ export default function Home() {
                 alignItems: 'baseline',
                 gap: '8px'
               }}>
-                $14<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
+                ${billingType === 'yearly' ? '13' : '14'}<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
               </div>
               
               <div style={{ marginBottom: '2rem' }}>
