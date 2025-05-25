@@ -249,20 +249,11 @@ export default function Home() {
           alignItems: 'center'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{
-              width: '80px',
-              height: '40px',
-              background: '#2d5016',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '1.2rem'
-            }}>
-              Yaya
-            </div>
+            <img
+              src="/yaya-logo.png"
+              alt="Yaya Assistant Logo"
+              style={{ width: '80px', height: 'auto', objectFit: 'contain' }}
+            />
           </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <span style={{
@@ -533,198 +524,319 @@ export default function Home() {
 
       {/* Pricing Section */}
       <section style={{ padding: '6rem 0', background: 'white' }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 2rem', textAlign: 'center' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', textAlign: 'center' }}>
           <h2 className="animate-on-scroll" style={{
-            fontSize: '2.5rem',
-            fontWeight: '300',
-            marginBottom: '3rem',
-            color: '#1a202c',
+            fontSize: '3rem',
+            fontWeight: '400',
+            marginBottom: '1.5rem',
+            color: '#8B5E3C',
             letterSpacing: '-0.02em'
           }}>
             Simple Pricing
           </h2>
 
+          {/* Billing Toggle */}
+          <div className="animate-on-scroll" style={{
+            display: 'flex',
+            gap: '2rem',
+            justifyContent: 'center',
+            marginBottom: '4rem',
+            fontSize: '1.1rem'
+          }}>
+            <span style={{
+              color: '#999',
+              fontWeight: '400'
+            }}>
+              Yearly Billing
+            </span>
+            <span style={{
+              color: '#8B5E3C',
+              fontWeight: '500'
+            }}>
+              Monthly Billing
+            </span>
+          </div>
+
           {/* Pricing Cards */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
             gap: '2rem',
             marginBottom: '3rem'
           }}>
-            {/* Starter Plan */}
+            {/* Basic Plan */}
             <div className="animate-on-scroll" style={{
-              background: 'white',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '2rem',
-              textAlign: 'left'
+              background: '#F5F1EB',
+              borderRadius: '20px',
+              padding: '2.5rem 2rem',
+              textAlign: 'left',
+              border: '1px solid #E5DDD5'
             }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1a202c' }}>
-                Starter
-              </h3>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1a202c', marginBottom: '1rem' }}>
-                $5<span style={{ fontSize: '1rem', fontWeight: '400', color: '#718096' }}>/month</span>
-              </div>
-              <p style={{ color: '#718096', marginBottom: '2rem', fontSize: '0.9rem' }}>
-                Perfect for getting started
-              </p>
-              <div style={{ marginBottom: '2rem' }}>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  Basic calendar management
-                </div>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  Simple reminders
-                </div>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  Todo lists
-                </div>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  50 messages/month
-                </div>
-              </div>
-              <a href="/payment" style={{
-                background: '#f7fafc',
-                color: '#2d5016',
-                border: '1px solid #2d5016',
-                padding: '12px 24px',
-                borderRadius: '6px',
-                textDecoration: 'none',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                display: 'block',
-                textAlign: 'center'
+              <div style={{ 
+                fontSize: '0.9rem', 
+                color: '#8B5E3C', 
+                fontWeight: '500', 
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
               }}>
-                Get Started
-              </a>
+                BASIC PLAN
+              </div>
+              <div style={{ 
+                fontSize: '4rem', 
+                fontWeight: '300', 
+                color: '#8B5E3C', 
+                marginBottom: '2rem',
+                lineHeight: '1'
+              }}>
+                FREE
+              </div>
+              
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited messages
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited one-time reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100+ languages supported
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  ChatGPT
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  5 Voice Notes / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  5 Image Analysis / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Receive reminders from friends
+                </div>
+              </div>
             </div>
 
-            {/* Pro Plan */}
+            {/* Executive Plan */}
             <div className="animate-on-scroll" style={{
-              background: 'white',
-              border: '2px solid #2d5016',
-              borderRadius: '12px',
-              padding: '2rem',
+              background: '#F5F1EB',
+              borderRadius: '20px',
+              padding: '2.5rem 2rem',
               textAlign: 'left',
-              position: 'relative'
+              position: 'relative',
+              border: '1px solid #E5DDD5'
             }}>
               <div style={{
                 position: 'absolute',
-                top: '-12px',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: '#2d5016',
+                top: '1rem',
+                right: '1rem',
+                background: '#8B5E3C',
                 color: 'white',
-                padding: '4px 16px',
+                padding: '4px 12px',
                 borderRadius: '12px',
                 fontSize: '0.75rem',
                 fontWeight: '500'
               }}>
-                Most Popular
+                7 DAY TRIAL
               </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1a202c' }}>
-                Pro
-              </h3>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1a202c', marginBottom: '1rem' }}>
-                $15<span style={{ fontSize: '1rem', fontWeight: '400', color: '#718096' }}>/month</span>
-              </div>
-              <p style={{ color: '#718096', marginBottom: '2rem', fontSize: '0.9rem' }}>
-                For power users and teams
-              </p>
-              <div style={{ marginBottom: '2rem' }}>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  Everything in Starter
-                </div>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  Multiple calendars
-                </div>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  Voice messages
-                </div>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  500 messages/month
-                </div>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  Priority support
-                </div>
-              </div>
-              <a href="/payment" style={{
-                background: '#2d5016',
-                color: 'white',
-                padding: '12px 24px',
-                borderRadius: '6px',
-                textDecoration: 'none',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                display: 'block',
-                textAlign: 'center'
+              <div style={{ 
+                fontSize: '0.9rem', 
+                color: '#8B5E3C', 
+                fontWeight: '500', 
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
               }}>
-                Get Started
-              </a>
-            </div>
-
-            {/* Business Plan */}
-            <div className="animate-on-scroll" style={{
-              background: 'white',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '2rem',
-              textAlign: 'left'
-            }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1a202c' }}>
-                Business
-              </h3>
-              <div style={{ fontSize: '2rem', fontWeight: '700', color: '#1a202c', marginBottom: '1rem' }}>
-                $35<span style={{ fontSize: '1rem', fontWeight: '400', color: '#718096' }}>/month</span>
+                EXECUTIVE PLAN
               </div>
-              <p style={{ color: '#718096', marginBottom: '2rem', fontSize: '0.9rem' }}>
-                For teams and businesses
-              </p>
+              <div style={{ 
+                fontSize: '4rem', 
+                fontWeight: '300', 
+                color: '#8B5E3C', 
+                marginBottom: '0.5rem',
+                lineHeight: '1',
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '8px'
+              }}>
+                $5<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
+              </div>
+              
               <div style={{ marginBottom: '2rem' }}>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  Everything in Pro
-                </div>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  Team collaboration
-                </div>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  Custom integrations
-                </div>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
                   Unlimited messages
                 </div>
-                <div style={{ color: '#4a5568', marginBottom: '0.5rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Check size={16} style={{ color: '#2d5016' }} />
-                  Dedicated support
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited one-time reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100+ languages supported
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  ChatGPT
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Repeat reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Google / Outlook Calendar
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 Voice Notes / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  20 Image Analysis / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  20 Internet Searches
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Send/Receive reminders with friends
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  AI Memory of You
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Create Lists
                 </div>
               </div>
-              <a href="/payment" style={{
-                background: '#f7fafc',
-                color: '#2d5016',
-                border: '1px solid #2d5016',
-                padding: '12px 24px',
-                borderRadius: '6px',
-                textDecoration: 'none',
+              
+              <div style={{
+                textAlign: 'center',
                 fontSize: '0.9rem',
-                fontWeight: '500',
-                display: 'block',
-                textAlign: 'center'
+                color: '#8B5E3C',
+                fontWeight: '400',
+                marginTop: '1.5rem'
               }}>
-                Contact Sales
-              </a>
+                4,100+ users loving this plan
+              </div>
             </div>
+
+            {/* Ultimate Plan */}
+            <div className="animate-on-scroll" style={{
+              background: '#F5F1EB',
+              borderRadius: '20px',
+              padding: '2.5rem 2rem',
+              textAlign: 'left',
+              position: 'relative',
+              border: '1px solid #E5DDD5'
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: '#8B5E3C',
+                color: 'white',
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: '500'
+              }}>
+                7 DAY TRIAL
+              </div>
+              <div style={{ 
+                fontSize: '0.9rem', 
+                color: '#8B5E3C', 
+                fontWeight: '500', 
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                ULTIMATE PLAN
+              </div>
+              <div style={{ 
+                fontSize: '4rem', 
+                fontWeight: '300', 
+                color: '#8B5E3C', 
+                marginBottom: '0.5rem',
+                lineHeight: '1',
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '8px'
+              }}>
+                $14<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
+              </div>
+              
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited messages
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited one-time reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100+ languages supported
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  ChatGPT
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Repeat reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Google / Outlook Calendar
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  500 Voice Notes / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 Image Analysis / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 Internet Searches
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Send/Receive reminders with friends
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  AI Memory of You
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Create Lists
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Need Yaya for your Team */}
+          <div className="animate-on-scroll" style={{
+            fontSize: '1.1rem',
+            color: '#8B5E3C',
+            marginTop: '3rem',
+            textAlign: 'center'
+          }}>
+            Need Yaya for your Team?
           </div>
         </div>
       </section>
