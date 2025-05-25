@@ -254,8 +254,6 @@ export default function Home() {
           zIndex: 1000,
           transition: 'transform 0.3s ease'
         }}
-        onMouseOver={(e) => e.target.style.transform = 'scale(1.1)'}
-        onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
       >
         <MessageCircle size={24} />
       </a>
