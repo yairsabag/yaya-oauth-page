@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ChevronDown, Phone, MessageCircle } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 
 export default function Home() {
   const [currentTextIndex, setCurrentTextIndex] = useState(0)
@@ -9,7 +9,7 @@ export default function Home() {
   
   const heroTexts = [
     "todo list.",
-    "calendar.",
+    "calendar.", 
     "reminders."
   ]
 
@@ -22,7 +22,7 @@ export default function Home() {
   }, [])
 
   return (
-    <div style={{ fontFamily: "'Lato', system-ui, -apple-system, sans-serif" }}>
+    <div style={{ fontFamily: "Lato, system-ui, -apple-system, sans-serif" }}>
       {/* Header */}
       <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '1rem 0' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -46,23 +46,23 @@ export default function Home() {
       {/* Hero Section */}
       <section style={{ background: 'linear-gradient(135deg, #ee751a 0%, #f19340 100%)', color: 'white', padding: '5rem 0', textAlign: 'center' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
-          <h1 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '0.5rem', lineHeight: '1.1', fontFamily: "'Montserrat', sans-serif" }}>
+          <h1 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '0.5rem', lineHeight: '1.1', fontFamily: "Montserrat, sans-serif" }}>
             Save your time, text your
           </h1>
-          <h1 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '1rem', lineHeight: '1.1', fontFamily: "'Montserrat', sans-serif", minHeight: '4.5rem' }}>
+          <h1 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '1rem', lineHeight: '1.1', fontFamily: "Montserrat, sans-serif", minHeight: '4.5rem' }}>
             {isClient ? heroTexts[currentTextIndex] : "todo list."}
           </h1>
           <p style={{ fontSize: '1.5rem', marginBottom: '2rem', opacity: 0.95, fontWeight: '500' }}>
             Your executive assistant in WhatsApp
           </p>
           
-          <div style={{ fontSize: '2rem', fontWeight: 'bold', margin: '2rem 0', fontFamily: "'Montserrat', sans-serif" }}>
+          <div style={{ fontSize: '2rem', fontWeight: 'bold', margin: '2rem 0', fontFamily: "Montserrat, sans-serif" }}>
             <a href="https://wa.me/972559943649" style={{ color: 'white', textDecoration: 'none' }}>
               +972 55-994-3649
             </a>
           </div>
           
-          <div style={{ fontSize: '1.1rem', marginBottom: '3rem', lineHeight: '1.6', opacity: 0.95' }}>
+          <div style={{ fontSize: '1.1rem', marginBottom: '3rem', lineHeight: '1.6', opacity: 0.95 }}>
             Add a 7pm dinner this week with Eva<br/>
             Put amazon return on my ToDo<br/>
             Remind me about bills every thursday night
@@ -99,14 +99,14 @@ export default function Home() {
       {/* Features Section */}
       <section style={{ padding: '5rem 0', background: 'white' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '3rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', fontFamily: "'Montserrat', sans-serif" }}>
+          <h2 style={{ fontSize: '3rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', fontFamily: "Montserrat, sans-serif" }}>
             Save 3 hours a week with Yaya
           </h2>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '4rem', marginTop: '4rem' }}>
             {/* Feature 1 */}
             <div style={{ textAlign: 'left' }}>
-              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', fontFamily: "'Montserrat', sans-serif" }}>
+              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', fontFamily: "Montserrat, sans-serif" }}>
                 Create hundreds of events, in seconds
               </h3>
               <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: '1.1rem', lineHeight: '1.6' }}>
@@ -120,18 +120,20 @@ export default function Home() {
               
               {/* Chat Example */}
               <div style={{ marginTop: '2rem', background: '#f9fafb', borderRadius: '12px', padding: '1.5rem' }}>
-                <ChatBubbles 
-                  messages={[
-                    { text: "Add lunch with Sarah tomorrow at 1pm", sender: "user" },
-                    { text: "I've created an event on your calendar.", sender: "yaya" }
-                  ]}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ background: '#25d366', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 4px 12px', maxWidth: '80%', fontSize: '0.85rem', marginLeft: 'auto' }}>
+                    Add lunch with Sarah tomorrow at 1pm
+                  </div>
+                  <div style={{ background: '#374151', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
+                    I've created an event on your calendar.
+                  </div>
+                </div>
               </div>
             </div>
             
             {/* Feature 2 */}
             <div style={{ textAlign: 'left' }}>
-              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', fontFamily: "'Montserrat', sans-serif" }}>
+              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', fontFamily: "Montserrat, sans-serif" }}>
                 Stop forgetting your small tasks
               </h3>
               <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: '1.1rem', lineHeight: '1.6' }}>
@@ -141,18 +143,20 @@ export default function Home() {
               
               {/* Chat Example */}
               <div style={{ marginTop: '2rem', background: '#f9fafb', borderRadius: '12px', padding: '1.5rem' }}>
-                <ChatBubbles 
-                  messages={[
-                    { text: "Remind me to call mom every Sunday", sender: "user" },
-                    { text: "I'll remind you every Sunday at 6pm!", sender: "yaya" }
-                  ]}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ background: '#25d366', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 4px 12px', maxWidth: '80%', fontSize: '0.85rem', marginLeft: 'auto' }}>
+                    Remind me to call mom every Sunday
+                  </div>
+                  <div style={{ background: '#374151', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
+                    I'll remind you every Sunday at 6pm!
+                  </div>
+                </div>
               </div>
             </div>
             
             {/* Feature 3 */}
             <div style={{ textAlign: 'left' }}>
-              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', fontFamily: "'Montserrat', sans-serif" }}>
+              <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', fontFamily: "Montserrat, sans-serif" }}>
                 Your ToDo list in WhatsApp
               </h3>
               <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: '1.1rem', lineHeight: '1.6' }}>
@@ -161,14 +165,20 @@ export default function Home() {
               
               {/* Chat Example */}
               <div style={{ marginTop: '2rem', background: '#f9fafb', borderRadius: '12px', padding: '1.5rem' }}>
-                <ChatBubbles 
-                  messages={[
-                    { text: "Add milk, eggs, and bread to my shopping list", sender: "user" },
-                    { text: "Added to your Shopping List!", sender: "yaya" },
-                    { text: "Be more casual in your responses", sender: "user" },
-                    { text: "Got it! I'll keep things more relaxed 😊", sender: "yaya" }
-                  ]}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ background: '#25d366', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 4px 12px', maxWidth: '80%', fontSize: '0.85rem', marginLeft: 'auto' }}>
+                    Add milk, eggs, and bread to my shopping list
+                  </div>
+                  <div style={{ background: '#374151', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
+                    Added to your Shopping List!
+                  </div>
+                  <div style={{ background: '#25d366', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 4px 12px', maxWidth: '80%', fontSize: '0.85rem', marginLeft: 'auto' }}>
+                    Be more casual in your responses
+                  </div>
+                  <div style={{ background: '#374151', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
+                    Got it! I'll keep things more relaxed 😊
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -178,7 +188,7 @@ export default function Home() {
       {/* Learning Section */}
       <section style={{ padding: '5rem 0', background: '#f9fafb' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '2rem', color: '#1f2937', fontFamily: "'Montserrat', sans-serif" }}>
+          <h2 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '2rem', color: '#1f2937', fontFamily: "Montserrat, sans-serif" }}>
             Yaya learns from you and gets smarter over time
           </h2>
           <p style={{ fontSize: '1.2rem', color: '#6b7280', maxWidth: '800px', margin: '0 auto', lineHeight: '1.6' }}>
@@ -190,7 +200,7 @@ export default function Home() {
       {/* Pricing Section */}
       <section style={{ padding: '5rem 0', background: 'white' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '3rem', fontWeight: '700', marginBottom: '2rem', color: '#1f2937', fontFamily: "'Montserrat', sans-serif" }}>
+          <h2 style={{ fontSize: '3rem', fontWeight: '700', marginBottom: '2rem', color: '#1f2937', fontFamily: "Montserrat, sans-serif" }}>
             Simple Pricing
           </h2>
           
@@ -205,7 +215,7 @@ export default function Home() {
               <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Basic Plan
               </h3>
-              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#1f2937', marginBottom: '0.5rem', fontFamily: "'Montserrat', sans-serif" }}>
+              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#1f2937', marginBottom: '0.5rem', fontFamily: "Montserrat, sans-serif" }}>
                 FREE
               </div>
               <ul style={{ listStyle: 'none', textAlign: 'left', margin: '2rem 0', padding: 0 }}>
@@ -225,7 +235,7 @@ export default function Home() {
               <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Executive Plan
               </h3>
-              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#1f2937', marginBottom: '0.5rem', fontFamily: "'Montserrat', sans-serif" }}>
+              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#1f2937', marginBottom: '0.5rem', fontFamily: "Montserrat, sans-serif" }}>
                 $5<span style={{ fontSize: '1.2rem', fontWeight: '400', color: '#6b7280' }}>/MONTH</span>
               </div>
               <ul style={{ listStyle: 'none', textAlign: 'left', margin: '2rem 0', padding: 0 }}>
@@ -246,7 +256,7 @@ export default function Home() {
               <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Ultimate Plan
               </h3>
-              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#1f2937', marginBottom: '0.5rem', fontFamily: "'Montserrat', sans-serif" }}>
+              <div style={{ fontSize: '3rem', fontWeight: '900', color: '#1f2937', marginBottom: '0.5rem', fontFamily: "Montserrat, sans-serif" }}>
                 $14<span style={{ fontSize: '1.2rem', fontWeight: '400', color: '#6b7280' }}>/MONTH</span>
               </div>
               <ul style={{ listStyle: 'none', textAlign: 'left', margin: '2rem 0', padding: 0 }}>
@@ -309,63 +319,6 @@ export default function Home() {
       >
         <MessageCircle size={24} />
       </a>
-    </div>
-  )
-}
-
-// Chat Bubbles Component
-function ChatBubbles({ messages }: { messages: Array<{ text: string; sender: 'user' | 'yaya' }> }) {
-  const [visibleMessages, setVisibleMessages] = useState<number>(0)
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setVisibleMessages(prev => {
-        if (prev < messages.length) {
-          return prev + 1
-        }
-        // Reset after showing all messages
-        setTimeout(() => setVisibleMessages(0), 1000)
-        return 0
-      })
-    }, 1500)
-
-    return () => clearInterval(timer)
-  }, [messages.length])
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {messages.slice(0, visibleMessages).map((message, index) => (
-        <div
-          key={index}
-          style={{
-            background: message.sender === 'user' ? '#25d366' : '#374151',
-            color: 'white',
-            padding: '8px 12px',
-            borderRadius: message.sender === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
-            maxWidth: '80%',
-            fontSize: '0.85rem',
-            marginLeft: message.sender === 'user' ? 'auto' : '0',
-            opacity: 0,
-            animation: 'fadeInUp 0.5s ease-out forwards',
-            animationDelay: `${index * 0.2}s`
-          }}
-        >
-          {message.text}
-        </div>
-      ))}
-      
-      <style jsx>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   )
 }
