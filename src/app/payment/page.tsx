@@ -3,10 +3,23 @@
 import React, { useState } from 'react'
 import { Check } from 'lucide-react'
 
+interface Plan {
+  id: string
+  name: string
+  monthlyPrice: number
+  yearlyPrice: number
+  displayPrice?: string | null
+  popular: boolean
+  features: string[]
+  buttonText: string
+  buttonAction: string
+  usersCount?: string
+}
+
 export default function PaymentPage() {
   const [billingType, setBillingType] = useState('monthly')
 
-  const plans = [
+  const plans: Plan[] = [
     {
       id: 'basic',
       name: 'Basic Plan',
@@ -77,7 +90,7 @@ export default function PaymentPage() {
     }
   ]
 
-  const handlePlanAction = (plan) => {
+  const handlePlanAction = (plan: Plan) => {
     if (plan.buttonAction === 'whatsapp') {
       // Redirect to WhatsApp
       window.open('https://wa.me/972559943649?text=Hi! I want to start with the Basic (FREE) plan', '_blank')
