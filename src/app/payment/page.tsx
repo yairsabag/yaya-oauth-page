@@ -301,23 +301,25 @@ export default function PaymentPage() {
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
+                    const target = e.target as HTMLButtonElement
                     if (plan.id === 'basic') {
-                      e.target.style.background = '#22c55e'
+                      target.style.background = '#22c55e'
                     } else if (plan.popular) {
-                      e.target.style.background = '#7c4a32'
+                      target.style.background = '#7c4a32'
                     } else {
-                      e.target.style.background = '#8B5E3C'
-                      e.target.style.color = 'white'
+                      target.style.background = '#8B5E3C'
+                      target.style.color = 'white'
                     }
                   }}
                   onMouseLeave={(e) => {
+                    const target = e.target as HTMLButtonElement
                     if (plan.id === 'basic') {
-                      e.target.style.background = '#25d366'
+                      target.style.background = '#25d366'
                     } else if (plan.popular) {
-                      e.target.style.background = '#8B5E3C'
+                      target.style.background = '#8B5E3C'
                     } else {
-                      e.target.style.background = '#f7fafc'
-                      e.target.style.color = '#8B5E3C'
+                      target.style.background = '#f7fafc'
+                      target.style.color = '#8B5E3C'
                     }
                   }}
                 >
