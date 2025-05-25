@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react'
 import { MessageCircle } from 'lucide-react'
 
 // Chat Bubbles Component
-function ChatBubbles({ messages }) {
+function ChatBubbles({ messages }: { messages: Array<{ text: string; sender: 'user' | 'yaya' }> }) {
   const [visibleMessages, setVisibleMessages] = useState(0)
   
   useEffect(() => {
-    let timeout
+    let timeout: NodeJS.Timeout
     const timer = setInterval(() => {
       setVisibleMessages(prev => {
         if (prev < messages.length) return prev + 1
@@ -644,8 +644,8 @@ export default function Home() {
           zIndex: 1000,
           transition: 'transform 0.3s ease'
         }}
-        onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
-        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+        onMouseEnter={(e) => (e.target as HTMLElement).style.transform = 'scale(1.1)'}
+        onMouseLeave={(e) => (e.target as HTMLElement).style.transform = 'scale(1)'}
       >
         <MessageCircle size={24} />
       </a>
