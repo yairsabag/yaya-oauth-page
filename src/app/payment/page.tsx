@@ -189,6 +189,7 @@ export default function PaymentPage() {
             {plans.map((plan) => (
               <div
                 key={plan.id}
+                onClick={() => handlePlanAction(plan)}
                 style={{
                   background: '#F5F1EB',
                   borderRadius: '20px',
@@ -287,7 +288,10 @@ export default function PaymentPage() {
                 )}
 
                 <button
-                  onClick={() => handlePlanAction(plan)}
+                  onClick={(e) => {
+                    e.stopPropagation() // Prevent card click from triggering
+                    handlePlanAction(plan)
+                  }}
                   style={{
                     width: '100%',
                     background: plan.popular ? '#8B5E3C' : (plan.id === 'basic' ? '#25d366' : '#f7fafc'),
