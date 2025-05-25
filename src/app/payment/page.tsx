@@ -92,8 +92,8 @@ export default function PaymentPage() {
 
   const handlePlanAction = (plan: Plan) => {
     if (plan.buttonAction === 'whatsapp') {
-      // Redirect to WhatsApp
-      window.open('https://wa.me/972559943649?text=Hi! I want to start with the Basic (FREE) plan', '_blank')
+      // Redirect to WhatsApp with the specific URL format
+      window.open('https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0', '_blank')
     } else {
       // Redirect to checkout page
       const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
