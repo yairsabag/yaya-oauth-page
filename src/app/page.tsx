@@ -26,8 +26,15 @@ export default function Home() {
       {/* Header */}
       <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '1rem 0' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#a67c5a' }}>
-            Yaya
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img 
+              src="/yaya-logo.png" 
+              alt="Yaya Logo" 
+              style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+            />
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#a67c5a' }}>
+              Yaya
+            </div>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <span style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)', color: 'white', padding: '4px 12px', borderRadius: '16px', fontSize: '0.8rem', fontWeight: '500' }}>
@@ -96,6 +103,7 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Rest of the sections remain the same as before - Features, Learning, Pricing, Footer */}
       {/* Features Section */}
       <section style={{ padding: '5rem 0', background: 'white' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
