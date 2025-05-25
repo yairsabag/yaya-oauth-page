@@ -7,21 +7,20 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
   const [visibleMessages, setVisibleMessages] = useState(0)
   
   useEffect(() => {
-    let timeout: NodeJS.Timeout
     const timer = setInterval(() => {
       setVisibleMessages(prev => {
-        if (prev < messages.length) return prev + 1
-        clearInterval(timer)
-        timeout = setTimeout(() => setVisibleMessages(0), 3000)
-        return prev
+        if (prev < messages.length) {
+          return prev + 1
+        } else {
+          // Reset after showing all messages for 3 seconds
+          setTimeout(() => setVisibleMessages(0), 3000)
+          return prev
+        }
       })
-    }, 2000)
+    }, 1500)
     
-    return () => {
-      clearInterval(timer)
-      clearTimeout(timeout)
-    }
-  }, [messages.length])
+    return () => clearInterval(timer)
+  }, [messages.length, visibleMessages])
 
   return (
     <div style={{
