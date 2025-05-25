@@ -26,14 +26,14 @@ export default function Home() {
       {/* Header */}
       <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '1rem 0' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ee751a' }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#a67c5a' }}>
             Yaya
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <span style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)', color: 'white', padding: '4px 12px', borderRadius: '16px', fontSize: '0.8rem', fontWeight: '500' }}>
               Introducing Multi-Calendar Support📊
             </span>
-            <a href="https://wa.me/972559943649" style={{ background: 'linear-gradient(135deg, #ee751a 0%, #f19340 100%)', color: 'white', padding: '8px 16px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600' }}>
+            <a href="https://wa.me/972559943649" style={{ background: 'linear-gradient(135deg, #faf0e6 0%, #f5e6d3 100%)', color: '#6b4e3d', padding: '8px 16px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600', border: '1px solid #e6d3c1' }}>
               Get Started
             </a>
             <a href="http://app.textcoco.com" style={{ color: '#6b7280', textDecoration: 'none' }}>
@@ -44,31 +44,31 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section style={{ background: 'linear-gradient(135deg, #ee751a 0%, #f19340 100%)', color: 'white', padding: '5rem 0', textAlign: 'center' }}>
+      <section style={{ background: 'linear-gradient(135deg, #faf0e6 0%, #f5e6d3 100%)', color: '#4a3429', padding: '5rem 0', textAlign: 'center' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
-          <h1 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '0.5rem', lineHeight: '1.1', fontFamily: "Montserrat, sans-serif" }}>
+          <h1 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '0.5rem', lineHeight: '1.1', fontFamily: "Montserrat, sans-serif", color: '#3d2817' }}>
             Save your time, text your
           </h1>
-          <h1 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '1rem', lineHeight: '1.1', fontFamily: "Montserrat, sans-serif", minHeight: '4.5rem' }}>
+          <h1 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '1rem', lineHeight: '1.1', fontFamily: "Montserrat, sans-serif", minHeight: '4.5rem', color: '#3d2817' }}>
             {isClient ? heroTexts[currentTextIndex] : "todo list."}
           </h1>
-          <p style={{ fontSize: '1.5rem', marginBottom: '2rem', opacity: 0.95, fontWeight: '500' }}>
+          <p style={{ fontSize: '1.5rem', marginBottom: '2rem', opacity: 0.85, fontWeight: '500', color: '#5a4136' }}>
             Your executive assistant in WhatsApp
           </p>
           
           <div style={{ fontSize: '2rem', fontWeight: 'bold', margin: '2rem 0', fontFamily: "Montserrat, sans-serif" }}>
-            <a href="https://wa.me/972559943649" style={{ color: 'white', textDecoration: 'none' }}>
+            <a href="https://wa.me/972559943649" style={{ color: '#3d2817', textDecoration: 'none' }}>
               +972 55-994-3649
             </a>
           </div>
           
-          <div style={{ fontSize: '1.1rem', marginBottom: '3rem', lineHeight: '1.6', opacity: 0.95 }}>
+          <div style={{ fontSize: '1.1rem', marginBottom: '3rem', lineHeight: '1.6', opacity: 0.8, color: '#5a4136' }}>
             Add a 7pm dinner this week with Eva<br/>
             Put amazon return on my ToDo<br/>
             Remind me about bills every thursday night
           </div>
           
-          <a href="https://wa.me/972559943649" style={{ background: 'rgba(255,255,255,0.2)', color: 'white', padding: '16px 32px', borderRadius: '10px', textDecoration: 'none', fontSize: '1.2rem', border: '2px solid rgba(255,255,255,0.3)', fontWeight: '600', display: 'inline-block', transition: 'all 0.3s ease' }}>
+          <a href="https://wa.me/972559943649" style={{ background: 'rgba(61,40,23,0.1)', color: '#3d2817', padding: '16px 32px', borderRadius: '10px', textDecoration: 'none', fontSize: '1.2rem', border: '2px solid rgba(61,40,23,0.2)', fontWeight: '600', display: 'inline-block', transition: 'all 0.3s ease' }}>
             Get Started
           </a>
           
@@ -113,18 +113,18 @@ export default function Home() {
                 Modify an event with a voice message. Search multiple calendars, instantly. Yaya knows when you're busy or free and organizes your weekly schedule. We support:
               </p>
               <div style={{ marginBottom: '1rem' }}>
-                <span style={{ color: '#ee751a', fontWeight: '600' }}>Outlook Calendar</span><br/>
-                <span style={{ color: '#ee751a', fontWeight: '600' }}>Google Calendar</span>
+                <span style={{ color: '#a67c5a', fontWeight: '600' }}>Outlook Calendar</span><br/>
+                <span style={{ color: '#a67c5a', fontWeight: '600' }}>Google Calendar</span>
               </div>
-              <a href="/calendar" style={{ color: '#ee751a', textDecoration: 'none', fontWeight: '600' }}>Learn More →</a>
+              <a href="/calendar" style={{ color: '#a67c5a', textDecoration: 'none', fontWeight: '600' }}>Learn More →</a>
               
               {/* Chat Example */}
-              <div style={{ marginTop: '2rem', background: '#f9fafb', borderRadius: '12px', padding: '1.5rem' }}>
+              <div style={{ marginTop: '2rem', background: '#faf9f7', borderRadius: '12px', padding: '1.5rem', border: '1px solid #f0ebe5' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ background: '#25d366', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 4px 12px', maxWidth: '80%', fontSize: '0.85rem', marginLeft: 'auto' }}>
                     Add lunch with Sarah tomorrow at 1pm
                   </div>
-                  <div style={{ background: '#374151', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
+                  <div style={{ background: '#f5e6d3', color: '#6b4e3d', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
                     I've created an event on your calendar.
                   </div>
                 </div>
@@ -139,15 +139,15 @@ export default function Home() {
               <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: '1.1rem', lineHeight: '1.6' }}>
                 Create single or repeating reminders in your own language! Yaya can even send reminders to your friends, so you don't have to.
               </p>
-              <a href="/reminders" style={{ color: '#ee751a', textDecoration: 'none', fontWeight: '600' }}>Learn More →</a>
+              <a href="/reminders" style={{ color: '#a67c5a', textDecoration: 'none', fontWeight: '600' }}>Learn More →</a>
               
               {/* Chat Example */}
-              <div style={{ marginTop: '2rem', background: '#f9fafb', borderRadius: '12px', padding: '1.5rem' }}>
+              <div style={{ marginTop: '2rem', background: '#faf9f7', borderRadius: '12px', padding: '1.5rem', border: '1px solid #f0ebe5' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ background: '#25d366', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 4px 12px', maxWidth: '80%', fontSize: '0.85rem', marginLeft: 'auto' }}>
                     Remind me to call mom every Sunday
                   </div>
-                  <div style={{ background: '#374151', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
+                  <div style={{ background: '#f5e6d3', color: '#6b4e3d', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
                     I'll remind you every Sunday at 6pm!
                   </div>
                 </div>
@@ -164,18 +164,18 @@ export default function Home() {
               </p>
               
               {/* Chat Example */}
-              <div style={{ marginTop: '2rem', background: '#f9fafb', borderRadius: '12px', padding: '1.5rem' }}>
+              <div style={{ marginTop: '2rem', background: '#faf9f7', borderRadius: '12px', padding: '1.5rem', border: '1px solid #f0ebe5' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <div style={{ background: '#25d366', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 4px 12px', maxWidth: '80%', fontSize: '0.85rem', marginLeft: 'auto' }}>
                     Add milk, eggs, and bread to my shopping list
                   </div>
-                  <div style={{ background: '#374151', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
+                  <div style={{ background: '#f5e6d3', color: '#6b4e3d', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
                     Added to your Shopping List!
                   </div>
                   <div style={{ background: '#25d366', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 4px 12px', maxWidth: '80%', fontSize: '0.85rem', marginLeft: 'auto' }}>
                     Be more casual in your responses
                   </div>
-                  <div style={{ background: '#374151', color: 'white', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
+                  <div style={{ background: '#f5e6d3', color: '#6b4e3d', padding: '8px 12px', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: '0.85rem' }}>
                     Got it! I'll keep things more relaxed 😊
                   </div>
                 </div>
@@ -186,7 +186,7 @@ export default function Home() {
       </section>
 
       {/* Learning Section */}
-      <section style={{ padding: '5rem 0', background: '#f9fafb' }}>
+      <section style={{ padding: '5rem 0', background: '#faf9f7' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
           <h2 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '2rem', color: '#1f2937', fontFamily: "Montserrat, sans-serif" }}>
             Yaya learns from you and gets smarter over time
@@ -206,7 +206,7 @@ export default function Home() {
           
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '3rem' }}>
             <span style={{ background: '#f3f4f6', padding: '8px 16px', borderRadius: '20px', fontSize: '0.9rem', color: '#6b7280' }}>Yearly Billing</span>
-            <span style={{ background: '#ee751a', color: 'white', padding: '8px 16px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: '600' }}>Monthly Billing</span>
+            <span style={{ background: '#faf0e6', color: '#6b4e3d', padding: '8px 16px', borderRadius: '20px', fontSize: '0.9rem', fontWeight: '600', border: '1px solid #e6d3c1' }}>Monthly Billing</span>
           </div>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginTop: '3rem' }}>
@@ -225,13 +225,13 @@ export default function Home() {
                 <li style={{ padding: '8px 0', borderBottom: '1px solid #f3f4f6', fontSize: '0.95rem' }}>• ChatGPT</li>
                 <li style={{ padding: '8px 0', fontSize: '0.95rem' }}>• 5 Voice Notes / Month</li>
               </ul>
-              <div style={{ textAlign: 'center', marginTop: '1.5rem', color: '#ee751a', fontWeight: '600', fontSize: '0.9rem' }}>
+              <div style={{ textAlign: 'center', marginTop: '1.5rem', color: '#a67c5a', fontWeight: '600', fontSize: '0.9rem' }}>
                 7 DAY TRIAL
               </div>
             </div>
 
             {/* Executive Plan */}
-            <div style={{ background: 'white', borderRadius: '1.5rem', padding: '2.5rem', boxShadow: '0 20px 40px rgba(238, 117, 26, 0.2)', border: '2px solid #ee751a', transform: 'scale(1.05)', position: 'relative' }}>
+            <div style={{ background: 'white', borderRadius: '1.5rem', padding: '2.5rem', boxShadow: '0 20px 40px rgba(250, 240, 230, 0.4)', border: '2px solid #faf0e6', transform: 'scale(1.05)', position: 'relative' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Executive Plan
               </h3>
@@ -247,7 +247,7 @@ export default function Home() {
               </ul>
               <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
                 <div style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '0.5rem' }}>4,100+ users loving this plan</div>
-                <div style={{ color: '#ee751a', fontWeight: '600', fontSize: '0.9rem' }}>7 DAY TRIAL</div>
+                <div style={{ color: '#a67c5a', fontWeight: '600', fontSize: '0.9rem' }}>7 DAY TRIAL</div>
               </div>
             </div>
 
@@ -266,7 +266,7 @@ export default function Home() {
                 <li style={{ padding: '8px 0', borderBottom: '1px solid #f3f4f6', fontSize: '0.95rem' }}>• 100 Internet Searches</li>
                 <li style={{ padding: '8px 0', fontSize: '0.95rem' }}>• Create Lists</li>
               </ul>
-              <div style={{ textAlign: 'center', marginTop: '1.5rem', color: '#ee751a', fontWeight: '600', fontSize: '0.9rem' }}>
+              <div style={{ textAlign: 'center', marginTop: '1.5rem', color: '#a67c5a', fontWeight: '600', fontSize: '0.9rem' }}>
                 7 DAY TRIAL
               </div>
             </div>
@@ -274,7 +274,7 @@ export default function Home() {
           
           <div style={{ marginTop: '3rem', textAlign: 'center' }}>
             <p style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '1rem' }}>Need Yaya for your Team?</p>
-            <a href="mailto:info@textcoco.com?subject=Yaya%20AI%20for%20my%20Team" style={{ color: '#ee751a', textDecoration: 'none', fontWeight: '600' }}>Email Us</a>
+            <a href="mailto:info@textcoco.com?subject=Yaya%20AI%20for%20my%20Team" style={{ color: '#a67c5a', textDecoration: 'none', fontWeight: '600' }}>Email Us</a>
           </div>
         </div>
       </section>
@@ -283,7 +283,7 @@ export default function Home() {
       <footer style={{ background: '#1f2937', color: 'white', padding: '3rem 0' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
           <div style={{ marginBottom: '2rem' }}>
-            <span style={{ fontSize: '2rem', fontWeight: 'bold', color: '#ee751a' }}>Yaya</span>
+            <span style={{ fontSize: '2rem', fontWeight: 'bold', color: '#faf0e6' }}>Yaya</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', flexWrap: 'wrap' }}>
             <a href="/privacy-policy" style={{ color: '#9ca3af', textDecoration: 'none', fontSize: '0.9rem' }}>Privacy Policy</a>
