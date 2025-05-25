@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { MessageCircle } from 'lucide-react'
+import Link from 'next/link'
 
 export default function Home() {
   const [currentTextIndex, setCurrentTextIndex] = useState(0)
@@ -40,9 +41,9 @@ export default function Home() {
             <span style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)', color: 'white', padding: '4px 12px', borderRadius: '16px', fontSize: '0.8rem', fontWeight: '500' }}>
               Introducing Multi-Calendar Support📊
             </span>
-            <a href="https://wa.me/972559943649" style={{ background: 'linear-gradient(135deg, #faf0e6 0%, #f5e6d3 100%)', color: '#6b4e3d', padding: '8px 16px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600', border: '1px solid #e6d3c1' }}>
+            <Link href="/payment" style={{ background: 'linear-gradient(135deg, #faf0e6 0%, #f5e6d3 100%)', color: '#6b4e3d', padding: '8px 16px', borderRadius: '6px', textDecoration: 'none', fontSize: '0.9rem', fontWeight: '600', border: '1px solid #e6d3c1' }}>
               Get Started
-            </a>
+            </Link>
             <a href="http://app.textcoco.com" style={{ color: '#6b7280', textDecoration: 'none' }}>
               Login
             </a>
@@ -75,9 +76,9 @@ export default function Home() {
             Remind me about bills every thursday night
           </div>
           
-          <a href="https://wa.me/972559943649" style={{ background: 'rgba(61,40,23,0.1)', color: '#3d2817', padding: '16px 32px', borderRadius: '10px', textDecoration: 'none', fontSize: '1.2rem', border: '2px solid rgba(61,40,23,0.2)', fontWeight: '600', display: 'inline-block', transition: 'all 0.3s ease' }}>
+          <Link href="/payment" style={{ background: 'rgba(61,40,23,0.1)', color: '#3d2817', padding: '16px 32px', borderRadius: '10px', textDecoration: 'none', fontSize: '1.2rem', border: '2px solid rgba(61,40,23,0.2)', fontWeight: '600', display: 'inline-block', transition: 'all 0.3s ease' }}>
             Get Started
-          </a>
+          </Link>
           
           {/* iPhone Mockup */}
           <div style={{ maxWidth: '320px', margin: '4rem auto 0' }}>
@@ -103,7 +104,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Rest of the sections remain the same as before - Features, Learning, Pricing, Footer */}
       {/* Features Section */}
       <section style={{ padding: '5rem 0', background: 'white' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
