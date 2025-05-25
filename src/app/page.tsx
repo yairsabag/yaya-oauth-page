@@ -432,7 +432,6 @@ export default function Home() {
               position: 'relative'
             }}>
               <h3 style={{ 
-                fontSize: '1.1rem', 
                 fontWeight: '500', 
                 marginBottom: '0.5rem', 
                 color: '#4a5568', 
@@ -480,7 +479,6 @@ export default function Home() {
               border: '2px solid #e2e8f0'
             }}>
               <h3 style={{ 
-                fontSize: '1.1rem', 
                 fontWeight: '500', 
                 marginBottom: '0.5rem', 
                 color: '#4a5568', 
