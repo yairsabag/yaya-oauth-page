@@ -4,6 +4,23 @@ import React, { useState, useEffect } from 'react'
 import { ChevronDown, Phone, MessageCircle } from 'lucide-react'
 
 export default function Home() {
+  const [currentTextIndex, setCurrentTextIndex] = useState(0)
+  const [isClient, setIsClient] = useState(false)
+  
+  const heroTexts = [
+    "todo list.",
+    "calendar.",
+    "reminders."
+  ]
+
+  useEffect(() => {
+    setIsClient(true)
+    const interval = setInterval(() => {
+      setCurrentTextIndex((prev) => (prev + 1) % heroTexts.length)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
+
   return (
     <div style={{ fontFamily: "'Lato', system-ui, -apple-system, sans-serif" }}>
       {/* Header */}
@@ -32,8 +49,8 @@ export default function Home() {
           <h1 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '0.5rem', lineHeight: '1.1', fontFamily: "'Montserrat', sans-serif" }}>
             Save your time, text your
           </h1>
-          <h1 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '1rem', lineHeight: '1.1', fontFamily: "'Montserrat', sans-serif" }}>
-            todo list.
+          <h1 style={{ fontSize: '4rem', fontWeight: '900', marginBottom: '1rem', lineHeight: '1.1', fontFamily: "'Montserrat', sans-serif", minHeight: '4.5rem' }}>
+            {isClient ? heroTexts[currentTextIndex] : "todo list."}
           </h1>
           <p style={{ fontSize: '1.5rem', marginBottom: '2rem', opacity: 0.95, fontWeight: '500' }}>
             Your executive assistant in WhatsApp
@@ -45,7 +62,7 @@ export default function Home() {
             </a>
           </div>
           
-          <div style={{ fontSize: '1.1rem', marginBottom: '3rem', lineHeight: '1.6', opacity: 0.95 }}>
+          <div style={{ fontSize: '1.1rem', marginBottom: '3rem', lineHeight: '1.6', opacity: 0.95' }}>
             Add a 7pm dinner this week with Eva<br/>
             Put amazon return on my ToDo<br/>
             Remind me about bills every thursday night
@@ -87,6 +104,7 @@ export default function Home() {
           </h2>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '4rem', marginTop: '4rem' }}>
+            {/* Feature 1 */}
             <div style={{ textAlign: 'left' }}>
               <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', fontFamily: "'Montserrat', sans-serif" }}>
                 Create hundreds of events, in seconds
@@ -99,8 +117,19 @@ export default function Home() {
                 <span style={{ color: '#ee751a', fontWeight: '600' }}>Google Calendar</span>
               </div>
               <a href="/calendar" style={{ color: '#ee751a', textDecoration: 'none', fontWeight: '600' }}>Learn More →</a>
+              
+              {/* Chat Example */}
+              <div style={{ marginTop: '2rem', background: '#f9fafb', borderRadius: '12px', padding: '1.5rem' }}>
+                <ChatBubbles 
+                  messages={[
+                    { text: "Add lunch with Sarah tomorrow at 1pm", sender: "user" },
+                    { text: "I've created an event on your calendar.", sender: "yaya" }
+                  ]}
+                />
+              </div>
             </div>
             
+            {/* Feature 2 */}
             <div style={{ textAlign: 'left' }}>
               <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', fontFamily: "'Montserrat', sans-serif" }}>
                 Stop forgetting your small tasks
@@ -109,8 +138,19 @@ export default function Home() {
                 Create single or repeating reminders in your own language! Yaya can even send reminders to your friends, so you don't have to.
               </p>
               <a href="/reminders" style={{ color: '#ee751a', textDecoration: 'none', fontWeight: '600' }}>Learn More →</a>
+              
+              {/* Chat Example */}
+              <div style={{ marginTop: '2rem', background: '#f9fafb', borderRadius: '12px', padding: '1.5rem' }}>
+                <ChatBubbles 
+                  messages={[
+                    { text: "Remind me to call mom every Sunday", sender: "user" },
+                    { text: "I'll remind you every Sunday at 6pm!", sender: "yaya" }
+                  ]}
+                />
+              </div>
             </div>
             
+            {/* Feature 3 */}
             <div style={{ textAlign: 'left' }}>
               <h3 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '1rem', color: '#1f2937', fontFamily: "'Montserrat', sans-serif" }}>
                 Your ToDo list in WhatsApp
@@ -118,6 +158,18 @@ export default function Home() {
               <p style={{ color: '#6b7280', marginBottom: '2rem', fontSize: '1.1rem', lineHeight: '1.6' }}>
                 No app download required. Your ToDo list, gift ideas list, or grocery list are easily accessible with Yaya. Ask Yaya to create and check your lists. You can even check your lists on the Dashboard.
               </p>
+              
+              {/* Chat Example */}
+              <div style={{ marginTop: '2rem', background: '#f9fafb', borderRadius: '12px', padding: '1.5rem' }}>
+                <ChatBubbles 
+                  messages={[
+                    { text: "Add milk, eggs, and bread to my shopping list", sender: "user" },
+                    { text: "Added to your Shopping List!", sender: "yaya" },
+                    { text: "Be more casual in your responses", sender: "user" },
+                    { text: "Got it! I'll keep things more relaxed 😊", sender: "yaya" }
+                  ]}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -257,6 +309,63 @@ export default function Home() {
       >
         <MessageCircle size={24} />
       </a>
+    </div>
+  )
+}
+
+// Chat Bubbles Component
+function ChatBubbles({ messages }: { messages: Array<{ text: string; sender: 'user' | 'yaya' }> }) {
+  const [visibleMessages, setVisibleMessages] = useState<number>(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setVisibleMessages(prev => {
+        if (prev < messages.length) {
+          return prev + 1
+        }
+        // Reset after showing all messages
+        setTimeout(() => setVisibleMessages(0), 1000)
+        return 0
+      })
+    }, 1500)
+
+    return () => clearInterval(timer)
+  }, [messages.length])
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {messages.slice(0, visibleMessages).map((message, index) => (
+        <div
+          key={index}
+          style={{
+            background: message.sender === 'user' ? '#25d366' : '#374151',
+            color: 'white',
+            padding: '8px 12px',
+            borderRadius: message.sender === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
+            maxWidth: '80%',
+            fontSize: '0.85rem',
+            marginLeft: message.sender === 'user' ? 'auto' : '0',
+            opacity: 0,
+            animation: 'fadeInUp 0.5s ease-out forwards',
+            animationDelay: `${index * 0.2}s`
+          }}
+        >
+          {message.text}
+        </div>
+      ))}
+      
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   )
 }
