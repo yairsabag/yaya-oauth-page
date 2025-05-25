@@ -1,14 +1,14 @@
 'use client'
 
-import React, { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import React, { useState, useEffect } from 'react'
 import { ArrowLeft, Shield, CreditCard } from 'lucide-react'
 
-function CheckoutContent() {
-  const searchParams = useSearchParams()
-  const plan = searchParams.get('plan')
-  const price = searchParams.get('price')
+export default function CheckoutPage() {
+  const [urlParams, setUrlParams] = useState({
+    plan: '',
+    price: '',
+    billing: ''
+  })
 
   const [formData, setFormData] = useState({
     email: '',
@@ -18,13 +18,22 @@ function CheckoutContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
+  useEffect(() => {
+    // Get URL parameters from window.location
+    const params = new URLSearchParams(window.location.search)
+    setUrlParams({
+      plan: params.get('plan') || '',
+      price: params.get('price') || '',
+      billing: params.get('billing') || ''
+    })
+  }, [])
+
   const planNames = {
     executive: 'Executive Plan',
     ultimate: 'Ultimate Plan'
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     setIsLoading(true)
     setErrors({})
 
@@ -45,29 +54,33 @@ function CheckoutContent() {
       // For now, simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000))
       
-      // Redirect to success page
-      window.location.href = `/payment/success?plan=${plan}&email=${formData.email}`
+      // Simulate 90% success rate for demo
+      if (Math.random() > 0.1) {
+        // Redirect to success page
+        window.location.href = `/payment/success?plan=${urlParams.plan}&email=${formData.email}&price=${urlParams.price}`
+      } else {
+        // Redirect to failed page
+        window.location.href = '/payment/failed'
+      }
     } catch (error) {
       window.location.href = '/payment/failed'
     }
   }
 
   return (
-    <div style={{ fontFamily: "Lato, system-ui, -apple-system, sans-serif", minHeight: '100vh', background: '#f9f9f9' }}>
+    <div style={{ fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", minHeight: '100vh', background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)' }}>
       {/* Header */}
-      <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', padding: '1rem 0' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-            <img 
-              src="/yaya-logo.png" 
-              alt="Yaya Logo" 
-              style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+      <header style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '1rem 0' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
+            <img
+              src="/yaya-logo.png"
+              alt="Yaya Assistant Logo"
+              style={{ width: '80px', height: '80px', objectFit: 'contain' }}
             />
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#a67c5a' }}>
-              Yaya
-            </div>
-          </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280' }}>
+            <span style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
+          </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#4a5568' }}>
             <Shield size={16} />
             <span style={{ fontSize: '0.9rem' }}>Secure Checkout</span>
           </div>
@@ -75,14 +88,14 @@ function CheckoutContent() {
       </header>
 
       <main style={{ padding: '2rem 0' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 1rem' }}>
-          <Link 
+        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 2rem' }}>
+          <a 
             href="/payment" 
             style={{ 
               display: 'inline-flex', 
               alignItems: 'center', 
               gap: '0.5rem', 
-              color: '#a67c5a', 
+              color: '#8B5E3C', 
               textDecoration: 'none', 
               marginBottom: '2rem',
               fontSize: '0.9rem'
@@ -90,44 +103,46 @@ function CheckoutContent() {
           >
             <ArrowLeft size={16} />
             Back to Plans
-          </Link>
+          </a>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
             {/* Order Summary */}
             <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1f2937' }}>
+              <h2 style={{ fontSize: '2rem', fontWeight: '400', marginBottom: '1.5rem', color: '#8B5E3C', letterSpacing: '-0.02em' }}>
                 Order Summary
               </h2>
               
-              <div style={{ background: 'white', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #e5e7eb' }}>
-                <div style={{ marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#1f2937' }}>
-                    {planNames[plan as keyof typeof planNames] || 'Selected Plan'}
+              <div style={{ background: '#F5F1EB', borderRadius: '20px', padding: '2rem', border: '1px solid #E5DDD5' }}>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                    {planNames[urlParams.plan as keyof typeof planNames] || 'Selected Plan'}
                   </h3>
-                  <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Monthly subscription</p>
+                  <p style={{ color: '#8B5E3C', fontSize: '0.9rem', opacity: 0.8 }}>
+                    {urlParams.billing === 'yearly' ? 'Annual' : 'Monthly'} subscription
+                  </p>
                 </div>
 
-                <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
                     <span>7-day free trial</span>
-                    <span style={{ color: '#10b981', fontWeight: '600' }}>$0.00</span>
+                    <span style={{ color: '#25d366', fontWeight: '600' }}>$0.00</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <span>Then monthly</span>
-                    <span>${price}/month</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
+                    <span>Then {urlParams.billing === 'yearly' ? 'annually' : 'monthly'}</span>
+                    <span>${urlParams.price}/{urlParams.billing === 'yearly' ? 'year' : 'month'}</span>
                   </div>
                 </div>
 
-                <div style={{ borderTop: '1px solid #f3f4f6', paddingTop: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', fontSize: '1.1rem' }}>
+                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', fontSize: '1.1rem', color: '#8B5E3C' }}>
                     <span>Total today</span>
-                    <span style={{ color: '#10b981' }}>$0.00</span>
+                    <span style={{ color: '#25d366' }}>$0.00</span>
                   </div>
                 </div>
 
-                <div style={{ marginTop: '1rem', padding: '1rem', background: '#f0f9ff', borderRadius: '0.5rem', border: '1px solid #e0f2fe' }}>
-                  <p style={{ fontSize: '0.85rem', color: '#075985', textAlign: 'center' }}>
-                    🎉 Free for 7 days, then ${price}/month. Cancel anytime.
+                <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(37, 211, 102, 0.1)', borderRadius: '12px', border: '1px solid rgba(37, 211, 102, 0.2)' }}>
+                  <p style={{ fontSize: '0.85rem', color: '#8B5E3C', textAlign: 'center' }}>
+                    🎉 Free for 7 days, then ${urlParams.price}/{urlParams.billing === 'yearly' ? 'year' : 'month'}. Cancel anytime.
                   </p>
                 </div>
               </div>
@@ -135,13 +150,13 @@ function CheckoutContent() {
 
             {/* Payment Form */}
             <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1f2937' }}>
+              <h2 style={{ fontSize: '2rem', fontWeight: '400', marginBottom: '1.5rem', color: '#8B5E3C', letterSpacing: '-0.02em' }}>
                 Contact Information
               </h2>
 
-              <form onSubmit={handleSubmit} style={{ background: 'white', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #e5e7eb' }}>
+              <div style={{ background: '#F5F1EB', borderRadius: '20px', padding: '2rem', border: '1px solid #E5DDD5' }}>
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
                     Email Address *
                   </label>
                   <input
@@ -151,10 +166,11 @@ function CheckoutContent() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: errors.email ? '1px solid #ef4444' : '1px solid #d1d5db',
-                      borderRadius: '0.5rem',
+                      border: errors.email ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                      borderRadius: '8px',
                       fontSize: '0.9rem',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      background: 'white'
                     }}
                     placeholder="your@email.com"
                   />
@@ -162,7 +178,7 @@ function CheckoutContent() {
                 </div>
 
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
                     Full Name *
                   </label>
                   <input
@@ -172,10 +188,11 @@ function CheckoutContent() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: errors.fullName ? '1px solid #ef4444' : '1px solid #d1d5db',
-                      borderRadius: '0.5rem',
+                      border: errors.fullName ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                      borderRadius: '8px',
                       fontSize: '0.9rem',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      background: 'white'
                     }}
                     placeholder="John Doe"
                   />
@@ -183,7 +200,7 @@ function CheckoutContent() {
                 </div>
 
                 <div style={{ marginBottom: '2rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
                     Phone Number *
                   </label>
                   <input
@@ -193,10 +210,11 @@ function CheckoutContent() {
                     style={{
                       width: '100%',
                       padding: '0.75rem',
-                      border: errors.phone ? '1px solid #ef4444' : '1px solid #d1d5db',
-                      borderRadius: '0.5rem',
+                      border: errors.phone ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                      borderRadius: '8px',
                       fontSize: '0.9rem',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      background: 'white'
                     }}
                     placeholder="+972-50-123-4567"
                   />
@@ -204,45 +222,48 @@ function CheckoutContent() {
                 </div>
 
                 <button
-                  type="submit"
+                  onClick={handleSubmit}
                   disabled={isLoading}
                   style={{
                     width: '100%',
                     padding: '1rem',
-                    background: isLoading ? '#9ca3af' : 'linear-gradient(135deg, #a67c5a 0%, #8b5a3c 100%)',
+                    background: isLoading ? '#9ca3af' : '#8B5E3C',
                     color: 'white',
                     border: 'none',
-                    borderRadius: '0.5rem',
+                    borderRadius: '8px',
                     fontSize: '1rem',
                     fontWeight: '600',
                     cursor: isLoading ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '0.5rem'
+                    gap: '0.5rem',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isLoading) {
+                      (e.target as HTMLButtonElement).style.background = '#7c4a32'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isLoading) {
+                      (e.target as HTMLButtonElement).style.background = '#8B5E3C'
+                    }
                   }}
                 >
                   <CreditCard size={20} />
                   {isLoading ? 'Processing...' : 'Start Free Trial'}
                 </button>
 
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', textAlign: 'center', marginTop: '1rem' }}>
+                <p style={{ fontSize: '0.8rem', color: '#8B5E3C', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
                   By continuing, you agree to our Terms of Service and Privacy Policy.
                   Your trial starts today and you can cancel anytime before it ends.
                 </p>
-              </form>
+              </div>
             </div>
           </div>
         </div>
       </main>
     </div>
-  )
-}
-
-export default function CheckoutPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <CheckoutContent />
-    </Suspense>
   )
 }
