@@ -28,7 +28,7 @@ export default function SuccessPage() {
   }
 
   // Google OAuth URL with registration code
-  const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=https://yairsabag.app.n8n.cloud/webhook/google-oauth-callback&response_type=code&scope=https://www.googleapis.com/auth/calendar&state=${urlParams.code}`
+  const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=314964896562-3vu0iemj1j8d6g44cfttvn09smm393j9.apps.googleusercontent.com&redirect_uri=https://yairsabag.app.n8n.cloud/webhook/google-oauth-callback&response_type=code&scope=https://www.googleapis.com/auth/calendar&state=${urlParams.code}`
 
   return (
     <div style={{ fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", minHeight: '100vh', background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)' }}>
