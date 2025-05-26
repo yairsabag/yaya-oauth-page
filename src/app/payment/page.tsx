@@ -1,25 +1,33 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Check } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Check, MessageCircle } from 'lucide-react'
 
-interface Plan {
-  id: string
-  name: string
-  monthlyPrice: number
-  yearlyPrice: number
-  displayPrice?: string | null
-  popular: boolean
-  features: string[]
-  buttonText: string
-  buttonAction: string
-  usersCount?: string
-}
-
-export default function PaymentPage() {
+export default function SelectPlanPage() {
   const [billingType, setBillingType] = useState('monthly')
+  const [formData, setFormData] = useState({
+    phone: '',
+    email: '',
+    plan: ''
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const plans: Plan[] = [
+  useEffect(() => {
+    // Check if plan was pre-selected from pricing page
+    const params = new URLSearchParams(window.location.search)
+    const preSelectedPlan = params.get('plan')
+    const preSelectedBilling = params.get('billing')
+    
+    if (preSelectedPlan) {
+      setFormData(prev => ({ ...prev, plan: preSelectedPlan }))
+    }
+    if (preSelectedBilling) {
+      setBillingType(preSelectedBilling)
+    }
+  }, [])
+
+  const plans = [
     {
       id: 'basic',
       name: 'Basic Plan',
@@ -61,8 +69,7 @@ export default function PaymentPage() {
         'Create Lists'
       ],
       buttonText: 'Start Free Trial',
-      buttonAction: 'payment',
-      usersCount: '4,100+ users loving this plan'
+      buttonAction: 'payment'
     },
     {
       id: 'ultimate',
@@ -90,14 +97,76 @@ export default function PaymentPage() {
     }
   ]
 
-  const handlePlanAction = (plan: Plan) => {
-    if (plan.buttonAction === 'whatsapp') {
-      // Redirect to WhatsApp with the specific URL format
+  const handlePlanSelection = (planId: string) => {
+    setFormData({ ...formData, plan: planId })
+    
+    if (planId === 'basic') {
+      // For free plan, redirect to WhatsApp directly
       window.open('https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0', '_blank')
-    } else {
-      // Redirect to checkout page
-      const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
-      window.location.href = `/payment/checkout?plan=${plan.id}&price=${price}&billing=${billingType}`
+    }
+  }
+
+  const handleSubmit = async () => {
+    setIsLoading(true)
+    setErrors({})
+
+    // Validate form
+    const newErrors: Record<string, string> = {}
+    if (!formData.email) newErrors.email = 'Email is required'
+    if (!formData.phone) newErrors.phone = 'Phone number is required'
+    if (!formData.plan) newErrors.plan = 'Please select a plan'
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      // Generate unique registration code
+      const registrationCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+      
+      console.log('Sending webhook data:', {
+        phone: formData.phone,
+        email: formData.email,
+        plan: formData.plan,
+        registration_code: registrationCode
+      })
+      
+      // Send data to n8n webhook
+      const response = await fetch('https://yairsabag.app.n8n.cloud/webhook-test/whatsapp-registration', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          phone: formData.phone,
+          email: formData.email,
+          plan: formData.plan,
+          registration_code: registrationCode
+        })
+      })
+      
+      console.log('Webhook response status:', response.status)
+      console.log('Webhook response:', await response.text())
+      
+      // Get plan details for checkout
+      const plan = plans.find(p => p.id === formData.plan)
+      const price = billingType === 'yearly' ? plan?.yearlyPrice : plan?.monthlyPrice
+      
+      // Redirect to checkout with all parameters including email
+      window.location.href = `/payment/checkout?plan=${formData.plan}&price=${price}&billing=${billingType}&code=${registrationCode}&email=${formData.email}`
+      
+    } catch (error) {
+      console.error('Webhook error:', error)
+      // Still proceed to checkout even if webhook fails
+      const plan = plans.find(p => p.id === formData.plan)
+      const price = billingType === 'yearly' ? plan?.yearlyPrice : plan?.monthlyPrice
+      const registrationCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+      
+      window.location.href = `/payment/checkout?plan=${formData.plan}&price=${price}&billing=${billingType}&code=${registrationCode}&email=${formData.email}`
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -120,7 +189,6 @@ export default function PaymentPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main style={{ padding: '4rem 0' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -131,10 +199,10 @@ export default function PaymentPage() {
               marginBottom: '1.5rem',
               letterSpacing: '-0.02em'
             }}>
-              Simple Pricing
+              Choose Your Plan
             </h1>
             <p style={{ fontSize: '1.2rem', color: '#718096', maxWidth: '600px', margin: '0 auto 2rem' }}>
-              Start your 7-day free trial. No commitment, cancel anytime.
+              Get started with Yaya Assistant. Start your 7-day free trial today.
             </p>
 
             {/* Billing Toggle */}
@@ -185,32 +253,155 @@ export default function PaymentPage() {
             </div>
           </div>
 
+          {/* Contact Form */}
+          <div style={{ maxWidth: '500px', margin: '0 auto 3rem', background: '#F5F1EB', borderRadius: '20px', padding: '2rem', border: '1px solid #E5DDD5' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem', textAlign: 'center' }}>
+              📞 Contact Information
+            </h3>
+            <p style={{ color: '#8B5E3C', fontSize: '0.9rem', marginBottom: '1.5rem', textAlign: 'center', opacity: 0.8 }}>
+              Enter your details to get started with Yaya
+            </p>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                Email Address *
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="your@email.com"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: errors.email ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  marginBottom: '0.5rem',
+                  boxSizing: 'border-box',
+                  background: 'white'
+                }}
+              />
+              {errors.email && <p style={{ color: '#ef4444', fontSize: '0.8rem' }}>{errors.email}</p>}
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                Phone Number *
+              </label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+972-50-123-4567"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: errors.phone ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  marginBottom: '0.5rem',
+                  boxSizing: 'border-box',
+                  background: 'white'
+                }}
+              />
+              {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.8rem' }}>{errors.phone}</p>}
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                Select Plan *
+              </label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => handlePlanSelection('executive')}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    background: formData.plan === 'executive' ? '#8B5E3C' : 'white',
+                    color: formData.plan === 'executive' ? 'white' : '#8B5E3C',
+                    border: '1px solid #8B5E3C',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Executive Plan
+                </button>
+                <button
+                  onClick={() => handlePlanSelection('ultimate')}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    background: formData.plan === 'ultimate' ? '#8B5E3C' : 'white',
+                    color: formData.plan === 'ultimate' ? 'white' : '#8B5E3C',
+                    border: '1px solid #8B5E3C',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Ultimate Plan
+                </button>
+              </div>
+              {errors.plan && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.5rem' }}>{errors.plan}</p>}
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              style={{
+                width: '100%',
+                padding: '12px 24px',
+                background: isLoading ? '#9ca3af' : '#8B5E3C',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {isLoading ? 'Processing...' : 'Continue to Payment'}
+            </button>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
             {plans.map((plan) => (
               <div
                 key={plan.id}
-                onClick={() => handlePlanAction(plan)}
+                onClick={() => handlePlanSelection(plan.id)}
                 style={{
-                  background: '#F5F1EB',
+                  background: formData.plan === plan.id ? 'rgba(139, 94, 60, 0.1)' : '#F5F1EB',
                   borderRadius: '20px',
                   padding: '2.5rem 2rem',
                   textAlign: 'left',
                   position: 'relative',
-                  border: plan.popular ? '2px solid #8B5E3C' : '1px solid #E5DDD5',
+                  border: plan.popular ? '2px solid #8B5E3C' : formData.plan === plan.id ? '2px solid #8B5E3C' : '1px solid #E5DDD5',
                   transform: plan.popular ? 'scale(1.02)' : 'none',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                  opacity: plan.id === 'basic' ? 0.7 : 1
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = plan.popular ? 'scale(1.05)' : 'scale(1.02)'
-                  e.currentTarget.style.boxShadow = '0 20px 25px rgba(139, 94, 60, 0.15)'
-                  e.currentTarget.style.border = '2px solid #8B5E3C'
+                  if (plan.id !== 'basic') {
+                    e.currentTarget.style.transform = plan.popular ? 'scale(1.05)' : 'scale(1.02)'
+                    e.currentTarget.style.boxShadow = '0 20px 25px rgba(139, 94, 60, 0.15)'
+                    e.currentTarget.style.border = '2px solid #8B5E3C'
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = plan.popular ? 'scale(1.02)' : 'scale(1)'
-                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)'
-                  e.currentTarget.style.border = plan.popular ? '2px solid #8B5E3C' : '1px solid #E5DDD5'
+                  if (plan.id !== 'basic') {
+                    e.currentTarget.style.transform = plan.popular ? 'scale(1.02)' : 'scale(1)'
+                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)'
+                    e.currentTarget.style.border = plan.popular ? '2px solid #8B5E3C' : formData.plan === plan.id ? '2px solid #8B5E3C' : '1px solid #E5DDD5'
+                  }
                 }}
               >
                 {(plan.popular || (plan.id !== 'basic' && plan.monthlyPrice > 0)) && (
@@ -252,7 +443,7 @@ export default function PaymentPage() {
                 }}>
                   {plan.displayPrice ? 
                     plan.displayPrice : 
-                    `$${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}`
+                    `${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}`
                   }
                   {!plan.displayPrice && (
                     <span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
@@ -275,65 +466,40 @@ export default function PaymentPage() {
                   ))}
                 </div>
 
-                {plan.usersCount && (
+                {formData.plan === plan.id && plan.id !== 'basic' && (
                   <div style={{
+                    background: '#8B5E3C',
+                    color: 'white',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
                     textAlign: 'center',
                     fontSize: '0.9rem',
-                    color: '#8B5E3C',
-                    fontWeight: '400',
-                    marginBottom: '1.5rem'
+                    fontWeight: '500',
+                    marginBottom: '1rem'
                   }}>
-                    {plan.usersCount}
+                    ✓ Selected
                   </div>
                 )}
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation() // Prevent card click from triggering
-                    handlePlanAction(plan)
-                  }}
-                  style={{
-                    width: '100%',
-                    background: plan.popular ? '#8B5E3C' : (plan.id === 'basic' ? '#25d366' : '#f7fafc'),
-                    color: plan.popular ? 'white' : (plan.id === 'basic' ? 'white' : '#8B5E3C'),
-                    border: plan.popular || plan.id === 'basic' ? 'none' : '1px solid #8B5E3C',
-                    padding: '12px 24px',
+                {plan.id === 'basic' && (
+                  <div style={{
+                    background: 'rgba(37, 211, 102, 0.1)',
+                    color: '#25d366',
+                    padding: '8px 16px',
                     borderRadius: '6px',
+                    textAlign: 'center',
                     fontSize: '0.9rem',
                     fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    const target = e.target as HTMLButtonElement
-                    if (plan.id === 'basic') {
-                      target.style.background = '#22c55e'
-                    } else if (plan.popular) {
-                      target.style.background = '#7c4a32'
-                    } else {
-                      target.style.background = '#8B5E3C'
-                      target.style.color = 'white'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    const target = e.target as HTMLButtonElement
-                    if (plan.id === 'basic') {
-                      target.style.background = '#25d366'
-                    } else if (plan.popular) {
-                      target.style.background = '#8B5E3C'
-                    } else {
-                      target.style.background = '#f7fafc'
-                      target.style.color = '#8B5E3C'
-                    }
-                  }}
-                >
-                  {plan.buttonText}
-                </button>
+                    marginBottom: '1rem',
+                    border: '1px solid rgba(37, 211, 102, 0.2)'
+                  }}>
+                    💬 Available on WhatsApp Only
+                  </div>
+                )}
               </div>
             ))}
           </div>
 
-          {/* Need Yaya for your Team */}
           <div style={{
             fontSize: '1.1rem',
             color: '#8B5E3C',
@@ -344,13 +510,6 @@ export default function PaymentPage() {
             <a href="mailto:info@textcoco.com" style={{ color: '#8B5E3C', textDecoration: 'underline' }}>
               Contact us
             </a>
-          </div>
-
-          <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-            <p style={{ color: '#718096', fontSize: '0.9rem' }}>
-              Questions? <a href="mailto:info@textcoco.com" style={{ color: '#8B5E3C', textDecoration: 'none' }}>Contact us</a> or message us on{' '}
-              <a href="https://wa.me/972559943649" style={{ color: '#8B5E3C', textDecoration: 'none' }}>WhatsApp</a>
-            </p>
           </div>
         </div>
       </main>
