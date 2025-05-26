@@ -7,7 +7,8 @@ export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState({
     plan: '',
     price: '',
-    billing: ''
+    billing: '',
+    code: ''
   })
 
   const [formData, setFormData] = useState({
@@ -24,7 +25,8 @@ export default function CheckoutPage() {
     setUrlParams({
       plan: params.get('plan') || '',
       price: params.get('price') || '',
-      billing: params.get('billing') || ''
+      billing: params.get('billing') || '',
+      code: params.get('code') || ''
     })
   }, [])
 
@@ -56,8 +58,8 @@ export default function CheckoutPage() {
       
       // Simulate 90% success rate for demo
       if (Math.random() > 0.1) {
-        // Redirect to success page
-        window.location.href = `/payment/success?plan=${urlParams.plan}&email=${formData.email}&price=${urlParams.price}`
+        // Redirect to success page with registration code
+        window.location.href = `/payment/success?plan=${urlParams.plan}&email=${formData.email}&price=${urlParams.price}&code=${urlParams.code}`
       } else {
         // Redirect to failed page
         window.location.href = '/payment/failed'
