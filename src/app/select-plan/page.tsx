@@ -113,7 +113,7 @@ export default function SelectPlanPage() {
       const registrationCode = Math.random().toString(36).substring(2, 8).toUpperCase()
       
       // Send data to n8n webhook
-      await fetch('https://n8nWebhookToStoreUser.com', {
+      await fetch('https://yairsabag.app.n8n.cloud/webhook/whatsapp-registration', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
