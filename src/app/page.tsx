@@ -201,6 +201,16 @@ export default function Home() {
     return () => observer.disconnect()
   }, [])
 
+  // FIXED: Now redirects to select-plan instead of checkout
+  const handlePlanAction = (planId: string) => {
+    if (planId === 'basic') {
+      window.open('https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0', '_blank')
+    } else {
+      // Redirect to select-plan page with pre-selected plan
+      window.location.href = `/select-plan?plan=${planId}&billing=${billingType}`
+    }
+  }
+
   return (
     <div style={{ fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
       <style jsx>{`
@@ -273,7 +283,7 @@ export default function Home() {
               Introducing Multi-Calendar Support 📅
             </span>
             <a
-              href="/payment"
+              href="/select-plan"
               style={{
                 background: '#2d5016',
                 color: 'white',
@@ -369,7 +379,7 @@ export default function Home() {
             </a>
           </div>
 
-          <a href="/payment" className="animate-on-scroll" style={{
+          <a href="/select-plan" className="animate-on-scroll" style={{
             background: '#2d5016',
             color: 'white',
             padding: '16px 32px',
@@ -598,8 +608,12 @@ export default function Home() {
               borderRadius: '20px',
               padding: '2.5rem 2rem',
               textAlign: 'left',
-              border: '1px solid #E5DDD5'
-            }}>
+              border: '1px solid #E5DDD5',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onClick={() => handlePlanAction('basic')}
+            >
               <div style={{ 
                 fontSize: '0.9rem', 
                 color: '#8B5E3C', 
@@ -659,8 +673,12 @@ export default function Home() {
               padding: '2.5rem 2rem',
               textAlign: 'left',
               position: 'relative',
-              border: '1px solid #E5DDD5'
-            }}>
+              border: '2px solid #8B5E3C',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onClick={() => handlePlanAction('executive')}
+            >
               <div style={{
                 position: 'absolute',
                 top: '1rem',
@@ -766,8 +784,12 @@ export default function Home() {
               padding: '2.5rem 2rem',
               textAlign: 'left',
               position: 'relative',
-              border: '1px solid #E5DDD5'
-            }}>
+              border: '1px solid #E5DDD5',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onClick={() => handlePlanAction('ultimate')}
+            >
               <div style={{
                 position: 'absolute',
                 top: '1rem',
