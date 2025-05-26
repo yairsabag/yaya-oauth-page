@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Check, MessageCircle } from 'lucide-react'
 
 export default function SelectPlanPage() {
@@ -12,6 +12,20 @@ export default function SelectPlanPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    // Check if plan was pre-selected from pricing page
+    const params = new URLSearchParams(window.location.search)
+    const preSelectedPlan = params.get('plan')
+    const preSelectedBilling = params.get('billing')
+    
+    if (preSelectedPlan) {
+      setFormData(prev => ({ ...prev, plan: preSelectedPlan }))
+    }
+    if (preSelectedBilling) {
+      setBillingType(preSelectedBilling)
+    }
+  }, [])
 
   const plans = [
     {
@@ -112,8 +126,15 @@ export default function SelectPlanPage() {
       // Generate unique registration code
       const registrationCode = Math.random().toString(36).substring(2, 8).toUpperCase()
       
+      console.log('Sending webhook data:', {
+        phone: formData.phone,
+        email: formData.email,
+        plan: formData.plan,
+        registration_code: registrationCode
+      })
+      
       // Send data to n8n webhook
-      await fetch('https://yairsabag.app.n8n.cloud/webhook-test/whatsapp-registration', {
+      const response = await fetch('https://yairsabag.app.n8n.cloud/webhook-test/whatsapp-registration', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -126,6 +147,9 @@ export default function SelectPlanPage() {
         })
       })
       
+      console.log('Webhook response status:', response.status)
+      console.log('Webhook response:', await response.text())
+      
       // Get plan details for checkout
       const plan = plans.find(p => p.id === formData.plan)
       const price = billingType === 'yearly' ? plan?.yearlyPrice : plan?.monthlyPrice
@@ -134,7 +158,7 @@ export default function SelectPlanPage() {
       window.location.href = `/payment/checkout?plan=${formData.plan}&price=${price}&billing=${billingType}&code=${registrationCode}&email=${formData.email}`
       
     } catch (error) {
-      console.error('Error saving user data:', error)
+      console.error('Webhook error:', error)
       // Still proceed to checkout even if webhook fails
       const plan = plans.find(p => p.id === formData.plan)
       const price = billingType === 'yearly' ? plan?.yearlyPrice : plan?.monthlyPrice
