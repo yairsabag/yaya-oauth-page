@@ -5,9 +5,13 @@ import { Check, MessageCircle } from 'lucide-react'
 
 export default function SelectPlanPage() {
   const [billingType, setBillingType] = useState('monthly')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+  const [formData, setFormData] = useState({
+    phone: '',
+    email: '',
+    plan: ''
+  })
   const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const plans = [
     {
@@ -79,35 +83,64 @@ export default function SelectPlanPage() {
     }
   ]
 
-  const handlePlanSelection = async (plan: typeof plans[0]) => {
-    if (plan.buttonAction === 'whatsapp') {
+  const handlePlanSelection = (planId: string) => {
+    setFormData({ ...formData, plan: planId })
+    
+    if (planId === 'basic') {
       // For free plan, redirect to WhatsApp directly
       window.open('https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0', '_blank')
+    }
+  }
+
+  const handleSubmit = async () => {
+    setIsLoading(true)
+    setErrors({})
+
+    // Validate form
+    const newErrors: Record<string, string> = {}
+    if (!formData.email) newErrors.email = 'Email is required'
+    if (!formData.phone) newErrors.phone = 'Phone number is required'
+    if (!formData.plan) newErrors.plan = 'Please select a plan'
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      setIsLoading(false)
       return
     }
 
-    // For paid plans, we need phone number first
-    setSelectedPlan(plan.id)
-  }
-
-  const handleProceedToPayment = async () => {
-    if (!phoneNumber || !selectedPlan) return
-
-    setIsLoading(true)
     try {
-      // Generate a registration code (in real implementation, this would be done server-side)
+      // Generate unique registration code
       const registrationCode = Math.random().toString(36).substring(2, 8).toUpperCase()
       
-      // Store phone number with registration code (this would be API call in real implementation)
-      // For now, just proceed to checkout
+      // Send data to n8n webhook
+      await fetch('https://n8nWebhookToStoreUser.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          phone: formData.phone,
+          email: formData.email,
+          plan: formData.plan,
+          registration_code: registrationCode
+        })
+      })
       
-      const plan = plans.find(p => p.id === selectedPlan)
+      // Get plan details for checkout
+      const plan = plans.find(p => p.id === formData.plan)
       const price = billingType === 'yearly' ? plan?.yearlyPrice : plan?.monthlyPrice
       
-      // Redirect to checkout with registration code
-      window.location.href = `/payment/checkout?plan=${selectedPlan}&price=${price}&billing=${billingType}&code=${registrationCode}`
+      // Redirect to checkout with all parameters including email
+      window.location.href = `/payment/checkout?plan=${formData.plan}&price=${price}&billing=${billingType}&code=${registrationCode}&email=${formData.email}`
+      
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error saving user data:', error)
+      // Still proceed to checkout even if webhook fails
+      const plan = plans.find(p => p.id === formData.plan)
+      const price = billingType === 'yearly' ? plan?.yearlyPrice : plan?.monthlyPrice
+      const registrationCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+      
+      window.location.href = `/payment/checkout?plan=${formData.plan}&price=${price}&billing=${billingType}&code=${registrationCode}&email=${formData.email}`
     } finally {
       setIsLoading(false)
     }
@@ -196,78 +229,155 @@ export default function SelectPlanPage() {
             </div>
           </div>
 
-          {/* Phone Number Input (only show if paid plan selected) */}
-          {selectedPlan && selectedPlan !== 'basic' && (
-            <div style={{ maxWidth: '500px', margin: '0 auto 3rem', background: '#F5F1EB', borderRadius: '20px', padding: '2rem', border: '1px solid #E5DDD5' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem', textAlign: 'center' }}>
-                📱 Enter Your WhatsApp Number
-              </h3>
-              <p style={{ color: '#8B5E3C', fontSize: '0.9rem', marginBottom: '1rem', textAlign: 'center', opacity: 0.8 }}>
-                We'll connect your subscription to your WhatsApp account
-              </p>
+          {/* Contact Form */}
+          <div style={{ maxWidth: '500px', margin: '0 auto 3rem', background: '#F5F1EB', borderRadius: '20px', padding: '2rem', border: '1px solid #E5DDD5' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem', textAlign: 'center' }}>
+              📞 Contact Information
+            </h3>
+            <p style={{ color: '#8B5E3C', fontSize: '0.9rem', marginBottom: '1.5rem', textAlign: 'center', opacity: 0.8 }}>
+              Enter your details to get started with Yaya
+            </p>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                Email Address *
+              </label>
               <input
-                type="tel"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+972-50-123-4567"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="your@email.com"
                 style={{
                   width: '100%',
                   padding: '12px',
-                  border: '1px solid #E5DDD5',
+                  border: errors.email ? '1px solid #ef4444' : '1px solid #E5DDD5',
                   borderRadius: '8px',
                   fontSize: '1rem',
-                  marginBottom: '1rem',
+                  marginBottom: '0.5rem',
                   boxSizing: 'border-box',
                   background: 'white'
                 }}
               />
-              <button
-                onClick={handleProceedToPayment}
-                disabled={!phoneNumber || isLoading}
+              {errors.email && <p style={{ color: '#ef4444', fontSize: '0.8rem' }}>{errors.email}</p>}
+            </div>
+
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                Phone Number *
+              </label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="+972-50-123-4567"
                 style={{
                   width: '100%',
-                  padding: '12px 24px',
-                  background: !phoneNumber || isLoading ? '#9ca3af' : '#8B5E3C',
-                  color: 'white',
-                  border: 'none',
+                  padding: '12px',
+                  border: errors.phone ? '1px solid #ef4444' : '1px solid #E5DDD5',
                   borderRadius: '8px',
                   fontSize: '1rem',
-                  fontWeight: '600',
-                  cursor: !phoneNumber || isLoading ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease'
+                  marginBottom: '0.5rem',
+                  boxSizing: 'border-box',
+                  background: 'white'
                 }}
-              >
-                {isLoading ? 'Processing...' : 'Continue to Payment'}
-              </button>
+              />
+              {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.8rem' }}>{errors.phone}</p>}
             </div>
-          )}
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                Select Plan *
+              </label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => handlePlanSelection('executive')}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    background: formData.plan === 'executive' ? '#8B5E3C' : 'white',
+                    color: formData.plan === 'executive' ? 'white' : '#8B5E3C',
+                    border: '1px solid #8B5E3C',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Executive Plan
+                </button>
+                <button
+                  onClick={() => handlePlanSelection('ultimate')}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    background: formData.plan === 'ultimate' ? '#8B5E3C' : 'white',
+                    color: formData.plan === 'ultimate' ? 'white' : '#8B5E3C',
+                    border: '1px solid #8B5E3C',
+                    borderRadius: '6px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Ultimate Plan
+                </button>
+              </div>
+              {errors.plan && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.5rem' }}>{errors.plan}</p>}
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              style={{
+                width: '100%',
+                padding: '12px 24px',
+                background: isLoading ? '#9ca3af' : '#8B5E3C',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '1rem',
+                fontWeight: '600',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {isLoading ? 'Processing...' : 'Continue to Payment'}
+            </button>
+          </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
             {plans.map((plan) => (
               <div
                 key={plan.id}
-                onClick={() => handlePlanSelection(plan)}
+                onClick={() => handlePlanSelection(plan.id)}
                 style={{
-                  background: selectedPlan === plan.id ? 'rgba(139, 94, 60, 0.1)' : '#F5F1EB',
+                  background: formData.plan === plan.id ? 'rgba(139, 94, 60, 0.1)' : '#F5F1EB',
                   borderRadius: '20px',
                   padding: '2.5rem 2rem',
                   textAlign: 'left',
                   position: 'relative',
-                  border: plan.popular ? '2px solid #8B5E3C' : selectedPlan === plan.id ? '2px solid #8B5E3C' : '1px solid #E5DDD5',
+                  border: plan.popular ? '2px solid #8B5E3C' : formData.plan === plan.id ? '2px solid #8B5E3C' : '1px solid #E5DDD5',
                   transform: plan.popular ? 'scale(1.02)' : 'none',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                  opacity: plan.id === 'basic' ? 0.7 : 1
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = plan.popular ? 'scale(1.05)' : 'scale(1.02)'
-                  e.currentTarget.style.boxShadow = '0 20px 25px rgba(139, 94, 60, 0.15)'
-                  e.currentTarget.style.border = '2px solid #8B5E3C'
+                  if (plan.id !== 'basic') {
+                    e.currentTarget.style.transform = plan.popular ? 'scale(1.05)' : 'scale(1.02)'
+                    e.currentTarget.style.boxShadow = '0 20px 25px rgba(139, 94, 60, 0.15)'
+                    e.currentTarget.style.border = '2px solid #8B5E3C'
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = plan.popular ? 'scale(1.02)' : 'scale(1)'
-                  e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)'
-                  e.currentTarget.style.border = plan.popular ? '2px solid #8B5E3C' : selectedPlan === plan.id ? '2px solid #8B5E3C' : '1px solid #E5DDD5'
+                  if (plan.id !== 'basic') {
+                    e.currentTarget.style.transform = plan.popular ? 'scale(1.02)' : 'scale(1)'
+                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)'
+                    e.currentTarget.style.border = plan.popular ? '2px solid #8B5E3C' : formData.plan === plan.id ? '2px solid #8B5E3C' : '1px solid #E5DDD5'
+                  }
                 }}
               >
                 {(plan.popular || (plan.id !== 'basic' && plan.monthlyPrice > 0)) && (
@@ -332,7 +442,7 @@ export default function SelectPlanPage() {
                   ))}
                 </div>
 
-                {selectedPlan === plan.id && (
+                {formData.plan === plan.id && plan.id !== 'basic' && (
                   <div style={{
                     background: '#8B5E3C',
                     color: 'white',
@@ -344,6 +454,22 @@ export default function SelectPlanPage() {
                     marginBottom: '1rem'
                   }}>
                     ✓ Selected
+                  </div>
+                )}
+
+                {plan.id === 'basic' && (
+                  <div style={{
+                    background: 'rgba(37, 211, 102, 0.1)',
+                    color: '#25d366',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    textAlign: 'center',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    marginBottom: '1rem',
+                    border: '1px solid rgba(37, 211, 102, 0.2)'
+                  }}>
+                    💬 Available on WhatsApp Only
                   </div>
                 )}
               </div>
