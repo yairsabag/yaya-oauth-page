@@ -466,14 +466,16 @@ export default function PaymentPage() {
                 }}
                 onMouseEnter={(e) => {
                   if (!isLoading) {
-                    (e.target as HTMLButtonElement).style.background = '#7c4a32'
-                    (e.target as HTMLButtonElement).style.transform = 'translateY(-2px)'
+                    const target = e.target as HTMLButtonElement
+                    target.style.backgroundColor = '#7c4a32'
+                    target.style.transform = 'translateY(-2px)'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isLoading) {
-                    (e.target as HTMLButtonElement).style.background = '#8B5E3C'
-                    (e.target as HTMLButtonElement).style.transform = 'translateY(0)'
+                    const target = e.target as HTMLButtonElement
+                    target.style.backgroundColor = '#8B5E3C'
+                    target.style.transform = 'translateY(0)'
                   }
                 }}
               >
