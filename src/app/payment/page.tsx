@@ -8,12 +8,52 @@ export default function PaymentPage() {
   const [formData, setFormData] = useState({
     phone: '',
     email: '',
-    plan: ''
+    plan: '',
+    countryCode: '+972'
   })
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showContactForm, setShowContactForm] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState('')
+
+  const countries = [
+    { code: '+972', name: 'Israel', flag: '🇮🇱' },
+    { code: '+1', name: 'United States', flag: '🇺🇸' },
+    { code: '+1', name: 'Canada', flag: '🇨🇦' },
+    { code: '+44', name: 'United Kingdom', flag: '🇬🇧' },
+    { code: '+33', name: 'France', flag: '🇫🇷' },
+    { code: '+49', name: 'Germany', flag: '🇩🇪' },
+    { code: '+39', name: 'Italy', flag: '🇮🇹' },
+    { code: '+34', name: 'Spain', flag: '🇪🇸' },
+    { code: '+31', name: 'Netherlands', flag: '🇳🇱' },
+    { code: '+32', name: 'Belgium', flag: '🇧🇪' },
+    { code: '+41', name: 'Switzerland', flag: '🇨🇭' },
+    { code: '+43', name: 'Austria', flag: '🇦🇹' },
+    { code: '+46', name: 'Sweden', flag: '🇸🇪' },
+    { code: '+47', name: 'Norway', flag: '🇳🇴' },
+    { code: '+45', name: 'Denmark', flag: '🇩🇰' },
+    { code: '+358', name: 'Finland', flag: '🇫🇮' },
+    { code: '+351', name: 'Portugal', flag: '🇵🇹' },
+    { code: '+30', name: 'Greece', flag: '🇬🇷' },
+    { code: '+48', name: 'Poland', flag: '🇵🇱' },
+    { code: '+420', name: 'Czech Republic', flag: '🇨🇿' },
+    { code: '+36', name: 'Hungary', flag: '🇭🇺' },
+    { code: '+7', name: 'Russia', flag: '🇷🇺' },
+    { code: '+81', name: 'Japan', flag: '🇯🇵' },
+    { code: '+82', name: 'South Korea', flag: '🇰🇷' },
+    { code: '+86', name: 'China', flag: '🇨🇳' },
+    { code: '+91', name: 'India', flag: '🇮🇳' },
+    { code: '+61', name: 'Australia', flag: '🇦🇺' },
+    { code: '+64', name: 'New Zealand', flag: '🇳🇿' },
+    { code: '+55', name: 'Brazil', flag: '🇧🇷' },
+    { code: '+52', name: 'Mexico', flag: '🇲🇽' },
+    { code: '+54', name: 'Argentina', flag: '🇦🇷' },
+    { code: '+56', name: 'Chile', flag: '🇨🇱' },
+    { code: '+27', name: 'South Africa', flag: '🇿🇦' },
+    { code: '+971', name: 'UAE', flag: '🇦🇪' },
+    { code: '+966', name: 'Saudi Arabia', flag: '🇸🇦' },
+    { code: '+90', name: 'Turkey', flag: '🇹🇷' }
+  ]
 
   const plans = [
     {
@@ -134,7 +174,7 @@ export default function PaymentPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          phone: formData.phone,
+          phone: formData.countryCode + formData.phone,
           email: formData.email,
           plan: formData.plan,
           registration_code: registrationCode
@@ -417,26 +457,49 @@ export default function PaymentPage() {
                 <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#2d5016', marginBottom: '0.5rem' }}>
                   Phone Number *
                 </label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="+972-50-123-4567"
-                  style={{
-                    width: '100%',
-                    padding: '14px',
-                    border: errors.phone ? '2px solid #ef4444' : '1px solid #c3d9c6',
-                    borderRadius: '10px',
-                    fontSize: '1rem',
-                    marginBottom: '0.5rem',
-                    boxSizing: 'border-box',
-                    background: 'white',
-                    transition: 'border-color 0.2s ease'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#2d5016'}
-                  onBlur={(e) => e.target.style.borderColor = errors.phone ? '#ef4444' : '#c3d9c6'}
-                />
-                {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.9rem' }}>{errors.phone}</p>}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <select
+                    value={formData.countryCode}
+                    onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
+                    style={{
+                      padding: '14px 10px',
+                      border: '1px solid #c3d9c6',
+                      borderRadius: '10px',
+                      fontSize: '1rem',
+                      background: 'white',
+                      minWidth: '120px',
+                      cursor: 'pointer',
+                      transition: 'border-color 0.2s ease'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#2d5016'}
+                    onBlur={(e) => e.target.style.borderColor = '#c3d9c6'}
+                  >
+                    {countries.map((country) => (
+                      <option key={`${country.code}-${country.name}`} value={country.code}>
+                        {country.flag} {country.code}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="50-123-4567"
+                    style={{
+                      flex: 1,
+                      padding: '14px',
+                      border: errors.phone ? '2px solid #ef4444' : '1px solid #c3d9c6',
+                      borderRadius: '10px',
+                      fontSize: '1rem',
+                      boxSizing: 'border-box',
+                      background: 'white',
+                      transition: 'border-color 0.2s ease'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#2d5016'}
+                    onBlur={(e) => e.target.style.borderColor = errors.phone ? '#ef4444' : '#c3d9c6'}
+                  />
+                </div>
+                {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '0.5rem' }}>{errors.phone}</p>}
               </div>
 
               <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(45, 80, 22, 0.1)', borderRadius: '10px', border: '1px solid rgba(45, 80, 22, 0.2)' }}>
