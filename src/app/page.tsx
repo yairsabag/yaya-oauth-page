@@ -201,13 +201,13 @@ export default function Home() {
     return () => observer.disconnect()
   }, [])
 
-  // FIXED: Now redirects to select-plan instead of checkout
+  // UPDATED: Now redirects to /payment instead of select-plan
   const handlePlanAction = (planId: string) => {
     if (planId === 'basic') {
       window.open('https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0', '_blank')
     } else {
-      // Redirect to select-plan page with pre-selected plan
-      window.location.href = `/select-plan?plan=${planId}&billing=${billingType}`
+      // Redirect to payment page with pre-selected plan
+      window.location.href = `/payment?plan=${planId}&billing=${billingType}`
     }
   }
 
@@ -283,7 +283,7 @@ export default function Home() {
               Introducing Multi-Calendar Support 📅
             </span>
             <a
-              href="/select-plan"
+              href="/payment"
               style={{
                 background: '#2d5016',
                 color: 'white',
@@ -379,7 +379,7 @@ export default function Home() {
             </a>
           </div>
 
-          <a href="/select-plan" className="animate-on-scroll" style={{
+          <a href="/payment" className="animate-on-scroll" style={{
             background: '#2d5016',
             color: 'white',
             padding: '16px 32px',
@@ -742,6 +742,97 @@ export default function Home() {
                 </div>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  500 Voice Notes / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 Image Analysis / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 Internet Searches
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Send/Receive reminders with friends
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  AI Memory of You
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Create Lists
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Need Yaya for your Team */}
+          <div className="animate-on-scroll" style={{
+            fontSize: '1.1rem',
+            color: '#8B5E3C',
+            marginTop: '3rem',
+            textAlign: 'center'
+          }}>
+            Need Yaya for your Team?
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer style={{ background: '#1a202c', color: '#a0aec0', padding: '3rem 0' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', textAlign: 'center' }}>
+          <div style={{ marginBottom: '2rem' }}>
+            <span style={{ fontSize: '1.5rem', fontWeight: '500', color: 'white' }}>Yaya</span>
+          </div>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '2rem',
+            flexWrap: 'wrap',
+            fontSize: '0.875rem'
+          }}>
+            <a href="/privacy-policy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
+            <a href="/terms-of-service" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Service</a>
+            <a href="/posts" style={{ color: 'inherit', textDecoration: 'none' }}>Blog</a>
+            <a href="https://discord.gg/BRxAAq47xv" style={{ color: 'inherit', textDecoration: 'none' }}>Discord</a>
+            <a href="https://x.com/textcoco" style={{ color: 'inherit', textDecoration: 'none' }}>X/Twitter</a>
+            <a href="mailto:info@textcoco.com" style={{ color: 'inherit', textDecoration: 'none' }}>info@textcoco.com</a>
+          </div>
+        </div>
+      </footer>
+
+      {/* WhatsApp Floating Button */}
+      <a
+        title="Chat with Yaya on WhatsApp"
+        href="https://wa.me/972559943649"
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          background: '#25d366',
+          color: 'white',
+          borderRadius: '50%',
+          width: '56px',
+          height: '56px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textDecoration: 'none',
+          boxShadow: '0 8px 25px rgba(37, 211, 102, 0.4)',
+          zIndex: 1000,
+          transition: 'transform 0.3s ease'
+        }}
+        onMouseEnter={(e) => (e.target as HTMLElement).style.transform = 'scale(1.1)'}
+        onMouseLeave={(e) => (e.target as HTMLElement).style.transform = 'scale(1)'}
+      >
+        <MessageCircle size={24} />
+      </a>
+    </div>
+  )
+}', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
                   100 Voice Notes / Month
                 </div>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
@@ -851,95 +942,4 @@ export default function Home() {
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
                   Google / Outlook Calendar
                 </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  500 Voice Notes / Month
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100 Image Analysis / Month
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100 Internet Searches
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Send/Receive reminders with friends
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  AI Memory of You
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Create Lists
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Need Yaya for your Team */}
-          <div className="animate-on-scroll" style={{
-            fontSize: '1.1rem',
-            color: '#8B5E3C',
-            marginTop: '3rem',
-            textAlign: 'center'
-          }}>
-            Need Yaya for your Team?
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer style={{ background: '#1a202c', color: '#a0aec0', padding: '3rem 0' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', textAlign: 'center' }}>
-          <div style={{ marginBottom: '2rem' }}>
-            <span style={{ fontSize: '1.5rem', fontWeight: '500', color: 'white' }}>Yaya</span>
-          </div>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '2rem',
-            flexWrap: 'wrap',
-            fontSize: '0.875rem'
-          }}>
-            <a href="/privacy-policy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
-            <a href="/terms-of-service" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Service</a>
-            <a href="/posts" style={{ color: 'inherit', textDecoration: 'none' }}>Blog</a>
-            <a href="https://discord.gg/BRxAAq47xv" style={{ color: 'inherit', textDecoration: 'none' }}>Discord</a>
-            <a href="https://x.com/textcoco" style={{ color: 'inherit', textDecoration: 'none' }}>X/Twitter</a>
-            <a href="mailto:info@textcoco.com" style={{ color: 'inherit', textDecoration: 'none' }}>info@textcoco.com</a>
-          </div>
-        </div>
-      </footer>
-
-      {/* WhatsApp Floating Button */}
-      <a
-        title="Chat with Yaya on WhatsApp"
-        href="https://wa.me/972559943649"
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          background: '#25d366',
-          color: 'white',
-          borderRadius: '50%',
-          width: '56px',
-          height: '56px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textDecoration: 'none',
-          boxShadow: '0 8px 25px rgba(37, 211, 102, 0.4)',
-          zIndex: 1000,
-          transition: 'transform 0.3s ease'
-        }}
-        onMouseEnter={(e) => (e.target as HTMLElement).style.transform = 'scale(1.1)'}
-        onMouseLeave={(e) => (e.target as HTMLElement).style.transform = 'scale(1)'}
-      >
-        <MessageCircle size={24} />
-      </a>
-    </div>
-  )
-}
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem
