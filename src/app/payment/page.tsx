@@ -189,7 +189,7 @@ export default function PaymentPage() {
             <h1 style={{ 
               fontSize: '3rem', 
               fontWeight: '400', 
-              color: '#8B5E3C', 
+              color: '#2d5016', 
               marginBottom: '1.5rem',
               letterSpacing: '-0.02em'
             }}>
@@ -216,7 +216,7 @@ export default function PaymentPage() {
                 onClick={() => setBillingType('yearly')}
                 style={{
                   background: billingType === 'yearly' ? 'white' : 'transparent',
-                  color: billingType === 'yearly' ? '#8B5E3C' : '#999',
+                  color: billingType === 'yearly' ? '#2d5016' : '#999',
                   padding: '8px 20px',
                   borderRadius: '6px',
                   fontSize: '1.1rem',
@@ -232,7 +232,7 @@ export default function PaymentPage() {
                 onClick={() => setBillingType('monthly')}
                 style={{
                   background: billingType === 'monthly' ? 'white' : 'transparent',
-                  color: billingType === 'monthly' ? '#8B5E3C' : '#999',
+                  color: billingType === 'monthly' ? '#2d5016' : '#999',
                   padding: '8px 20px',
                   borderRadius: '6px',
                   fontSize: '1.1rem',
@@ -254,12 +254,12 @@ export default function PaymentPage() {
                 key={plan.id}
                 onClick={() => handlePlanSelection(plan.id)}
                 style={{
-                  background: selectedPlan === plan.id ? 'rgba(139, 94, 60, 0.1)' : '#F5F1EB',
+                  background: selectedPlan === plan.id ? 'rgba(45, 80, 22, 0.1)' : '#F5F1EB',
                   borderRadius: '20px',
                   padding: '2.5rem 2rem',
                   textAlign: 'left',
                   position: 'relative',
-                  border: plan.popular ? '2px solid #8B5E3C' : selectedPlan === plan.id ? '2px solid #8B5E3C' : '1px solid #E5DDD5',
+                  border: plan.popular ? '2px solid #2d5016' : selectedPlan === plan.id ? '2px solid #2d5016' : '1px solid #c3d9c6',
                   transform: plan.popular ? 'scale(1.02)' : 'none',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
@@ -269,15 +269,15 @@ export default function PaymentPage() {
                 onMouseEnter={(e) => {
                   if (plan.id !== 'basic') {
                     e.currentTarget.style.transform = plan.popular ? 'scale(1.05)' : 'scale(1.02)'
-                    e.currentTarget.style.boxShadow = '0 20px 25px rgba(139, 94, 60, 0.15)'
-                    e.currentTarget.style.border = '2px solid #8B5E3C'
+                    e.currentTarget.style.boxShadow = '0 20px 25px rgba(45, 80, 22, 0.15)'
+                    e.currentTarget.style.border = '2px solid #2d5016'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (plan.id !== 'basic') {
                     e.currentTarget.style.transform = plan.popular ? 'scale(1.02)' : 'scale(1)'
                     e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)'
-                    e.currentTarget.style.border = plan.popular ? '2px solid #8B5E3C' : selectedPlan === plan.id ? '2px solid #8B5E3C' : '1px solid #E5DDD5'
+                    e.currentTarget.style.border = plan.popular ? '2px solid #2d5016' : selectedPlan === plan.id ? '2px solid #2d5016' : '1px solid #c3d9c6'
                   }
                 }}
               >
@@ -286,7 +286,7 @@ export default function PaymentPage() {
                     position: 'absolute',
                     top: '1rem',
                     right: '1rem',
-                    background: '#8B5E3C',
+                    background: '#2d5016',
                     color: 'white',
                     padding: '4px 12px',
                     borderRadius: '12px',
@@ -299,7 +299,7 @@ export default function PaymentPage() {
 
                 <div style={{ 
                   fontSize: '0.9rem', 
-                  color: '#8B5E3C', 
+                  color: '#2d5016', 
                   fontWeight: '500', 
                   marginBottom: '0.5rem',
                   textTransform: 'uppercase',
@@ -311,7 +311,7 @@ export default function PaymentPage() {
                 <div style={{ 
                   fontSize: '4rem', 
                   fontWeight: '300', 
-                  color: '#8B5E3C', 
+                  color: '#2d5016', 
                   marginBottom: plan.id === 'basic' ? '2rem' : '0.5rem',
                   lineHeight: '1',
                   display: 'flex',
@@ -330,14 +330,14 @@ export default function PaymentPage() {
                 <div style={{ marginBottom: '2rem' }}>
                   {plan.features.map((feature, index) => (
                     <div key={index} style={{ 
-                      color: '#8B5E3C', 
+                      color: '#2d5016', 
                       marginBottom: '0.75rem', 
                       fontSize: '0.95rem', 
                       display: 'flex', 
                       alignItems: 'flex-start', 
                       gap: '8px' 
                     }}>
-                      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                      <span style={{ color: '#2d5016', fontSize: '1rem' }}>•</span>
                       {feature}
                     </div>
                   ))}
@@ -345,7 +345,7 @@ export default function PaymentPage() {
 
                 {selectedPlan === plan.id && plan.id !== 'basic' && (
                   <div style={{
-                    background: '#8B5E3C',
+                    background: '#2d5016',
                     color: 'white',
                     padding: '8px 16px',
                     borderRadius: '6px',
@@ -379,16 +379,16 @@ export default function PaymentPage() {
 
           {/* Contact Form - Only shows when a paid plan is selected */}
           {showContactForm && selectedPlan && (
-            <div id="contact-form" style={{ maxWidth: '600px', margin: '0 auto 3rem', background: '#F5F1EB', borderRadius: '20px', padding: '2.5rem', border: '2px solid #8B5E3C', boxShadow: '0 10px 30px rgba(139, 94, 60, 0.2)' }}>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem', textAlign: 'center' }}>
+            <div id="contact-form" style={{ maxWidth: '600px', margin: '0 auto 3rem', background: '#F5F1EB', borderRadius: '20px', padding: '2.5rem', border: '2px solid #2d5016', boxShadow: '0 10px 30px rgba(45, 80, 22, 0.2)' }}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: '600', color: '#2d5016', marginBottom: '1rem', textAlign: 'center' }}>
                 📞 Complete Your Registration
               </h3>
-              <p style={{ color: '#8B5E3C', fontSize: '1rem', marginBottom: '1.5rem', textAlign: 'center', opacity: 0.8 }}>
+              <p style={{ color: '#2d5016', fontSize: '1rem', marginBottom: '1.5rem', textAlign: 'center', opacity: 0.8 }}>
                 Enter your contact details to start your 7-day free trial
               </p>
               
               <div style={{ marginBottom: '1.2rem' }}>
-                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#2d5016', marginBottom: '0.5rem' }}>
                   Email Address *
                 </label>
                 <input
@@ -399,7 +399,7 @@ export default function PaymentPage() {
                   style={{
                     width: '100%',
                     padding: '14px',
-                    border: errors.email ? '2px solid #ef4444' : '1px solid #E5DDD5',
+                    border: errors.email ? '2px solid #ef4444' : '1px solid #c3d9c6',
                     borderRadius: '10px',
                     fontSize: '1rem',
                     marginBottom: '0.5rem',
@@ -407,14 +407,14 @@ export default function PaymentPage() {
                     background: 'white',
                     transition: 'border-color 0.2s ease'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#8B5E3C'}
-                  onBlur={(e) => e.target.style.borderColor = errors.email ? '#ef4444' : '#E5DDD5'}
+                  onFocus={(e) => e.target.style.borderColor = '#2d5016'}
+                  onBlur={(e) => e.target.style.borderColor = errors.email ? '#ef4444' : '#c3d9c6'}
                 />
                 {errors.email && <p style={{ color: '#ef4444', fontSize: '0.9rem' }}>{errors.email}</p>}
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                <label style={{ display: 'block', fontSize: '1rem', fontWeight: '600', color: '#2d5016', marginBottom: '0.5rem' }}>
                   Phone Number *
                 </label>
                 <input
@@ -425,7 +425,7 @@ export default function PaymentPage() {
                   style={{
                     width: '100%',
                     padding: '14px',
-                    border: errors.phone ? '2px solid #ef4444' : '1px solid #E5DDD5',
+                    border: errors.phone ? '2px solid #ef4444' : '1px solid #c3d9c6',
                     borderRadius: '10px',
                     fontSize: '1rem',
                     marginBottom: '0.5rem',
@@ -433,17 +433,17 @@ export default function PaymentPage() {
                     background: 'white',
                     transition: 'border-color 0.2s ease'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#8B5E3C'}
-                  onBlur={(e) => e.target.style.borderColor = errors.phone ? '#ef4444' : '#E5DDD5'}
+                  onFocus={(e) => e.target.style.borderColor = '#2d5016'}
+                  onBlur={(e) => e.target.style.borderColor = errors.phone ? '#ef4444' : '#c3d9c6'}
                 />
                 {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.9rem' }}>{errors.phone}</p>}
               </div>
 
-              <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(139, 94, 60, 0.1)', borderRadius: '10px', border: '1px solid rgba(139, 94, 60, 0.2)' }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+              <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(45, 80, 22, 0.1)', borderRadius: '10px', border: '1px solid rgba(45, 80, 22, 0.2)' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#2d5016', marginBottom: '0.5rem' }}>
                   Selected Plan: {plans.find(p => p.id === selectedPlan)?.name}
                 </h4>
-                <p style={{ color: '#8B5E3C', fontSize: '0.9rem', opacity: 0.8 }}>
+                <p style={{ color: '#2d5016', fontSize: '0.9rem', opacity: 0.8 }}>
                   ${billingType === 'yearly' ? plans.find(p => p.id === selectedPlan)?.yearlyPrice : plans.find(p => p.id === selectedPlan)?.monthlyPrice}/{billingType === 'yearly' ? 'year' : 'month'} • 7-day free trial
                 </p>
               </div>
@@ -454,7 +454,7 @@ export default function PaymentPage() {
                 style={{
                   width: '100%',
                   padding: '16px 24px',
-                  background: isLoading ? '#9ca3af' : '#8B5E3C',
+                  background: isLoading ? '#9ca3af' : '#2d5016',
                   color: 'white',
                   border: 'none',
                   borderRadius: '10px',
@@ -462,27 +462,27 @@ export default function PaymentPage() {
                   fontWeight: '600',
                   cursor: isLoading ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
-                  boxShadow: '0 4px 12px rgba(139, 94, 60, 0.3)'
+                  boxShadow: '0 4px 12px rgba(45, 80, 22, 0.3)'
                 }}
                 onMouseEnter={(e) => {
                   if (!isLoading) {
                     const target = e.target as HTMLButtonElement
-                    target.style.backgroundColor = '#7c4a32'
+                    target.style.backgroundColor = '#1e3a0f'
                     target.style.transform = 'translateY(-2px)'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isLoading) {
                     const target = e.target as HTMLButtonElement
-                    target.style.backgroundColor = '#8B5E3C'
+                    target.style.backgroundColor = '#2d5016'
                     target.style.transform = 'translateY(0)'
                   }
                 }}
               >
-                {isLoading ? 'Processing...' : 'Start Free Trial'}
+                {isLoading ? 'Processing...' : 'Continue to Payment'}
               </button>
 
-              <p style={{ fontSize: '0.8rem', color: '#8B5E3C', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
+              <p style={{ fontSize: '0.8rem', color: '#2d5016', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
                 By continuing, you agree to our Terms of Service and Privacy Policy. Cancel anytime during your free trial.
               </p>
             </div>
@@ -490,12 +490,12 @@ export default function PaymentPage() {
 
           <div style={{
             fontSize: '1.1rem',
-            color: '#8B5E3C',
+            color: '#2d5016',
             marginTop: '3rem',
             textAlign: 'center'
           }}>
             Need Yaya for your Team?{' '}
-            <a href="mailto:info@textcoco.com" style={{ color: '#8B5E3C', textDecoration: 'underline' }}>
+            <a href="mailto:info@textcoco.com" style={{ color: '#2d5016', textDecoration: 'underline' }}>
               Contact us
             </a>
           </div>
