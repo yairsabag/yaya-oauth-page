@@ -1,3 +1,4 @@
+// עדכון RegistrationContext.tsx עם debug logs
 'use client'
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
@@ -20,23 +21,30 @@ export function RegistrationProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
+    console.log('🔍 RegistrationContext useEffect triggered')
+    console.log('🔍 Current URL params:', Object.fromEntries(searchParams.entries()))
+    console.log('🔍 Current registrationCode state:', registrationCode)
+    
     // קבלת הקוד מה-URL בכל טעינת דף
     const codeFromUrl = searchParams.get('code')
+    console.log('🔍 Code from URL:', codeFromUrl)
     
     if (codeFromUrl && codeFromUrl !== registrationCode) {
-      console.log('Registration code found in URL:', codeFromUrl)
+      console.log('✅ Setting new registration code from URL:', codeFromUrl)
       setRegistrationCode(codeFromUrl)
       
       // שמירה ב-localStorage לגיבוי
       if (typeof window !== 'undefined') {
         localStorage.setItem('registrationCode', codeFromUrl)
+        console.log('💾 Saved to localStorage:', codeFromUrl)
       }
     } else if (!codeFromUrl && !registrationCode) {
       // אם אין בURL, נסה לקחת מlocalStorage
       if (typeof window !== 'undefined') {
         const savedCode = localStorage.getItem('registrationCode')
+        console.log('💾 Checking localStorage:', savedCode)
         if (savedCode) {
-          console.log('Registration code restored from localStorage:', savedCode)
+          console.log('✅ Restored registration code from localStorage:', savedCode)
           setRegistrationCode(savedCode)
         }
       }
@@ -45,20 +53,32 @@ export function RegistrationProvider({ children }: { children: ReactNode }) {
 
   // פונקציה לניווט עם שמירת הקוד
   const navigateWithCode = (path: string) => {
+    console.log('🚀 navigateWithCode called with:', path)
+    console.log('🚀 Current registrationCode:', registrationCode)
+    
     if (registrationCode) {
       const separator = path.includes('?') ? '&' : '?'
-      router.push(`${path}${separator}code=${registrationCode}`)
+      const newUrl = `${path}${separator}code=${registrationCode}`
+      console.log('🚀 Navigating to:', newUrl)
+      router.push(newUrl)
     } else {
+      console.log('⚠️ No registration code, navigating without code')
       router.push(path)
     }
   }
 
   // פונקציה לבניית URL עם הקוד
   const buildUrlWithCode = (path: string) => {
+    console.log('🔗 buildUrlWithCode called with:', path)
+    console.log('🔗 Current registrationCode:', registrationCode)
+    
     if (registrationCode) {
       const separator = path.includes('?') ? '&' : '?'
-      return `${path}${separator}code=${registrationCode}`
+      const result = `${path}${separator}code=${registrationCode}`
+      console.log('🔗 Built URL:', result)
+      return result
     }
+    console.log('🔗 No code, returning original path:', path)
     return path
   }
 
@@ -70,6 +90,8 @@ export function RegistrationProvider({ children }: { children: ReactNode }) {
     navigateWithCode,
     buildUrlWithCode,
   }
+
+  console.log('🎯 RegistrationContext value:', { registrationCode, userInfo: !!userInfo })
 
   return (
     <RegistrationContext.Provider value={value}>
