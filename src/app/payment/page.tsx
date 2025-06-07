@@ -2,12 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { Check, MessageCircle } from 'lucide-react'
-import { useRegistration } from '../../contexts/RegistrationContext'
-import { useSearchParams } from 'next/navigation'
 
 export default function PaymentPage() {
-  const { registrationCode, setRegistrationCode, navigateWithCode, buildUrlWithCode } = useRegistration()
-  const searchParams = useSearchParams()
   const [billingType, setBillingType] = useState('monthly')
   const [formData, setFormData] = useState({
     phone: '',
@@ -129,30 +125,6 @@ export default function PaymentPage() {
     }
   ]
 
-  // useEffect לקבלת פרמטרים מה-URL
-  useEffect(() => {
-    const planFromUrl = searchParams.get('plan')
-    const billingFromUrl = searchParams.get('billing')
-    const codeFromUrl = searchParams.get('code')
-    const oauthSuccess = searchParams.get('oauth')
-    
-    if (planFromUrl) {
-      setSelectedPlan(planFromUrl)
-      setFormData(prev => ({ ...prev, plan: planFromUrl }))
-      setShowContactForm(true)
-    }
-    if (billingFromUrl) {
-      setBillingType(billingFromUrl)
-    }
-    if (codeFromUrl && !registrationCode) {
-      setRegistrationCode(codeFromUrl)
-    }
-    if (oauthSuccess === 'success') {
-      // הצגת הודעת הצלחה לOAuth
-      alert('Google Calendar connected successfully! ✅')
-    }
-  }, [searchParams, registrationCode, setRegistrationCode])
-
   const handlePlanSelection = (planId: string) => {
     if (planId === 'basic') {
       // For free plan, redirect to WhatsApp directly
@@ -167,30 +139,6 @@ export default function PaymentPage() {
       }, 100)
     }
   }
-
-  const handleGoogleOAuth = () => {
-  const currentCode = registrationCode || Math.random().toString(36).substring(2, 8).toUpperCase()
-  
-  if (!registrationCode) {
-    setRegistrationCode(currentCode)
-  }
-  
-  // Client ID ישיר
-  const clientId = '314964896562-o93h71h2cpiqgcikageq2a34ht2ipl2j.apps.googleusercontent.com'
-  const redirectUri = encodeURIComponent('https://yayagent.com/auth/callback')
-  const googleAuthUrl = 
-    `https://accounts.google.com/o/oauth2/v2/auth?` +
-    `client_id=${clientId}&` +
-    `redirect_uri=${redirectUri}&` +
-    `response_type=code&` +
-    `scope=openid%20email%20profile%20https://www.googleapis.com/auth/calendar&` +
-    `access_type=offline&` +
-    `prompt=consent&` +
-    `state=${currentCode}` // הקוד עובר כ-state
-  
-  console.log('🚀 Google OAuth URL:', googleAuthUrl)
-  window.location.href = googleAuthUrl
-}
 
   const handleSubmit = async () => {
     setIsLoading(true)
@@ -209,18 +157,14 @@ export default function PaymentPage() {
     }
 
     try {
-      // שימוש בקוד הקיים או יצירת חדש
-      const currentCode = registrationCode || Math.random().toString(36).substring(2, 8).toUpperCase()
-      
-      if (!registrationCode) {
-        setRegistrationCode(currentCode)
-      }
+      // Generate unique registration code
+      const registrationCode = Math.random().toString(36).substring(2, 8).toUpperCase()
       
       console.log('Sending webhook data:', {
         phone: formData.phone,
         email: formData.email,
         plan: formData.plan,
-        registration_code: currentCode
+        registration_code: registrationCode
       })
       
       // Send data to n8n webhook
@@ -233,7 +177,7 @@ export default function PaymentPage() {
           phone: formData.countryCode + formData.phone,
           email: formData.email,
           plan: formData.plan,
-          registration_code: currentCode
+          registration_code: registrationCode
         })
       })
       
@@ -244,17 +188,17 @@ export default function PaymentPage() {
       const plan = plans.find(p => p.id === formData.plan)
       const price = billingType === 'yearly' ? plan?.yearlyPrice : plan?.monthlyPrice
       
-      // שימוש בפונקציה החדשה לניווט
-      navigateWithCode(`/payment/checkout?plan=${formData.plan}&price=${price}&billing=${billingType}&email=${formData.email}`)
+      // Redirect to checkout with all parameters including email
+      window.location.href = `/payment/checkout?plan=${formData.plan}&price=${price}&billing=${billingType}&code=${registrationCode}&email=${formData.email}`
       
     } catch (error) {
       console.error('Webhook error:', error)
       // Still proceed to checkout even if webhook fails
       const plan = plans.find(p => p.id === formData.plan)
       const price = billingType === 'yearly' ? plan?.yearlyPrice : plan?.monthlyPrice
-      const currentCode = registrationCode || Math.random().toString(36).substring(2, 8).toUpperCase()
+      const registrationCode = Math.random().toString(36).substring(2, 8).toUpperCase()
       
-      navigateWithCode(`/payment/checkout?plan=${formData.plan}&price=${price}&billing=${billingType}&email=${formData.email}`)
+      window.location.href = `/payment/checkout?plan=${formData.plan}&price=${price}&billing=${billingType}&code=${registrationCode}&email=${formData.email}`
     } finally {
       setIsLoading(false)
     }
@@ -265,7 +209,7 @@ export default function PaymentPage() {
       {/* Header */}
       <header style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '1rem 0' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <a href={buildUrlWithCode('/')} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
             <img
               src="/yaya-logo.png"
               alt="Yaya Assistant Logo"
@@ -273,24 +217,9 @@ export default function PaymentPage() {
             />
             <span style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
           </a>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* הצגת קוד הרישום */}
-            {registrationCode && (
-              <div style={{ 
-                background: 'rgba(45, 80, 22, 0.1)', 
-                color: '#2d5016', 
-                padding: '4px 12px', 
-                borderRadius: '12px', 
-                fontSize: '0.8rem',
-                fontWeight: '500'
-              }}>
-                קוד: {registrationCode}
-              </div>
-            )}
-            <a href={buildUrlWithCode('/')} style={{ color: '#4a5568', textDecoration: 'none', fontSize: '0.875rem', fontWeight: '500' }}>
-              ← Back to Home
-            </a>
-          </div>
+          <a href="/" style={{ color: '#4a5568', textDecoration: 'none', fontSize: '0.875rem', fontWeight: '500' }}>
+            ← Back to Home
+          </a>
         </div>
       </header>
 
@@ -309,23 +238,6 @@ export default function PaymentPage() {
             <p style={{ fontSize: '1.2rem', color: '#718096', maxWidth: '600px', margin: '0 auto 2rem' }}>
               Get started with Yaya Assistant. Start your 7-day free trial today.
             </p>
-            
-            {/* הצגת מידע על הקוד אם קיים */}
-            {registrationCode && (
-              <div style={{
-                background: 'rgba(45, 80, 22, 0.1)',
-                border: '1px solid rgba(45, 80, 22, 0.2)',
-                borderRadius: '12px',
-                padding: '1rem',
-                margin: '0 auto 2rem',
-                maxWidth: '600px'
-              }}>
-                <p style={{ color: '#2d5016', margin: 0, fontSize: '1rem' }}>
-                  🎯 <strong>Registration Code: {registrationCode}</strong><br/>
-                  Your account will be linked to WhatsApp when you complete the signup.
-                </p>
-              </div>
-            )}
 
             {/* Billing Toggle */}
             <div style={{
@@ -448,7 +360,7 @@ export default function PaymentPage() {
                 }}>
                   {plan.displayPrice ? 
                     plan.displayPrice : 
-                    `${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}`
+                    `$${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}`
                   }
                   {!plan.displayPrice && (
                     <span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
@@ -590,43 +502,6 @@ export default function PaymentPage() {
                 {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.9rem', marginTop: '0.5rem' }}>{errors.phone}</p>}
               </div>
 
-              {/* Google Calendar Integration Button */}
-              <div style={{ marginBottom: '1.5rem' }}>
-                <button
-                  onClick={handleGoogleOAuth}
-                  style={{
-                    width: '100%',
-                    padding: '14px 24px',
-                    background: '#4285f4',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '10px',
-                    fontSize: '1rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    marginBottom: '1rem'
-                  }}
-                  onMouseEnter={(e) => {
-                    const target = e.target as HTMLButtonElement
-                    target.style.backgroundColor = '#3367d6'
-                  }}
-                  onMouseLeave={(e) => {
-                    const target = e.target as HTMLButtonElement
-                    target.style.backgroundColor = '#4285f4'
-                  }}
-                >
-                  📅 Connect Google Calendar (Optional)
-                </button>
-                <p style={{ fontSize: '0.85rem', color: '#666', textAlign: 'center', margin: 0 }}>
-                  Link your Google Calendar to create events directly from WhatsApp
-                </p>
-              </div>
-
               <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(45, 80, 22, 0.1)', borderRadius: '10px', border: '1px solid rgba(45, 80, 22, 0.2)' }}>
                 <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#2d5016', marginBottom: '0.5rem' }}>
                   Selected Plan: {plans.find(p => p.id === selectedPlan)?.name}
@@ -634,11 +509,6 @@ export default function PaymentPage() {
                 <p style={{ color: '#2d5016', fontSize: '0.9rem', opacity: 0.8 }}>
                   ${billingType === 'yearly' ? plans.find(p => p.id === selectedPlan)?.yearlyPrice : plans.find(p => p.id === selectedPlan)?.monthlyPrice}/{billingType === 'yearly' ? 'year' : 'month'} • 7-day free trial
                 </p>
-                {registrationCode && (
-                  <p style={{ color: '#2d5016', fontSize: '0.85rem', fontWeight: '500', margin: '0.5rem 0 0 0' }}>
-                    Registration Code: {registrationCode}
-                  </p>
-                )}
               </div>
 
               <button
