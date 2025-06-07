@@ -860,10 +860,7 @@ export default function Home() {
       </a>
     </div>
   )
-} '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Unlimited messages
-                </div>
+}
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
                   Unlimited one-time reminders
