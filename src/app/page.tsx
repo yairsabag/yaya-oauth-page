@@ -168,6 +168,16 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
 
 export default function Home() {
   const { navigateWithCode, buildUrlWithCode, registrationCode } = useRegistration() // הוספה חדשה!
+  
+  // 🔍 Debug logs - הוספה חדשה לבדיקה!
+  console.log('🏠 HomePage: registrationCode =', registrationCode)
+  console.log('🏠 HomePage: window.location.search =', window?.location?.search)
+
+  useEffect(() => {
+    console.log('🏠 HomePage useEffect: registrationCode changed to:', registrationCode)
+  }, [registrationCode])
+  // 🔍 סוף הוספת debug
+  
   const [currentTextIndex, setCurrentTextIndex] = useState(0)
   const [isClient, setIsClient] = useState(false)
   const [billingType, setBillingType] = useState('monthly')
