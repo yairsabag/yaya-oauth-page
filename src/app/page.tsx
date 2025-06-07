@@ -651,7 +651,8 @@ export default function Home() {
   onMouseLeave={(e) => (e.target as HTMLElement).style.transform = 'scale(1)'}
 >
   <MessageCircle size={24} />
-</a>{/* Pricing Cards */}
+</a>
+  {/* Pricing Cards */}
 <div style={{
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
