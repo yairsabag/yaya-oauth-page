@@ -169,27 +169,28 @@ export default function PaymentPage() {
   }
 
   const handleGoogleOAuth = () => {
-    // שימוש בקוד רישום ב-state parameter
-    const currentCode = registrationCode || Math.random().toString(36).substring(2, 8).toUpperCase()
-    
-    if (!registrationCode) {
-      setRegistrationCode(currentCode)
-    }
-    
-    // בניית URL לGoogle OAuth עם הקוד ב-state
-    const redirectUri = `${window.location.origin}/auth/callback`
-    const googleAuthUrl = 
-      `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `response_type=code&` +
-      `scope=openid email profile https://www.googleapis.com/auth/calendar&` +
-      `access_type=offline&` +
-      `prompt=consent&` +
-      `state=${currentCode}` // הקוד עובר כ-state
-    
-    window.location.href = googleAuthUrl
+  const currentCode = registrationCode || Math.random().toString(36).substring(2, 8).toUpperCase()
+  
+  if (!registrationCode) {
+    setRegistrationCode(currentCode)
   }
+  
+  // Client ID ישיר
+  const clientId = '314964896562-o93h71h2cpiqgcikageq2a34ht2ipl2j.apps.googleusercontent.com'
+  const redirectUri = encodeURIComponent('https://yayagent.com/auth/callback')
+  const googleAuthUrl = 
+    `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${redirectUri}&` +
+    `response_type=code&` +
+    `scope=openid%20email%20profile%20https://www.googleapis.com/auth/calendar&` +
+    `access_type=offline&` +
+    `prompt=consent&` +
+    `state=${currentCode}` // הקוד עובר כ-state
+  
+  console.log('🚀 Google OAuth URL:', googleAuthUrl)
+  window.location.href = googleAuthUrl
+}
 
   const handleSubmit = async () => {
     setIsLoading(true)
