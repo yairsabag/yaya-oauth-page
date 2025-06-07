@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react'
 import { MessageCircle, Check } from 'lucide-react'
+import { useRegistration } from '../contexts/RegistrationContext'
 
 // Phone Mockup Component
 function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'user' | 'yaya'; time?: string }> }) {
@@ -170,6 +171,9 @@ export default function Home() {
   const [isClient, setIsClient] = useState(false)
   const [billingType, setBillingType] = useState('monthly')
 
+  // שימוש בקונטקסט לניהול הקוד
+  const { registrationCode, getUrlWithCode } = useRegistration()
+
   const heroTexts = [
     'calendar.',
     'todo list.',
@@ -201,13 +205,21 @@ export default function Home() {
     return () => observer.disconnect()
   }, [])
 
-  // FIXED: Now redirects to /payment instead of /select-plan
+  // פונקציה מעודכנת לטיפול בפעולות תוכניות
   const handlePlanAction = (planId: string) => {
     if (planId === 'basic') {
-      window.open('https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0', '_blank')
+      // עבור תוכנית חינמית - פתיחת WhatsApp עם קוד אם קיים
+      const whatsappUrl = registrationCode 
+        ? `https://api.whatsapp.com/send/?phone=972559943649&text=My code: ${registrationCode}&type=phone_number&app_absent=0`
+        : 'https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0'
+      window.open(whatsappUrl, '_blank')
     } else {
-      // Redirect to payment page with pre-selected plan
-      window.location.href = `/payment?plan=${planId}&billing=${billingType}`
+      // עבור תוכניות בתשלום - הפניה לדף תשלום עם שמירת הקוד
+      const paymentUrl = getUrlWithCode('/payment', {
+        plan: planId,
+        billing: billingType
+      })
+      window.location.href = paymentUrl
     }
   }
 
@@ -283,7 +295,7 @@ export default function Home() {
               Introducing Multi-Calendar Support 📅
             </span>
             <a
-              href="/payment"
+              href={getUrlWithCode('/payment')}
               style={{
                 background: '#2d5016',
                 color: 'white',
@@ -379,7 +391,7 @@ export default function Home() {
             </a>
           </div>
 
-          <a href="/payment" className="animate-on-scroll" style={{
+          <a href={getUrlWithCode('/payment')} className="animate-on-scroll" style={{
             background: '#2d5016',
             color: 'white',
             padding: '16px 32px',
@@ -637,99 +649,6 @@ export default function Home() {
               <div style={{ marginBottom: '2rem' }}>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Unlimited messages
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Unlimited one-time reminders
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100+ languages supported
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  ChatGPT
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  5 Voice Notes / Month
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  5 Image Analysis / Month
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Receive reminders from friends
-                </div>
-              </div>
-            </div>
-
-            {/* Executive Plan */}
-            <div className="animate-on-scroll" style={{
-              background: '#F5F1EB',
-              borderRadius: '20px',
-              padding: '2.5rem 2rem',
-              textAlign: 'left',
-              position: 'relative',
-              border: '2px solid #8B5E3C',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease'
-            }}
-            onClick={() => handlePlanAction('executive')}
-            >
-              <div style={{
-                position: 'absolute',
-                top: '1rem',
-                right: '1rem',
-                background: '#8B5E3C',
-                color: 'white',
-                padding: '4px 12px',
-                borderRadius: '12px',
-                fontSize: '0.75rem',
-                fontWeight: '500'
-              }}>
-                7 DAY TRIAL
-              </div>
-              <div style={{ 
-                fontSize: '0.9rem', 
-                color: '#8B5E3C', 
-                fontWeight: '500', 
-                marginBottom: '0.5rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em'
-              }}>
-                EXECUTIVE PLAN
-              </div>
-              <div style={{ 
-                fontSize: '4rem', 
-                fontWeight: '300', 
-                color: '#8B5E3C', 
-                marginBottom: '0.5rem',
-                lineHeight: '1',
-                display: 'flex',
-                alignItems: 'baseline',
-                gap: '8px'
-              }}>
-                ${billingType === 'yearly' ? '4' : '5'}<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
-              </div>
-              
-              <div style={{ marginBottom: '2rem' }}>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Unlimited messages
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Unlimited one-time reminders
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100+ languages supported
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
                   ChatGPT
                 </div>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
@@ -900,9 +819,9 @@ export default function Home() {
             flexWrap: 'wrap',
             fontSize: '0.875rem'
           }}>
-            <a href="/privacy-policy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
-            <a href="/terms-of-service" style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Service</a>
-            <a href="/posts" style={{ color: 'inherit', textDecoration: 'none' }}>Blog</a>
+            <a href={getUrlWithCode('/privacy-policy')} style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
+            <a href={getUrlWithCode('/terms-of-service')} style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Service</a>
+            <a href={getUrlWithCode('/posts')} style={{ color: 'inherit', textDecoration: 'none' }}>Blog</a>
             <a href="https://discord.gg/BRxAAq47xv" style={{ color: 'inherit', textDecoration: 'none' }}>Discord</a>
             <a href="https://x.com/textcoco" style={{ color: 'inherit', textDecoration: 'none' }}>X/Twitter</a>
             <a href="mailto:info@textcoco.com" style={{ color: 'inherit', textDecoration: 'none' }}>info@textcoco.com</a>
@@ -913,7 +832,10 @@ export default function Home() {
       {/* WhatsApp Floating Button */}
       <a
         title="Chat with Yaya on WhatsApp"
-        href="https://wa.me/972559943649"
+        href={registrationCode 
+          ? `https://wa.me/972559943649?text=My code: ${registrationCode}`
+          : "https://wa.me/972559943649"
+        }
         style={{
           position: 'fixed',
           bottom: '24px',
@@ -938,4 +860,97 @@ export default function Home() {
       </a>
     </div>
   )
-}
+} '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited messages
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited one-time reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100+ languages supported
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  ChatGPT
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  5 Voice Notes / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  5 Image Analysis / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Receive reminders from friends
+                </div>
+              </div>
+            </div>
+
+            {/* Executive Plan */}
+            <div className="animate-on-scroll" style={{
+              background: '#F5F1EB',
+              borderRadius: '20px',
+              padding: '2.5rem 2rem',
+              textAlign: 'left',
+              position: 'relative',
+              border: '2px solid #8B5E3C',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onClick={() => handlePlanAction('executive')}
+            >
+              <div style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: '#8B5E3C',
+                color: 'white',
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: '500'
+              }}>
+                7 DAY TRIAL
+              </div>
+              <div style={{ 
+                fontSize: '0.9rem', 
+                color: '#8B5E3C', 
+                fontWeight: '500', 
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                EXECUTIVE PLAN
+              </div>
+              <div style={{ 
+                fontSize: '4rem', 
+                fontWeight: '300', 
+                color: '#8B5E3C', 
+                marginBottom: '0.5rem',
+                lineHeight: '1',
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '8px'
+              }}>
+                ${billingType === 'yearly' ? '4' : '5'}<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
+              </div>
+              
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited messages
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited one-time reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100+ languages supported
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize:
