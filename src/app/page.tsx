@@ -27,21 +27,22 @@ export default function Home() {
   }, [])
 
   const handleGoogleLogin = () => {
-    if (!registrationCode) {
-      alert('No registration code found! Please start from WhatsApp bot.')
-      return
-    }
-    
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
-    const redirectUri = encodeURIComponent('https://yayagent.com/auth/callback')
-    const scope = encodeURIComponent('openid email profile https://www.googleapis.com/auth/calendar')
-    const state = encodeURIComponent(registrationCode)
-    
-    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&access_type=offline&prompt=consent&state=${state}`
-    
-    console.log('🚀 Redirecting to Google OAuth:', authUrl)
-    window.location.href = authUrl
+  if (!registrationCode) {
+    alert('No registration code found! Please start from WhatsApp bot.')
+    return
   }
+  
+  // השתמש בClient ID הישיר שלך
+  const clientId = '314964896562-o93h71h2cpiqgcikageq2a34ht2ipl2j.apps.googleusercontent.com'
+  const redirectUri = encodeURIComponent('https://yayagent.com/auth/callback')
+  const scope = encodeURIComponent('openid email profile https://www.googleapis.com/auth/calendar')
+  const state = encodeURIComponent(registrationCode)
+  
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&access_type=offline&prompt=consent&state=${state}`
+  
+  console.log('🚀 Redirecting to Google OAuth:', authUrl)
+  window.location.href = authUrl
+}
 
   return (
     <div style={{ fontFamily: 'system-ui, sans-serif', minHeight: '100vh' }}>
