@@ -8,9 +8,7 @@ export default function CheckoutPage() {
     plan: '',
     price: '',
     billing: '',
-    code: '',
-    email: '',
-    phone: ''
+    code: ''
   })
 
   const [formData, setFormData] = useState({
@@ -28,18 +26,8 @@ export default function CheckoutPage() {
       plan: params.get('plan') || '',
       price: params.get('price') || '',
       billing: params.get('billing') || '',
-      code: params.get('code') || '',
-      email: params.get('email') || '',
-      phone: params.get('phone') || ''
+      code: params.get('code') || ''
     })
-
-    // Pre-fill email and phone if they came from payment page
-    if (params.get('email')) {
-      setFormData(prev => ({ ...prev, email: params.get('email') || '' }))
-    }
-    if (params.get('phone')) {
-      setFormData(prev => ({ ...prev, phone: params.get('phone') || '' }))
-    }
   }, [])
 
   const planNames = {
@@ -70,8 +58,8 @@ export default function CheckoutPage() {
       
       // Simulate 90% success rate for demo
       if (Math.random() > 0.1) {
-        // Redirect to success page with registration code AND phone
-        window.location.href = `/payment/success?plan=${urlParams.plan}&email=${formData.email}&price=${urlParams.price}&code=${urlParams.code}&phone=${formData.phone}`
+        // Redirect to success page with registration code
+        window.location.href = `/payment/success?plan=${urlParams.plan}&email=${formData.email}&price=${urlParams.price}&code=${urlParams.code}`
       } else {
         // Redirect to failed page
         window.location.href = '/payment/failed'
