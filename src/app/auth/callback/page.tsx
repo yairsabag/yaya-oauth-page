@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 export default function OAuthCallback() {
-  const { registrationCode, setUserInfo, navigateWithCode } = useRegistration()
+  const { registrationCode, setRegistrationCode, getUrlWithCode } = useRegistration()
   const searchParams = useSearchParams()
   const router = useRouter()
   const [status, setStatus] = useState('מעבד...')
@@ -25,6 +25,11 @@ export default function OAuthCallback() {
         try {
           setStatus('מקבל נתונים מGoogle...')
           
+          // עדכון הקוד אם הוא לא קיים
+          if (!registrationCode && state) {
+            setRegistrationCode(state)
+          }
+          
           const response = await fetch('/api/oauth/callback', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -38,11 +43,11 @@ export default function OAuthCallback() {
           
           if (result.success) {
             setStatus('הצלחה! מחבר לחשבון...')
-            setUserInfo(result.userInfo)
             
             // חזרה לדף התשלום עם הצלחה
             setTimeout(() => {
-              navigateWithCode('/payment?oauth=success')
+              const successUrl = getUrlWithCode('/payment', { oauth: 'success' })
+              router.push(successUrl)
             }, 2000)
           } else {
             setStatus('שגיאה בעיבוד הנתונים')
@@ -57,7 +62,7 @@ export default function OAuthCallback() {
     if (searchParams.get('code')) {
       handleOAuthReturn()
     }
-  }, [searchParams, setUserInfo, navigateWithCode])
+  }, [searchParams, registrationCode, setRegistrationCode, getUrlWithCode, router])
 
   return (
     <div style={{ 
@@ -78,9 +83,9 @@ export default function OAuthCallback() {
           margin: '0 auto 1rem'
         }}></div>
         <h1 style={{ color: '#2d5016', marginBottom: '0.5rem' }}>{status}</h1>
-        {registrationCode && (
+        {(registrationCode || searchParams.get('state')) && (
           <p style={{ color: '#666', fontSize: '0.9rem' }}>
-            קוד רישום: {registrationCode}
+            קוד רישום: {registrationCode || searchParams.get('state')}
           </p>
         )}
         <style jsx>{`
