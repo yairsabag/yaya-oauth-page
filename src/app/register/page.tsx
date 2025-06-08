@@ -2,39 +2,22 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { CheckCircle, MessageCircle, Calendar, Bell, ArrowLeft, Shield, CreditCard } from 'lucide-react'
+import { CheckCircle, MessageCircle, Calendar, Bell, Shield, CreditCard } from 'lucide-react'
 
 export default function RegisterPage() {
   const searchParams = useSearchParams()
   const [registrationCode, setRegistrationCode] = useState<string | null>(null)
-  const [step, setStep] = useState<'form' | 'payment' | 'oauth'>('form')
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    countryCode: '+972'
-  })
+  const [step, setStep] = useState<'plan' | 'payment' | 'oauth'>('plan')
   const [selectedPlan, setSelectedPlan] = useState('executive')
   const [billingType, setBillingType] = useState('monthly')
   const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-
-  const countries = [
-    { code: '+972', name: 'Israel', flag: '🇮🇱' },
-    { code: '+1', name: 'United States', flag: '🇺🇸' },
-    { code: '+44', name: 'United Kingdom', flag: '🇬🇧' },
-    { code: '+33', name: 'France', flag: '🇫🇷' },
-    { code: '+49', name: 'Germany', flag: '🇩🇪' },
-    { code: '+39', name: 'Italy', flag: '🇮🇹' },
-    { code: '+34', name: 'Spain', flag: '🇪🇸' },
-    { code: '+31', name: 'Netherlands', flag: '🇳🇱' }
-  ]
 
   const plans = {
     executive: {
       name: 'Executive Plan',
       monthlyPrice: 5,
       yearlyPrice: 4,
+      popular: true,
       features: [
         'Unlimited messages',
         'Unlimited one-time reminders',
@@ -54,6 +37,7 @@ export default function RegisterPage() {
       name: 'Ultimate Plan',
       monthlyPrice: 14,
       yearlyPrice: 13,
+      popular: false,
       features: [
         'Unlimited messages',
         'Unlimited one-time reminders',
@@ -80,20 +64,7 @@ export default function RegisterPage() {
     }
   }, [searchParams])
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrors({})
-
-    const newErrors: Record<string, string> = {}
-    if (!formData.name) newErrors.name = 'Name is required'
-    if (!formData.email) newErrors.email = 'Email is required'
-    if (!formData.phone) newErrors.phone = 'Phone number is required'
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      return
-    }
-
+  const handlePlanSelection = () => {
     setStep('payment')
   }
 
@@ -101,15 +72,13 @@ export default function RegisterPage() {
     setIsLoading(true)
     
     try {
+      // שליחת נתונים ל-n8n webhook
       const response = await fetch('https://yairsabag.app.n8n.cloud/webhook-test/whatsapp-registration', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          phone: formData.countryCode + formData.phone,
-          email: formData.email,
-          name: formData.name,
           plan: selectedPlan,
           registration_code: registrationCode,
           billing_type: billingType,
@@ -136,7 +105,6 @@ export default function RegisterPage() {
     googleOAuthUrl.searchParams.set('scope', 'openid email https://www.googleapis.com/auth/calendar')
     googleOAuthUrl.searchParams.set('state', JSON.stringify({
       registrationCode,
-      formData,
       plan: selectedPlan,
       billing: billingType
     }))
@@ -242,6 +210,7 @@ export default function RegisterPage() {
 
       <main style={{ padding: '2rem 0' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 2rem' }}>
+          {/* Progress Bar */}
           <div style={{ marginBottom: '3rem', textAlign: 'center' }}>
             <div style={{ 
               display: 'flex', 
@@ -254,14 +223,14 @@ export default function RegisterPage() {
                 width: '40px',
                 height: '40px',
                 borderRadius: '50%',
-                background: step === 'form' ? '#8B5E3C' : '#c3d9c6',
+                background: step === 'plan' ? '#8B5E3C' : '#c3d9c6',
                 color: 'white',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: '600'
               }}>1</div>
-              <div style={{ width: '100px', height: '4px', background: step !== 'form' ? '#8B5E3C' : '#c3d9c6', borderRadius: '2px' }}></div>
+              <div style={{ width: '100px', height: '4px', background: step !== 'plan' ? '#8B5E3C' : '#c3d9c6', borderRadius: '2px' }}></div>
               <div style={{
                 width: '40px',
                 height: '40px',
@@ -294,14 +263,15 @@ export default function RegisterPage() {
               color: '#8B5E3C',
               fontWeight: '500'
             }}>
-              <span>Details</span>
+              <span>Choose Plan</span>
               <span>Payment</span>
               <span>Connect</span>
             </div>
           </div>
 
-          {step === 'form' && (
-            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          {/* Step 1: Plan Selection */}
+          {step === 'plan' && (
+            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
                 <h1 style={{ 
                   fontSize: '3rem', 
@@ -310,14 +280,14 @@ export default function RegisterPage() {
                   marginBottom: '1rem',
                   letterSpacing: '-0.02em'
                 }}>
-                  Complete Your Registration
+                  Choose Your Plan
                 </h1>
                 <p style={{ 
                   fontSize: '1.2rem', 
                   color: '#718096', 
                   marginBottom: '2rem'
                 }}>
-                  You're almost there! Fill in your details to activate your Yaya Assistant.
+                  Select the perfect plan for your needs. Start your 7-day free trial today.
                 </p>
                 
                 <div style={{ 
@@ -338,269 +308,197 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
-                <div>
-                  <h2 style={{ 
-                    fontSize: '1.5rem', 
-                    fontWeight: '600', 
-                    color: '#8B5E3C', 
-                    marginBottom: '1.5rem' 
-                  }}>
-                    Choose Your Plan
-                  </h2>
+              {/* Billing Toggle */}
+              <div style={{
+                display: 'flex',
+                gap: '4px',
+                justifyContent: 'center',
+                marginBottom: '3rem',
+                background: '#f7fafc',
+                borderRadius: '8px',
+                padding: '4px',
+                width: 'fit-content',
+                margin: '0 auto 3rem',
+                cursor: 'pointer'
+              }}>
+                <span 
+                  onClick={() => setBillingType('monthly')}
+                  style={{
+                    background: billingType === 'monthly' ? 'white' : 'transparent',
+                    color: billingType === 'monthly' ? '#8B5E3C' : '#999',
+                    padding: '8px 20px',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    boxShadow: billingType === 'monthly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Monthly Billing
+                </span>
+                <span 
+                  onClick={() => setBillingType('yearly')}
+                  style={{
+                    background: billingType === 'yearly' ? 'white' : 'transparent',
+                    color: billingType === 'yearly' ? '#8B5E3C' : '#999',
+                    padding: '8px 20px',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    boxShadow: billingType === 'yearly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Yearly Billing
+                </span>
+              </div>
 
-                  <div style={{
-                    display: 'flex',
-                    gap: '4px',
-                    justifyContent: 'center',
-                    marginBottom: '2rem',
-                    background: '#f7fafc',
-                    borderRadius: '8px',
-                    padding: '4px',
-                    width: 'fit-content',
-                    cursor: 'pointer'
-                  }}>
-                    <span 
-                      onClick={() => setBillingType('monthly')}
-                      style={{
-                        background: billingType === 'monthly' ? 'white' : 'transparent',
-                        color: billingType === 'monthly' ? '#8B5E3C' : '#999',
-                        padding: '8px 16px',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem',
-                        fontWeight: '500',
-                        boxShadow: billingType === 'monthly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      Monthly
-                    </span>
-                    <span 
-                      onClick={() => setBillingType('yearly')}
-                      style={{
-                        background: billingType === 'yearly' ? 'white' : 'transparent',
-                        color: billingType === 'yearly' ? '#8B5E3C' : '#999',
-                        padding: '8px 16px',
-                        borderRadius: '6px',
-                        fontSize: '0.9rem',
-                        fontWeight: '500',
-                        boxShadow: billingType === 'yearly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      Yearly
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'grid', gap: '1rem' }}>
-                    {Object.entries(plans).map(([planId, plan]) => (
-                      <div
-                        key={planId}
-                        onClick={() => setSelectedPlan(planId)}
-                        style={{
-                          background: selectedPlan === planId ? 'rgba(139, 94, 60, 0.1)' : '#F5F1EB',
-                          borderRadius: '16px',
-                          padding: '1.5rem',
-                          border: selectedPlan === planId ? '2px solid #8B5E3C' : '1px solid #E5DDD5',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        <div style={{ marginBottom: '0.5rem' }}>
-                          <span style={{ 
-                            fontSize: '0.8rem', 
-                            color: '#8B5E3C', 
-                            fontWeight: '600',
-                            textTransform: 'uppercase'
-                          }}>
-                            {plan.name}
-                          </span>
-                          {planId === 'executive' && (
-                            <span style={{
-                              background: '#8B5E3C',
-                              color: 'white',
-                              padding: '2px 8px',
-                              borderRadius: '8px',
-                              fontSize: '0.7rem',
-                              fontWeight: '500',
-                              marginLeft: '0.5rem'
-                            }}>
-                              POPULAR
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ 
-                          fontSize: '2rem', 
-                          fontWeight: '300', 
-                          color: '#8B5E3C', 
-                          marginBottom: '1rem'
-                        }}>
-                          ${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}
-                          <span style={{ fontSize: '0.8rem', fontWeight: '400' }}>/month</span>
-                        </div>
-                        {selectedPlan === planId && (
-                          <div style={{
-                            background: '#8B5E3C',
-                            color: 'white',
-                            padding: '4px 12px',
-                            borderRadius: '6px',
-                            textAlign: 'center',
-                            fontSize: '0.8rem',
-                            fontWeight: '500'
-                          }}>
-                            ✓ Selected
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h2 style={{ 
-                    fontSize: '1.5rem', 
-                    fontWeight: '600', 
-                    color: '#8B5E3C', 
-                    marginBottom: '1.5rem' 
-                  }}>
-                    Your Details
-                  </h2>
-
-                  <form onSubmit={handleFormSubmit} style={{ display: 'grid', gap: '1.5rem' }}>
-                    <div>
-                      <label style={{ 
-                        display: 'block', 
-                        fontSize: '0.9rem', 
-                        fontWeight: '600', 
-                        color: '#8B5E3C', 
-                        marginBottom: '0.5rem' 
-                      }}>
-                        Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: errors.name ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
-                        }}
-                        placeholder="John Doe"
-                      />
-                      {errors.name && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>{errors.name}</p>}
-                    </div>
-
-                    <div>
-                      <label style={{ 
-                        display: 'block', 
-                        fontSize: '0.9rem', 
-                        fontWeight: '600', 
-                        color: '#8B5E3C', 
-                        marginBottom: '0.5rem' 
-                      }}>
-                        Email Address *
-                      </label>
-                      <input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: errors.email ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
-                        }}
-                        placeholder="your@email.com"
-                      />
-                      {errors.email && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>{errors.email}</p>}
-                    </div>
-
-                    <div>
-                      <label style={{ 
-                        display: 'block', 
-                        fontSize: '0.9rem', 
-                        fontWeight: '600', 
-                        color: '#8B5E3C', 
-                        marginBottom: '0.5rem' 
-                      }}>
-                        Phone Number *
-                      </label>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <select
-                          value={formData.countryCode}
-                          onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
-                          style={{
-                            padding: '0.75rem 0.5rem',
-                            border: '1px solid #E5DDD5',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            background: 'white',
-                            minWidth: '100px'
-                          }}
-                        >
-                          {countries.map((country) => (
-                            <option key={`${country.code}-${country.name}`} value={country.code}>
-                              {country.flag} {country.code}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="tel"
-                          value={formData.phone}
-                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          style={{
-                            flex: 1,
-                            padding: '0.75rem',
-                            border: errors.phone ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                            borderRadius: '8px',
-                            fontSize: '1rem',
-                            boxSizing: 'border-box',
-                            background: 'white'
-                          }}
-                          placeholder="50-123-4567"
-                        />
-                      </div>
-                      {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.8rem', margin: '0.25rem 0 0 0' }}>{errors.phone}</p>}
-                    </div>
-
-                    <button
-                      type="submit"
-                      style={{
-                        width: '100%',
-                        padding: '1rem',
+              {/* Plan Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
+                {Object.entries(plans).map(([planId, plan]) => (
+                  <div
+                    key={planId}
+                    onClick={() => setSelectedPlan(planId)}
+                    style={{
+                      background: selectedPlan === planId ? 'rgba(139, 94, 60, 0.1)' : '#F5F1EB',
+                      borderRadius: '20px',
+                      padding: '2.5rem 2rem',
+                      textAlign: 'left',
+                      position: 'relative',
+                      border: plan.popular ? '2px solid #8B5E3C' : selectedPlan === planId ? '2px solid #8B5E3C' : '1px solid #E5DDD5',
+                      transform: plan.popular ? 'scale(1.02)' : 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = plan.popular ? 'scale(1.05)' : 'scale(1.02)'
+                      e.currentTarget.style.boxShadow = '0 20px 25px rgba(139, 94, 60, 0.15)'
+                      e.currentTarget.style.border = '2px solid #8B5E3C'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = plan.popular ? 'scale(1.02)' : 'scale(1)'
+                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)'
+                      e.currentTarget.style.border = plan.popular ? '2px solid #8B5E3C' : selectedPlan === planId ? '2px solid #8B5E3C' : '1px solid #E5DDD5'
+                    }}
+                  >
+                    {plan.popular && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
                         background: '#8B5E3C',
                         color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '1rem',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        marginTop: '1rem',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      Continue to Payment
-                    </button>
-                  </form>
-                </div>
+                        padding: '4px 12px',
+                        borderRadius: '12px',
+                        fontSize: '0.75rem',
+                        fontWeight: '500'
+                      }}>
+                        MOST POPULAR
+                      </div>
+                    )}
+
+                    <div style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#8B5E3C', 
+                      fontWeight: '500', 
+                      marginBottom: '0.5rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
+                      {plan.name.toUpperCase()}
+                    </div>
+
+                    <div style={{ 
+                      fontSize: '3.5rem', 
+                      fontWeight: '300', 
+                      color: '#8B5E3C', 
+                      marginBottom: '1rem',
+                      lineHeight: '1',
+                      display: 'flex',
+                      alignItems: 'baseline',
+                      gap: '8px'
+                    }}>
+                      ${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}
+                      <span style={{ fontSize: '1rem', fontWeight: '400' }}>/month</span>
+                    </div>
+
+                    {billingType === 'yearly' && (
+                      <div style={{ 
+                        fontSize: '0.85rem', 
+                        color: '#25d366', 
+                        fontWeight: '600', 
+                        marginBottom: '1.5rem'
+                      }}>
+                        💰 Save ${(plan.monthlyPrice - plan.yearlyPrice) * 12}/year
+                      </div>
+                    )}
+                    
+                    <div style={{ marginBottom: '2rem' }}>
+                      {plan.features.map((feature, index) => (
+                        <div key={index} style={{ 
+                          color: '#8B5E3C', 
+                          marginBottom: '0.75rem', 
+                          fontSize: '0.95rem', 
+                          display: 'flex', 
+                          alignItems: 'flex-start', 
+                          gap: '8px' 
+                        }}>
+                          <span style={{ color: '#25d366', fontSize: '1rem', fontWeight: '600' }}>✓</span>
+                          {feature}
+                        </div>
+                      ))}
+                    </div>
+
+                    {selectedPlan === planId && (
+                      <div style={{
+                        background: '#8B5E3C',
+                        color: 'white',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                        fontSize: '0.9rem',
+                        fontWeight: '500',
+                        marginBottom: '1rem'
+                      }}>
+                        ✓ Selected
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  onClick={handlePlanSelection}
+                  style={{
+                    padding: '1rem 3rem',
+                    background: '#8B5E3C',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '1.1rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(139, 94, 60, 0.3)'
+                  }}
+                  onMouseEnter={(e) => (e.target as HTMLElement).style.background = '#7c4a32'}
+                  onMouseLeave={(e) => (e.target as HTMLElement).style.background = '#8B5E3C'}
+                >
+                  Continue with {plans[selectedPlan as keyof typeof plans].name}
+                </button>
               </div>
             </div>
           )}
 
+          {/* Step 2: Payment */}
           {step === 'payment' && (
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <button
-                onClick={() => setStep('form')}
+                onClick={() => setStep('plan')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -613,8 +511,7 @@ export default function RegisterPage() {
                   marginBottom: '2rem'
                 }}
               >
-                <ArrowLeft size={16} />
-                Back to Details
+                ← Back to Plan Selection
               </button>
 
               <h1 style={{ 
@@ -647,14 +544,8 @@ export default function RegisterPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
                     <span><strong>Plan:</strong> {plans[selectedPlan as keyof typeof plans].name}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
-                    <span><strong>Name:</strong> {formData.name}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
-                    <span><strong>Email:</strong> {formData.email}</span>
-                  </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: '#8B5E3C' }}>
-                    <span><strong>Phone:</strong> {formData.countryCode}{formData.phone}</span>
+                    <span><strong>Billing:</strong> {billingType === 'yearly' ? 'Annual' : 'Monthly'}</span>
                   </div>
                 </div>
 
@@ -707,110 +598,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {step === 'oauth' && (
-            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-              <div style={{ marginBottom: '2rem' }}>
-                <CheckCircle size={80} style={{ color: '#25d366', margin: '0 auto' }} />
-              </div>
-
-              <h1 style={{ 
-                fontSize: '2.5rem', 
-                fontWeight: '400', 
-                color: '#8B5E3C', 
-                marginBottom: '1rem',
-                letterSpacing: '-0.02em'
-              }}>
-                🎉 Payment Successful!
-              </h1>
-
-              <p style={{ 
-                fontSize: '1.2rem', 
-                color: '#718096', 
-                marginBottom: '3rem'
-              }}>
-                Now connect your Google account to enable smart calendar features and complete your setup.
-              </p>
-
-              <div style={{ 
-                background: '#F5F1EB', 
-                borderRadius: '20px', 
-                padding: '2rem', 
-                border: '1px solid #E5DDD5',
-                marginBottom: '2rem'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.2rem', 
-                  fontWeight: '600', 
-                  color: '#8B5E3C', 
-                  marginBottom: '1.5rem' 
-                }}>
-                  Order Summary
-                </h3>
-                
-                <div style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
-                    <span><strong>Plan:</strong> {plans[selectedPlan as keyof typeof plans].name}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
-                    <span><strong>Name:</strong> {formData.name}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
-                    <span><strong>Email:</strong> {formData.email}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: '#8B5E3C' }}>
-                    <span><strong>Phone:</strong> {formData.countryCode}{formData.phone}</span>
-                  </div>
-                </div>
-
-                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
-                    <span>7-day free trial</span>
-                    <span style={{ color: '#25d366', fontWeight: '600' }}>$0.00</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8B5E3C' }}>
-                    <span>Then ${billingType === 'yearly' ? plans[selectedPlan as keyof typeof plans].yearlyPrice : plans[selectedPlan as keyof typeof plans].monthlyPrice}/{billingType === 'yearly' ? 'year' : 'month'}</span>
-                  </div>
-                </div>
-
-                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', fontSize: '1.1rem', color: '#8B5E3C' }}>
-                    <span>Total today</span>
-                    <span style={{ color: '#25d366' }}>$0.00</span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={handlePayment}
-                disabled={isLoading}
-                style={{
-                  width: '100%',
-                  padding: '1rem 2rem',
-                  background: isLoading ? '#9ca3af' : '#8B5E3C',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1.1rem',
-                  fontWeight: '600',
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <CreditCard size={20} />
-                {isLoading ? 'Processing...' : 'Start Free Trial'}
-              </button>
-
-              <p style={{ fontSize: '0.8rem', color: '#8B5E3C', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
-                By continuing, you agree to our Terms of Service and Privacy Policy.
-                Your trial starts today and you can cancel anytime before it ends.
-              </p>
-            </div>
-          )}
-
+          {/* Step 3: OAuth */}
           {step === 'oauth' && (
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <div style={{ marginBottom: '2rem' }}>
@@ -885,8 +673,6 @@ export default function RegisterPage() {
                   marginBottom: '1rem',
                   transition: 'all 0.2s ease'
                 }}
-                onMouseEnter={(e) => (e.target as HTMLElement).style.background = '#3367d6'}
-                onMouseLeave={(e) => (e.target as HTMLElement).style.background = '#4285f4'}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24">
                   <path fill="white" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -907,7 +693,7 @@ export default function RegisterPage() {
                 background: 'rgba(37, 211, 102, 0.1)',
                 borderRadius: '12px',
                 border: '1px solid rgba(37, 211, 102, 0.2)'
-              }}>
+             }}>
                 <p style={{ 
                   color: '#25d366', 
                   fontSize: '0.9rem',
