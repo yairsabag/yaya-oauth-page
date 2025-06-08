@@ -103,11 +103,8 @@ export default function RegisterPage() {
     googleOAuthUrl.searchParams.set('redirect_uri', 'https://yairsabag.app.n8n.cloud/webhook/google-oauth-callback')
     googleOAuthUrl.searchParams.set('response_type', 'code')
     googleOAuthUrl.searchParams.set('scope', 'openid email https://www.googleapis.com/auth/calendar')
-    googleOAuthUrl.searchParams.set('state', JSON.stringify({
-      registrationCode,
-      plan: selectedPlan,
-      billing: billingType
-    }))
+    // שליחת רק קוד הרישום כ-state
+    googleOAuthUrl.searchParams.set('state', registrationCode || '')
 
     window.location.href = googleOAuthUrl.toString()
   }
@@ -693,7 +690,7 @@ export default function RegisterPage() {
                 background: 'rgba(37, 211, 102, 0.1)',
                 borderRadius: '12px',
                 border: '1px solid rgba(37, 211, 102, 0.2)'
-             }}>
+              }}>
                 <p style={{ 
                   color: '#25d366', 
                   fontSize: '0.9rem',
