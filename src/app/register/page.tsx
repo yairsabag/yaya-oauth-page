@@ -73,7 +73,7 @@ export default function RegisterPage() {
     
     try {
       // שליחת נתונים ל-n8n webhook
-      const response = await fetch('https://yairsabag.app.n8n.cloud/webhook-test/whatsapp-registration', {
+      const response = await fetch('https://yairsabag.app.n8n.cloud/webhook/whatsapp-registration', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
