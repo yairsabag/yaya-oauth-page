@@ -71,13 +71,11 @@ export default function RegisterPage() {
     }
   }
 
-  // קבלת הקוד מה-URL
   useEffect(() => {
     const code = searchParams.get('code')
     if (code) {
       setRegistrationCode(code)
     } else {
-      // אם אין קוד - הפניה לדף הבית
       window.location.href = '/'
     }
   }, [searchParams])
@@ -103,7 +101,6 @@ export default function RegisterPage() {
     setIsLoading(true)
     
     try {
-      // שליחת נתונים ל-n8n webhook
       const response = await fetch('https://yairsabag.app.n8n.cloud/webhook-test/whatsapp-registration', {
         method: 'POST',
         headers: {
@@ -121,14 +118,10 @@ export default function RegisterPage() {
       })
       
       console.log('Webhook response:', response.status)
-      
-      // סימולצית תשלום מוצלח
       await new Promise(resolve => setTimeout(resolve, 2000))
-      
       setStep('oauth')
     } catch (error) {
       console.error('Payment error:', error)
-      // גם אם יש שגיאה, נמשיך לשלב הבא
       setStep('oauth')
     } finally {
       setIsLoading(false)
@@ -136,7 +129,6 @@ export default function RegisterPage() {
   }
 
   const handleGoogleOAuth = () => {
-    // יצירת URL ל-Google OAuth עם הקוד ב-state
     const googleOAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
     googleOAuthUrl.searchParams.set('client_id', '314964896562-o93h71h2cpiqgcikaqeg2a34ht2ipl2j.apps.googleusercontent.com')
     googleOAuthUrl.searchParams.set('redirect_uri', 'https://yairsabag.app.n8n.cloud/webhook/google-oauth-callback')
@@ -151,6 +143,7 @@ export default function RegisterPage() {
 
     window.location.href = googleOAuthUrl.toString()
   }
+
   if (!registrationCode) {
     return (
       <div style={{ 
@@ -197,8 +190,6 @@ export default function RegisterPage() {
               display: 'inline-block',
               transition: 'all 0.2s ease'
             }}
-            onMouseEnter={(e) => (e.target as HTMLElement).style.background = '#7c4a32'}
-            onMouseLeave={(e) => (e.target as HTMLElement).style.background = '#8B5E3C'}
           >
             Back to Home
           </a>
@@ -213,7 +204,6 @@ export default function RegisterPage() {
       minHeight: '100vh', 
       background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)' 
     }}>
-      {/* Header */}
       <header style={{ 
         background: 'rgba(255,255,255,0.95)', 
         backdropFilter: 'blur(10px)', 
@@ -252,7 +242,6 @@ export default function RegisterPage() {
 
       <main style={{ padding: '2rem 0' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 2rem' }}>
-          {/* Progress Bar */}
           <div style={{ marginBottom: '3rem', textAlign: 'center' }}>
             <div style={{ 
               display: 'flex', 
@@ -311,7 +300,6 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Step 1: Form */}
           {step === 'form' && (
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -351,7 +339,6 @@ export default function RegisterPage() {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
-                {/* Plan Selection */}
                 <div>
                   <h2 style={{ 
                     fontSize: '1.5rem', 
@@ -362,7 +349,6 @@ export default function RegisterPage() {
                     Choose Your Plan
                   </h2>
 
-                  {/* Billing Toggle */}
                   <div style={{
                     display: 'flex',
                     gap: '4px',
@@ -408,7 +394,6 @@ export default function RegisterPage() {
                     </span>
                   </div>
 
-                  {/* Plan Cards */}
                   <div style={{ display: 'grid', gap: '1rem' }}>
                     {Object.entries(plans).map(([planId, plan]) => (
                       <div
@@ -473,7 +458,6 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Form */}
                 <div>
                   <h2 style={{ 
                     fontSize: '1.5rem', 
@@ -604,8 +588,6 @@ export default function RegisterPage() {
                         marginTop: '1rem',
                         transition: 'all 0.2s ease'
                       }}
-                      onMouseEnter={(e) => (e.target as HTMLElement).style.background = '#7c4a32'}
-                      onMouseLeave={(e) => (e.target as HTMLElement).style.background = '#8B5E3C'}
                     >
                       Continue to Payment
                     </button>
@@ -615,7 +597,6 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Step 2: Payment */}
           {step === 'payment' && (
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <button
@@ -710,20 +691,9 @@ export default function RegisterPage() {
                   cursor: isLoading ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent:
-                    justifyContent: 'center',
+                  justifyContent: 'center',
                   gap: '0.5rem',
                   transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isLoading) {
-                    (e.target as HTMLElement).style.background = '#7c4a32'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isLoading) {
-                    (e.target as HTMLElement).style.background = '#8B5E3C'
-                  }
                 }}
               >
                 <CreditCard size={20} />
@@ -737,7 +707,110 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Step 3: OAuth */}
+          {step === 'oauth' && (
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <CheckCircle size={80} style={{ color: '#25d366', margin: '0 auto' }} />
+              </div>
+
+              <h1 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: '400', 
+                color: '#8B5E3C', 
+                marginBottom: '1rem',
+                letterSpacing: '-0.02em'
+              }}>
+                🎉 Payment Successful!
+              </h1>
+
+              <p style={{ 
+                fontSize: '1.2rem', 
+                color: '#718096', 
+                marginBottom: '3rem'
+              }}>
+                Now connect your Google account to enable smart calendar features and complete your setup.
+              </p>
+
+              <div style={{ 
+                background: '#F5F1EB', 
+                borderRadius: '20px', 
+                padding: '2rem', 
+                border: '1px solid #E5DDD5',
+                marginBottom: '2rem'
+              }}>
+                <h3 style={{ 
+                  fontSize: '1.2rem', 
+                  fontWeight: '600', 
+                  color: '#8B5E3C', 
+                  marginBottom: '1.5rem' 
+                }}>
+                  Order Summary
+                </h3>
+                
+                <div style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
+                    <span><strong>Plan:</strong> {plans[selectedPlan as keyof typeof plans].name}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
+                    <span><strong>Name:</strong> {formData.name}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
+                    <span><strong>Email:</strong> {formData.email}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: '#8B5E3C' }}>
+                    <span><strong>Phone:</strong> {formData.countryCode}{formData.phone}</span>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
+                    <span>7-day free trial</span>
+                    <span style={{ color: '#25d366', fontWeight: '600' }}>$0.00</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8B5E3C' }}>
+                    <span>Then ${billingType === 'yearly' ? plans[selectedPlan as keyof typeof plans].yearlyPrice : plans[selectedPlan as keyof typeof plans].monthlyPrice}/{billingType === 'yearly' ? 'year' : 'month'}</span>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', fontSize: '1.1rem', color: '#8B5E3C' }}>
+                    <span>Total today</span>
+                    <span style={{ color: '#25d366' }}>$0.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handlePayment}
+                disabled={isLoading}
+                style={{
+                  width: '100%',
+                  padding: '1rem 2rem',
+                  background: isLoading ? '#9ca3af' : '#8B5E3C',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <CreditCard size={20} />
+                {isLoading ? 'Processing...' : 'Start Free Trial'}
+              </button>
+
+              <p style={{ fontSize: '0.8rem', color: '#8B5E3C', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
+                By continuing, you agree to our Terms of Service and Privacy Policy.
+                Your trial starts today and you can cancel anytime before it ends.
+              </p>
+            </div>
+          )}
+
           {step === 'oauth' && (
             <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <div style={{ marginBottom: '2rem' }}>
