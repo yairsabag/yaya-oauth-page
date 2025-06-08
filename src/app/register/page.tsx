@@ -98,16 +98,29 @@ export default function RegisterPage() {
   }
 
   const handleGoogleOAuth = () => {
-    const googleOAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth')
-    googleOAuthUrl.searchParams.set('client_id', '314964896562-o93h71h2cpiqgcikaqeg2a34ht2ipl2j.apps.googleusercontent.com')
-    googleOAuthUrl.searchParams.set('redirect_uri', 'https://yairsabag.app.n8n.cloud/webhook/google-oauth-callback')
-    googleOAuthUrl.searchParams.set('response_type', 'code')
-    googleOAuthUrl.searchParams.set('scope', 'openid email https://www.googleapis.com/auth/calendar')
-    // שליחת רק קוד הרישום כ-state
-    googleOAuthUrl.searchParams.set('state', registrationCode || '')
-
-    window.location.href = googleOAuthUrl.toString()
-  }
+  const clientId = '314964896562-o93h71h2cpiqgcikaqeg2a34ht2ipl2j.apps.googleusercontent.com';
+  const redirectUri = encodeURIComponent('https://yairsabag.app.n8n.cloud/webhook/google-oauth-callback');
+  
+  const scopes = encodeURIComponent([
+    'openid',
+    'email',
+    'profile',
+    'https://www.googleapis.com/auth/calendar'
+  ].join(' '));
+  
+  const state = encodeURIComponent(registrationCode || '');
+  
+  const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${clientId}&` +
+    `redirect_uri=${redirectUri}&` +
+    `scope=${scopes}&` +
+    `response_type=code&` +
+    `access_type=offline&` +
+    `prompt=consent&` +
+    `state=${state}`;
+    
+  window.location.href = googleAuthUrl;
+};
 
   if (!registrationCode) {
     return (
