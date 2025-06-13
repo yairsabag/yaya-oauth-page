@@ -309,7 +309,7 @@ export default function Home() {
               Get Started
             </a>
             <a
-              href="http://app.textcoco.com"
+              href="http://yayagent.com"
               style={{
                 color: '#4a5568',
                 textDecoration: 'none',
@@ -915,8 +915,8 @@ export default function Home() {
             <a href={getUrlWithCode('/terms-of-service')} style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Service</a>
             <a href={getUrlWithCode('/posts')} style={{ color: 'inherit', textDecoration: 'none' }}>Blog</a>
             <a href="https://discord.gg/BRxAAq47xv" style={{ color: 'inherit', textDecoration: 'none' }}>Discord</a>
-            <a href="https://x.com/textcoco" style={{ color: 'inherit', textDecoration: 'none' }}>X/Twitter</a>
-            <a href="mailto:info@textcoco.com" style={{ color: 'inherit', textDecoration: 'none' }}>info@textcoco.com</a>
+            <a href="https://x.com/yayagent" style={{ color: 'inherit', textDecoration: 'none' }}>X/Twitter</a>
+            <a href="mailto:info@yayagent.com" style={{ color: 'inherit', textDecoration: 'none' }}>info@yayagent.com</a>
           </div>
         </div>
       </footer>
