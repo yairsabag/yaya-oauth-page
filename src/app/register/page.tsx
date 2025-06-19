@@ -99,7 +99,7 @@ export default function RegisterPage() {
 
   const handleGoogleOAuth = () => {
   const clientId = '314964896562-o93h71h2cpiqgcikaqeg2a34ht2ipl2j.apps.googleusercontent.com';
-  const redirectUri = encodeURIComponent('https://yairsabag.app.n8n.cloud/webhook/google-oauth-callback');
+  const redirectUri = encodeURIComponent('https://n8n-td2y.sliplane.app/webhook/google-oauth-callback');
   
   const scopes = encodeURIComponent([
     'openid',
