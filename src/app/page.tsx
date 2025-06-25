@@ -372,7 +372,7 @@ export default function Home() {
             gap: '8px',
             fontSize: '1rem',
             color: '#4a5568',
-            marginBottom: '2rem',
+            marginBottom: '3rem',
             fontWeight: '400'
           }}>
             Your executive assistant in <strong>WhatsApp</strong>
@@ -388,37 +388,32 @@ export default function Home() {
            style={{
            background: '#25d366',
            color: 'white',
-           padding: '16px 32px',
+           padding: '20px 40px',
            borderRadius: '50px',
            textDecoration: 'none',
-           fontSize: '1.1rem',
-           fontWeight: '500',
+           fontSize: '1.2rem',
+           fontWeight: '600',
            display: 'inline-flex',
            alignItems: 'center',
            gap: '12px',
            transition: 'all 0.3s ease',
-           boxShadow: '0 4px 20px rgba(37, 211, 102, 0.3)',
-           margin: '2rem 0'
+           boxShadow: '0 8px 30px rgba(37, 211, 102, 0.4)',
+           margin: '0 auto 3rem',
+           transform: 'translateY(0)',
+           border: 'none'
+       }}
+       onMouseEnter={(e) => {
+         e.target.style.transform = 'translateY(-2px)';
+         e.target.style.boxShadow = '0 12px 40px rgba(37, 211, 102, 0.5)';
+       }}
+       onMouseLeave={(e) => {
+         e.target.style.transform = 'translateY(0)';
+         e.target.style.boxShadow = '0 8px 30px rgba(37, 211, 102, 0.4)';
        }}
        >
-         <MessageCircle size={20} />
+         <MessageCircle size={22} />
           Start Here
        </a>
-
-          <a href={getUrlWithCode('/payment')} className="animate-on-scroll" style={{
-            background: '#2d5016',
-            color: 'white',
-            padding: '16px 32px',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontSize: '1.1rem',
-            fontWeight: '500',
-            display: 'inline-block',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 4px 20px rgba(45, 80, 22, 0.3)'
-          }}>
-            Start Free Trial
-          </a>
         </div>
       </section>
       {/* Features Section */}
