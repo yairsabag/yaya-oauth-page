@@ -1,9 +1,8 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import { MessageCircle, Check } from 'lucide-react'
-import { useRegistration } from '../contexts/RegistrationContext'
+import { MessageCircle, Check, Menu, X } from 'lucide-react'
 
-// Phone Mockup Component
+// Phone Mockup Component - מותאם מובייל
 function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'user' | 'yaya'; time?: string }> }) {
   const [visibleMessages, setVisibleMessages] = useState(0)
   
@@ -13,7 +12,6 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
         if (prev < messages.length) {
           return prev + 1
         } else {
-          // Reset after showing all messages for 3 seconds
           setTimeout(() => setVisibleMessages(0), 3000)
           return prev
         }
@@ -25,12 +23,13 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
 
   return (
     <div style={{
-      width: '280px',
+      width: '100%',
+      maxWidth: '280px',
       height: '420px',
       background: '#000',
       borderRadius: '30px',
       padding: '8px',
-      margin: '0 auto',
+      margin: '2rem auto',
       position: 'relative',
       boxShadow: '0 25px 50px rgba(0,0,0,0.3)'
     }}>
@@ -170,9 +169,22 @@ export default function Home() {
   const [currentTextIndex, setCurrentTextIndex] = useState(0)
   const [isClient, setIsClient] = useState(false)
   const [billingType, setBillingType] = useState('monthly')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [registrationCode, setRegistrationCode] = useState('')
 
-  // שימוש בקונטקסט לניהול הקוד
-  const { registrationCode, getUrlWithCode } = useRegistration()
+  // פונקציה לבניית URL עם קוד רישום
+  const getUrlWithCode = (path: string, params?: Record<string, string>) => {
+    const url = new URL(path, window.location.origin)
+    if (registrationCode) {
+      url.searchParams.set('code', registrationCode)
+    }
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        url.searchParams.set(key, value)
+      })
+    }
+    return url.toString()
+  }
 
   const heroTexts = [
     'calendar.',
@@ -197,7 +209,7 @@ export default function Home() {
       })
     }, {
       threshold: 0.1,
-      rootMargin: '0px 0px -100px 0px'
+      rootMargin: '0px 0px -50px 0px'
     })
 
     const elements = document.querySelectorAll('.animate-on-scroll')
@@ -214,11 +226,8 @@ export default function Home() {
         : 'https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0'
       window.open(whatsappUrl, '_blank')
     } else {
-      // עבור תוכניות בתשלום - הפניה לדף תשלום עם שמירת הקוד
-      const paymentUrl = getUrlWithCode('/payment', {
-        plan: planId,
-        billing: billingType
-      })
+      // עבור תוכניות בתשלום - הפניה לדף תשלום
+      const paymentUrl = `/payment?plan=${planId}&billing=${billingType}${registrationCode ? `&code=${registrationCode}` : ''}`
       window.location.href = paymentUrl
     }
   }
@@ -252,9 +261,51 @@ export default function Home() {
             opacity: 1 !important;
           }
         }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+          .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding-top: 80px;
+          }
+          
+          .mobile-menu-content {
+            background: white;
+            width: 100%;
+            max-width: 300px;
+            height: fit-content;
+            padding: 2rem;
+            border-radius: 20px 0 0 20px;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+          }
+        }
+
+        /* Touch-friendly buttons */
+        .touch-button {
+          min-height: 48px;
+          min-width: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        
+        .touch-button:active {
+          transform: scale(0.95);
+        }
       `}</style>
 
-      {/* Header */}
+      {/* Header - מותאם מובייל */}
       <header style={{
         background: 'rgba(255,255,255,0.95)',
         backdropFilter: 'blur(10px)',
@@ -267,20 +318,38 @@ export default function Home() {
         <div style={{
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: '0 2rem',
+          padding: '0 1rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
+          {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <img
               src="/yaya-logo.png"
               alt="Yaya Assistant Logo"
-              style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+              style={{ 
+                width: 'clamp(48px, 8vw, 80px)', 
+                height: 'clamp(48px, 8vw, 80px)', 
+                objectFit: 'contain' 
+              }}
             />
-            <span style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
+            <span style={{ 
+              fontSize: 'clamp(1.2rem, 4vw, 1.5rem)', 
+              fontWeight: '600', 
+              color: '#2d5016' 
+            }}>
+              Yaya
+            </span>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+
+          {/* Desktop Navigation */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '0.5rem', 
+            alignItems: 'center',
+            '@media (max-width: 768px)': { display: 'none' }
+          }} className="hidden md:flex">
             <span style={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               color: 'white',
@@ -295,7 +364,7 @@ export default function Home() {
               Introducing Multi-Calendar Support 📅
             </span>
             <a
-              href={getUrlWithCode('/payment')}
+              href="/payment"
               style={{
                 background: '#2d5016',
                 color: 'white',
@@ -320,20 +389,93 @@ export default function Home() {
               Login
             </a>
           </div>
+
+          {/* Mobile Menu Button */}
+          <button 
+            className="touch-button md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#2d5016',
+              borderRadius: '8px',
+              padding: '8px'
+            }}
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="mobile-menu md:hidden" onClick={() => setMobileMenuOpen(false)}>
+            <div className="mobile-menu-content" onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <span style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  padding: '12px',
+                  borderRadius: '12px',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  textAlign: 'center'
+                }}>
+                  📅 Multi-Calendar Support
+                </span>
+                <a
+                  href="/payment"
+                  style={{
+                    background: '#2d5016',
+                    color: 'white',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    textDecoration: 'none',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    textAlign: 'center',
+                    minHeight: '48px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                  Get Started
+                </a>
+                <a
+                  href="http://yayagent.com"
+                  style={{
+                    color: '#4a5568',
+                    textDecoration: 'none',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    padding: '16px',
+                    textAlign: 'center',
+                    minHeight: '48px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                  Login
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* Hero Section */}
+      {/* Hero Section - מותאם מובייל */}
       <section style={{
         background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)',
         color: '#2d3748',
-        padding: '8rem 0 6rem',
+        padding: 'clamp(6rem, 15vw, 8rem) 0 clamp(4rem, 10vw, 6rem)',
         textAlign: 'center',
-        marginTop: '80px'
+        marginTop: '80px',
+        minHeight: '60vh',
+        display: 'flex',
+        alignItems: 'center'
       }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', width: '100%' }}>
           <h1 className="animate-on-scroll" style={{
-            fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
+            fontSize: 'clamp(2rem, 8vw, 4.5rem)',
             fontWeight: '300',
             marginBottom: '0.5rem',
             lineHeight: '1.1',
@@ -343,19 +485,20 @@ export default function Home() {
             Save your time, text your
           </h1>
           <h1 className="text-animate" style={{
-            fontSize: 'clamp(2.5rem, 5vw, 4.5rem)',
+            fontSize: 'clamp(2rem, 8vw, 4.5rem)',
             fontWeight: '300',
             marginBottom: '2rem',
             lineHeight: '1.1',
-            minHeight: '5rem',
+            minHeight: 'clamp(3rem, 8vw, 5rem)',
             color: '#1a202c',
             letterSpacing: '-0.04em'
           }}>
             <span style={{
               background: '#e6f4ea',
-              padding: '6px 12px',
+              padding: 'clamp(6px, 2vw, 12px) clamp(8px, 3vw, 16px)',
               borderRadius: '12px',
-              color: '#2d5016'
+              color: '#2d5016',
+              display: 'inline-block'
             }}>
               {isClient ? heroTexts[currentTextIndex] : heroTexts[0]}
             </span>
@@ -366,21 +509,22 @@ export default function Home() {
             backdropFilter: 'blur(10px)',
             border: '1px solid rgba(0,0,0,0.1)',
             borderRadius: '50px',
-            padding: '12px 24px',
+            padding: 'clamp(8px, 3vw, 12px) clamp(16px, 5vw, 24px)',
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            fontSize: '1rem',
+            fontSize: 'clamp(0.875rem, 4vw, 1rem)',
             color: '#4a5568',
             marginBottom: '2rem',
-            fontWeight: '400'
+            fontWeight: '400',
+            maxWidth: '90%'
           }}>
             Your executive assistant in <strong>WhatsApp</strong>
             <MessageCircle size={18} style={{ color: '#25d366' }} />
           </div>
 
           <div className="animate-on-scroll" style={{
-            fontSize: '1.5rem',
+            fontSize: 'clamp(1.25rem, 6vw, 1.5rem)',
             fontWeight: '400',
             margin: '2rem 0',
             color: '#1a202c',
@@ -391,29 +535,34 @@ export default function Home() {
             </a>
           </div>
 
-          <a href={getUrlWithCode('/payment')} className="animate-on-scroll" style={{
-            background: '#2d5016',
-            color: 'white',
-            padding: '16px 32px',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontSize: '1.1rem',
-            fontWeight: '500',
-            display: 'inline-block',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 4px 20px rgba(45, 80, 22, 0.3)'
-          }}>
+          <a 
+            href="/payment" 
+            className="animate-on-scroll touch-button" 
+            style={{
+              background: '#2d5016',
+              color: 'white',
+              padding: 'clamp(12px, 4vw, 16px) clamp(24px, 8vw, 32px)',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontSize: 'clamp(1rem, 4vw, 1.1rem)',
+              fontWeight: '500',
+              display: 'inline-block',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 20px rgba(45, 80, 22, 0.3)',
+              minHeight: '48px'
+            }}>
             Start Free Trial
           </a>
         </div>
       </section>
-      {/* Features Section */}
-      <section style={{ padding: '6rem 0', background: '#ffffff' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
+
+      {/* Features Section - מותאם מובייל */}
+      <section style={{ padding: 'clamp(3rem, 8vw, 6rem) 0', background: '#ffffff' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
           <h2 className="animate-on-scroll" style={{
-            fontSize: '2.5rem',
+            fontSize: 'clamp(2rem, 6vw, 2.5rem)',
             fontWeight: '300',
-            marginBottom: '4rem',
+            marginBottom: 'clamp(3rem, 8vw, 4rem)',
             color: '#1a202c',
             textAlign: 'center',
             letterSpacing: '-0.02em'
@@ -421,29 +570,34 @@ export default function Home() {
             Save 3 hours a week with Yaya
           </h2>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '4rem' }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', 
+            gap: 'clamp(2rem, 6vw, 4rem)' 
+          }}>
             {/* Feature 1 */}
             <div className="animate-on-scroll slide-in-left" style={{ textAlign: 'center' }}>
               <h3 style={{
-                fontSize: '1.5rem',
+                fontSize: 'clamp(1.25rem, 5vw, 1.5rem)',
                 fontWeight: '400',
                 marginBottom: '1rem',
                 color: '#2d3748',
-                letterSpacing: '-0.01em'
+                letterSpacing: '-0.01em',
+                lineHeight: '1.3'
               }}>
                 Create hundreds of events, in seconds
               </h3>
               <p style={{
                 color: '#718096',
                 marginBottom: '2rem',
-                fontSize: '1rem',
+                fontSize: 'clamp(0.875rem, 4vw, 1rem)',
                 lineHeight: '1.7',
                 fontWeight: '400'
               }}>
                 Modify an event with a voice message. Search multiple calendars, instantly.
                 Yaya knows when you're busy or free and organizes your weekly schedule.
               </p>
-              <div style={{ marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+              <div style={{ marginBottom: '1.5rem', fontSize: 'clamp(0.875rem, 4vw, 0.95rem)' }}>
                 <div style={{ color: '#4a5568', marginBottom: '0.5rem' }}>We support:</div>
                 <div style={{ color: '#2d5016', fontWeight: '500' }}>• Outlook Calendar</div>
                 <div style={{ color: '#2d5016', fontWeight: '500' }}>• Google Calendar</div>
@@ -460,18 +614,19 @@ export default function Home() {
             {/* Feature 2 */}
             <div className="animate-on-scroll" style={{ textAlign: 'center' }}>
               <h3 style={{
-                fontSize: '1.5rem',
+                fontSize: 'clamp(1.25rem, 5vw, 1.5rem)',
                 fontWeight: '400',
                 marginBottom: '1rem',
                 color: '#2d3748',
-                letterSpacing: '-0.01em'
+                letterSpacing: '-0.01em',
+                lineHeight: '1.3'
               }}>
                 Stop forgetting your small tasks
               </h3>
               <p style={{
                 color: '#718096',
                 marginBottom: '2rem',
-                fontSize: '1rem',
+                fontSize: 'clamp(0.875rem, 4vw, 1rem)',
                 lineHeight: '1.7',
                 fontWeight: '400'
               }}>
@@ -491,18 +646,19 @@ export default function Home() {
             {/* Feature 3 */}
             <div className="animate-on-scroll slide-in-right" style={{ textAlign: 'center' }}>
               <h3 style={{
-                fontSize: '1.5rem',
+                fontSize: 'clamp(1.25rem, 5vw, 1.5rem)',
                 fontWeight: '400',
                 marginBottom: '1rem',
                 color: '#2d3748',
-                letterSpacing: '-0.01em'
+                letterSpacing: '-0.01em',
+                lineHeight: '1.3'
               }}>
                 Your ToDo list in WhatsApp
               </h3>
               <p style={{
                 color: '#718096',
                 marginBottom: '2rem',
-                fontSize: '1rem',
+                fontSize: 'clamp(0.875rem, 4vw, 1rem)',
                 lineHeight: '1.7',
                 fontWeight: '400'
               }}>
@@ -522,10 +678,10 @@ export default function Home() {
       </section>
 
       {/* Learning Section */}
-      <section style={{ padding: '6rem 0', background: '#fafafa' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 2rem', textAlign: 'center' }}>
+      <section style={{ padding: 'clamp(3rem, 8vw, 6rem) 0', background: '#fafafa' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
           <h2 className="animate-on-scroll" style={{
-            fontSize: '2.5rem',
+            fontSize: 'clamp(2rem, 6vw, 2.5rem)',
             fontWeight: '300',
             marginBottom: '2rem',
             color: '#1a202c',
@@ -534,7 +690,7 @@ export default function Home() {
             Yaya learns from you and gets smarter over time
           </h2>
           <p className="animate-on-scroll" style={{
-            fontSize: '1.1rem',
+            fontSize: 'clamp(1rem, 4vw, 1.1rem)',
             color: '#718096',
             lineHeight: '1.7',
             fontWeight: '400'
@@ -546,11 +702,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section style={{ padding: '6rem 0', background: 'white' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', textAlign: 'center' }}>
+      {/* Pricing Section - מותאם מובייל */}
+      <section style={{ padding: 'clamp(3rem, 8vw, 6rem) 0', background: 'white' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
           <h2 className="animate-on-scroll" style={{
-            fontSize: '3rem',
+            fontSize: 'clamp(2.5rem, 6vw, 3rem)',
             fontWeight: '400',
             marginBottom: '1.5rem',
             color: '#8B5E3C',
@@ -559,74 +715,82 @@ export default function Home() {
             Simple Pricing
           </h2>
 
-          {/* Billing Toggle */}
+          {/* Billing Toggle - מותאם מובייל */}
           <div className="animate-on-scroll" style={{
             display: 'flex',
             gap: '4px',
             justifyContent: 'center',
-            marginBottom: '4rem',
+            marginBottom: 'clamp(3rem, 8vw, 4rem)',
             background: '#f7fafc',
             borderRadius: '8px',
             padding: '4px',
             width: 'fit-content',
-            margin: '0 auto 4rem',
-            cursor: 'pointer'
+            margin: '0 auto clamp(3rem, 8vw, 4rem)',
+            cursor: 'pointer',
+            maxWidth: '90%'
           }}>
             <span 
               onClick={() => setBillingType('yearly')}
+              className="touch-button"
               style={{
                 background: billingType === 'yearly' ? 'white' : 'transparent',
                 color: billingType === 'yearly' ? '#8B5E3C' : '#999',
-                padding: '8px 20px',
+                padding: 'clamp(6px, 2vw, 8px) clamp(12px, 4vw, 20px)',
                 borderRadius: '6px',
-                fontSize: '1.1rem',
+                fontSize: 'clamp(0.875rem, 4vw, 1.1rem)',
                 fontWeight: '500',
                 boxShadow: billingType === 'yearly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                textAlign: 'center',
+                flex: 1
               }}
             >
               Yearly Billing
             </span>
             <span 
               onClick={() => setBillingType('monthly')}
+              className="touch-button"
               style={{
                 background: billingType === 'monthly' ? 'white' : 'transparent',
                 color: billingType === 'monthly' ? '#8B5E3C' : '#999',
-                padding: '8px 20px',
+                padding: 'clamp(6px, 2vw, 8px) clamp(12px, 4vw, 20px)',
                 borderRadius: '6px',
-                fontSize: '1.1rem',
+                fontSize: 'clamp(0.875rem, 4vw, 1.1rem)',
                 fontWeight: '500',
                 boxShadow: billingType === 'monthly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                textAlign: 'center',
+                flex: 1
               }}
             >
               Monthly Billing
             </span>
           </div>
 
-          {/* Pricing Cards */}
+          {/* Pricing Cards - מותאם מובייל */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '2rem',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+            gap: 'clamp(1.5rem, 4vw, 2rem)',
             marginBottom: '3rem'
           }}>
             {/* Basic Plan */}
-            <div className="animate-on-scroll" style={{
+            <div className="animate-on-scroll touch-button" style={{
               background: '#F5F1EB',
               borderRadius: '20px',
-              padding: '2.5rem 2rem',
+              padding: 'clamp(1.5rem, 5vw, 2.5rem) clamp(1rem, 4vw, 2rem)',
               textAlign: 'left',
               border: '1px solid #E5DDD5',
               cursor: 'pointer',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              opacity: 0.7
             }}
             onClick={() => handlePlanAction('basic')}
             >
               <div style={{ 
-                fontSize: '0.9rem', 
+                fontSize: 'clamp(0.8rem, 3vw, 0.9rem)', 
                 color: '#8B5E3C', 
                 fontWeight: '500', 
                 marginBottom: '0.5rem',
@@ -636,7 +800,7 @@ export default function Home() {
                 BASIC PLAN
               </div>
               <div style={{ 
-                fontSize: '4rem', 
+                fontSize: 'clamp(3rem, 10vw, 4rem)', 
                 fontWeight: '300', 
                 color: '#8B5E3C', 
                 marginBottom: '2rem',
@@ -646,42 +810,49 @@ export default function Home() {
               </div>
               
               <div style={{ marginBottom: '2rem' }}>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Unlimited messages
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Unlimited one-time reminders
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100+ languages supported
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  ChatGPT
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  5 Voice Notes / Month
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  5 Image Analysis / Month
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Receive reminders from friends
-                </div>
+                {[
+                  'Unlimited messages',
+                  'Unlimited one-time reminders',
+                  '100+ languages supported',
+                  'ChatGPT',
+                  '5 Voice Notes / Month',
+                  '5 Image Analysis / Month',
+                  'Receive reminders from friends'
+                ].map((feature, index) => (
+                  <div key={index} style={{ 
+                    color: '#8B5E3C', 
+                    marginBottom: '0.75rem', 
+                    fontSize: 'clamp(0.875rem, 4vw, 0.95rem)', 
+                    display: 'flex', 
+                    alignItems: 'flex-start', 
+                    gap: '8px',
+                    lineHeight: '1.4'
+                  }}>
+                    <span style={{ color: '#8B5E3C', fontSize: '1rem', minWidth: '16px' }}>•</span>
+                    {feature}
+                  </div>
+                ))}
+              </div>
+
+              <div style={{
+                background: 'rgba(37, 211, 102, 0.1)',
+                color: '#25d366',
+                padding: '12px 16px',
+                borderRadius: '12px',
+                textAlign: 'center',
+                fontSize: 'clamp(0.875rem, 4vw, 0.9rem)',
+                fontWeight: '500',
+                border: '1px solid rgba(37, 211, 102, 0.2)'
+              }}>
+                💬 Available on WhatsApp Only
               </div>
             </div>
 
             {/* Executive Plan */}
-            <div className="animate-on-scroll" style={{
+            <div className="animate-on-scroll touch-button" style={{
               background: '#F5F1EB',
               borderRadius: '20px',
-              padding: '2.5rem 2rem',
+              padding: 'clamp(1.5rem, 5vw, 2.5rem) clamp(1rem, 4vw, 2rem)',
               textAlign: 'left',
               position: 'relative',
               border: '2px solid #8B5E3C',
@@ -698,13 +869,13 @@ export default function Home() {
                 color: 'white',
                 padding: '4px 12px',
                 borderRadius: '12px',
-                fontSize: '0.75rem',
+                fontSize: 'clamp(0.7rem, 3vw, 0.75rem)',
                 fontWeight: '500'
               }}>
                 7 DAY TRIAL
               </div>
               <div style={{ 
-                fontSize: '0.9rem', 
+                fontSize: 'clamp(0.8rem, 3vw, 0.9rem)', 
                 color: '#8B5E3C', 
                 fontWeight: '500', 
                 marginBottom: '0.5rem',
@@ -714,7 +885,7 @@ export default function Home() {
                 EXECUTIVE PLAN
               </div>
               <div style={{ 
-                fontSize: '4rem', 
+                fontSize: 'clamp(3rem, 10vw, 4rem)', 
                 fontWeight: '300', 
                 color: '#8B5E3C', 
                 marginBottom: '0.5rem',
@@ -723,59 +894,42 @@ export default function Home() {
                 alignItems: 'baseline',
                 gap: '8px'
               }}>
-                ${billingType === 'yearly' ? '4' : '5'}<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
+                ${billingType === 'yearly' ? '4' : '5'}
+                <span style={{ fontSize: 'clamp(0.875rem, 4vw, 1rem)', fontWeight: '400' }}>/MONTH</span>
               </div>
               
               <div style={{ marginBottom: '2rem' }}>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Unlimited messages
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Unlimited one-time reminders
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100+ languages supported
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  ChatGPT
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Google / Outlook Calendar
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100 Voice Notes / Month
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  20 Image Analysis / Month
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  20 Internet Searches
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Send/Receive reminders with friends
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  AI Memory of You
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Create Lists
-                </div>
+                {[
+                  'Unlimited messages',
+                  'Unlimited one-time reminders',
+                  '100+ languages supported',
+                  'ChatGPT',
+                  'Google / Outlook Calendar',
+                  '100 Voice Notes / Month',
+                  '20 Image Analysis / Month',
+                  '20 Internet Searches',
+                  'Send/Receive reminders with friends',
+                  'AI Memory of You',
+                  'Create Lists'
+                ].map((feature, index) => (
+                  <div key={index} style={{ 
+                    color: '#8B5E3C', 
+                    marginBottom: '0.75rem', 
+                    fontSize: 'clamp(0.875rem, 4vw, 0.95rem)', 
+                    display: 'flex', 
+                    alignItems: 'flex-start', 
+                    gap: '8px',
+                    lineHeight: '1.4'
+                  }}>
+                    <span style={{ color: '#8B5E3C', fontSize: '1rem', minWidth: '16px' }}>•</span>
+                    {feature}
+                  </div>
+                ))}
               </div>
               
               <div style={{
                 textAlign: 'center',
-                fontSize: '0.9rem',
+                fontSize: 'clamp(0.875rem, 4vw, 0.9rem)',
                 color: '#8B5E3C',
                 fontWeight: '400',
                 marginTop: '1.5rem'
@@ -785,10 +939,10 @@ export default function Home() {
             </div>
 
             {/* Ultimate Plan */}
-            <div className="animate-on-scroll" style={{
+            <div className="animate-on-scroll touch-button" style={{
               background: '#F5F1EB',
               borderRadius: '20px',
-              padding: '2.5rem 2rem',
+              padding: 'clamp(1.5rem, 5vw, 2.5rem) clamp(1rem, 4vw, 2rem)',
               textAlign: 'left',
               position: 'relative',
               border: '1px solid #E5DDD5',
@@ -805,13 +959,13 @@ export default function Home() {
                 color: 'white',
                 padding: '4px 12px',
                 borderRadius: '12px',
-                fontSize: '0.75rem',
+                fontSize: 'clamp(0.7rem, 3vw, 0.75rem)',
                 fontWeight: '500'
               }}>
                 7 DAY TRIAL
               </div>
               <div style={{ 
-                fontSize: '0.9rem', 
+                fontSize: 'clamp(0.8rem, 3vw, 0.9rem)', 
                 color: '#8B5E3C', 
                 fontWeight: '500', 
                 marginBottom: '0.5rem',
@@ -821,7 +975,7 @@ export default function Home() {
                 ULTIMATE PLAN
               </div>
               <div style={{ 
-                fontSize: '4rem', 
+                fontSize: 'clamp(3rem, 10vw, 4rem)', 
                 fontWeight: '300', 
                 color: '#8B5E3C', 
                 marginBottom: '0.5rem',
@@ -830,113 +984,151 @@ export default function Home() {
                 alignItems: 'baseline',
                 gap: '8px'
               }}>
-                ${billingType === 'yearly' ? '13' : '14'}<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
+                ${billingType === 'yearly' ? '13' : '14'}
+                <span style={{ fontSize: 'clamp(0.875rem, 4vw, 1rem)', fontWeight: '400' }}>/MONTH</span>
               </div>
               
               <div style={{ marginBottom: '2rem' }}>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Unlimited messages
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Unlimited one-time reminders
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100+ languages supported
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  ChatGPT
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Repeat reminders
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Google / Outlook Calendar
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  500 Voice Notes / Month
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100 Image Analysis / Month
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100 Internet Searches
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Send/Receive reminders with friends
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  AI Memory of You
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Create Lists
-                </div>
+                {[
+                  'Unlimited messages',
+                  'Unlimited one-time reminders',
+                  '100+ languages supported',
+                  'ChatGPT',
+                  'Repeat reminders',
+                  'Google / Outlook Calendar',
+                  '500 Voice Notes / Month',
+                  '100 Image Analysis / Month',
+                  '100 Internet Searches',
+                  'Send/Receive reminders with friends',
+                  'AI Memory of You',
+                  'Create Lists'
+                ].map((feature, index) => (
+                  <div key={index} style={{ 
+                    color: '#8B5E3C', 
+                    marginBottom: '0.75rem', 
+                    fontSize: 'clamp(0.875rem, 4vw, 0.95rem)', 
+                    display: 'flex', 
+                    alignItems: 'flex-start', 
+                    gap: '8px',
+                    lineHeight: '1.4'
+                  }}>
+                    <span style={{ color: '#8B5E3C', fontSize: '1rem', minWidth: '16px' }}>•</span>
+                    {feature}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
           {/* Need Yaya for your Team */}
           <div className="animate-on-scroll" style={{
-            fontSize: '1.1rem',
+            fontSize: 'clamp(1rem, 4vw, 1.1rem)',
             color: '#8B5E3C',
             marginTop: '3rem',
             textAlign: 'center'
           }}>
-            Need Yaya for your Team?
+            Need Yaya for your Team?{' '}
+            <a href="mailto:info@textcoco.com" style={{ textDecoration: 'underline' }}>
+              Contact us
+            </a>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer style={{ background: '#1a202c', color: '#a0aec0', padding: '3rem 0' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', textAlign: 'center' }}>
+      {/* Footer - מותאם מובייל */}
+      <footer style={{ background: '#1a202c', color: '#a0aec0', padding: 'clamp(2rem, 6vw, 3rem) 0' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
           <div style={{ marginBottom: '2rem' }}>
-            <span style={{ fontSize: '1.5rem', fontWeight: '500', color: 'white' }}>Yaya</span>
+            <span style={{ fontSize: 'clamp(1.25rem, 5vw, 1.5rem)', fontWeight: '500', color: 'white' }}>Yaya</span>
           </div>
           <div style={{
             display: 'flex',
             justifyContent: 'center',
-            gap: '2rem',
+            gap: 'clamp(1rem, 4vw, 2rem)',
             flexWrap: 'wrap',
-            fontSize: '0.875rem'
+            fontSize: 'clamp(0.8rem, 3.5vw, 0.875rem)'
           }}>
-            <a href={getUrlWithCode('/privacy-policy')} style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
-            <a href={getUrlWithCode('/terms-of-service')} style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Service</a>
-            <a href={getUrlWithCode('/posts')} style={{ color: 'inherit', textDecoration: 'none' }}>Blog</a>
-            <a href="https://discord.gg/BRxAAq47xv" style={{ color: 'inherit', textDecoration: 'none' }}>Discord</a>
-            <a href="https://x.com/yayagent" style={{ color: 'inherit', textDecoration: 'none' }}>X/Twitter</a>
-            <a href="mailto:info@yayagent.com" style={{ color: 'inherit', textDecoration: 'none' }}>info@yayagent.com</a>
+            <a href="/privacy-policy" style={{ 
+              color: 'inherit', 
+              textDecoration: 'none',
+              padding: '8px',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              Privacy Policy
+            </a>
+            <a href="/terms-of-service" style={{ 
+              color: 'inherit', 
+              textDecoration: 'none',
+              padding: '8px',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              Terms of Service
+            </a>
+            <a href="/posts" style={{ 
+              color: 'inherit', 
+              textDecoration: 'none',
+              padding: '8px',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              Blog
+            </a>
+            <a href="https://discord.gg/BRxAAq47xv" style={{ 
+              color: 'inherit', 
+              textDecoration: 'none',
+              padding: '8px',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              Discord
+            </a>
+            <a href="https://x.com/yayagent" style={{ 
+              color: 'inherit', 
+              textDecoration: 'none',
+              padding: '8px',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              X/Twitter
+            </a>
+            <a href="mailto:info@yayagent.com" style={{ 
+              color: 'inherit', 
+              textDecoration: 'none',
+              padding: '8px',
+              minHeight: '44px',
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              info@yayagent.com
+            </a>
           </div>
         </div>
       </footer>
 
-      {/* WhatsApp Floating Button */}
+      {/* WhatsApp Floating Button - מותאם מובייל */}
       <a
         title="Chat with Yaya on WhatsApp"
         href={registrationCode 
           ? `https://wa.me/972559943649?text=My code: ${registrationCode}`
           : "https://wa.me/972559943649"
         }
+        className="touch-button"
         style={{
           position: 'fixed',
-          bottom: '24px',
-          right: '24px',
+          bottom: 'clamp(16px, 4vw, 24px)',
+          right: 'clamp(16px, 4vw, 24px)',
           background: '#25d366',
           color: 'white',
           borderRadius: '50%',
-          width: '56px',
-          height: '56px',
+          width: 'clamp(48px, 12vw, 56px)',
+          height: 'clamp(48px, 12vw, 56px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
