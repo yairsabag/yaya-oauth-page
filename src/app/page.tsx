@@ -88,7 +88,7 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
                 justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
                 opacity: 0,
                 animation: 'slideInMessage 0.5s ease-out forwards',
-                animationDelay: ${index * 0.3}s
+                animationDelay: `${index * 0.3}s`
               }}
             >
               <div style={{
@@ -150,7 +150,7 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
         </div>
       </div>
 
-      <style jsx>{
+      <style jsx>{`
         @keyframes slideInMessage {
           from {
             opacity: 0;
@@ -161,7 +161,7 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
             transform: translateY(0);
           }
         }
-      }</style>
+      `}</style>
     </div>
   )
 }
@@ -210,7 +210,7 @@ export default function Home() {
     if (planId === 'basic') {
       // עבור תוכנית חינמית - פתיחת WhatsApp עם קוד אם קיים
       const whatsappUrl = registrationCode 
-        ? https://api.whatsapp.com/send/?phone=972559943649&text=My code: ${registrationCode}&type=phone_number&app_absent=0
+        ? `https://api.whatsapp.com/send/?phone=972559943649&text=My code: ${registrationCode}&type=phone_number&app_absent=0`
         : 'https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0'
       window.open(whatsappUrl, '_blank')
     } else {
@@ -225,7 +225,7 @@ export default function Home() {
 
   return (
     <div style={{ fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-      <style jsx>{
+      <style jsx>{`
         .animate-on-scroll {
           opacity: 0;
           transform: translateY(30px);
@@ -252,7 +252,7 @@ export default function Home() {
             opacity: 1 !important;
           }
         }
-      }</style>
+      `}</style>
 
       {/* Header */}
       <header style={{
@@ -416,6 +416,7 @@ export default function Home() {
        </a>
         </div>
       </section>
+
       {/* Features Section */}
       <section style={{ padding: '6rem 0', background: '#ffffff' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
