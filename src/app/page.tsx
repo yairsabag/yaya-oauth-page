@@ -411,7 +411,12 @@ export default function Home() {
          e.target.style.boxShadow = '0 8px 30px rgba(37, 211, 102, 0.4)';
        }}
        >
-         {/* Features Section */}
+         <MessageCircle size={22} />
+          Start Here
+       </a>
+        </div>
+      </section>
+      {/* Features Section */}
       <section style={{ padding: '6rem 0', background: '#ffffff' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
           <h2 className="animate-on-scroll" style={{
@@ -956,4 +961,228 @@ export default function Home() {
               
               <div style={{ marginBottom: '2rem' }}>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited messages
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited one-time reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100+ languages supported
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  ChatGPT
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Google / Outlook Calendar
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 Voice Notes / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  20 Image Analysis / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  20 Internet Searches
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Send/Receive reminders with friends
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  AI Memory of You
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Create Lists
+                </div>
+              </div>
+              
+              <div style={{
+                textAlign: 'center',
+                fontSize: '0.9rem',
+                color: '#8B5E3C',
+                fontWeight: '400',
+                marginTop: '1.5rem'
+              }}>
+                4,100+ users loving this plan
+              </div>
+            </div>
+
+            {/* Ultimate Plan */}
+            <div className="animate-on-scroll" style={{
+              background: '#F5F1EB',
+              borderRadius: '20px',
+              padding: '2.5rem 2rem',
+              textAlign: 'left',
+              position: 'relative',
+              border: '1px solid #E5DDD5',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease'
+            }}
+            onClick={() => handlePlanAction('ultimate')}
+            >
+              <div style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: '#8B5E3C',
+                color: 'white',
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontSize: '0.75rem',
+                fontWeight: '500'
+              }}>
+                7 DAY TRIAL
+              </div>
+              <div style={{ 
+                fontSize: '0.9rem', 
+                color: '#8B5E3C', 
+                fontWeight: '500', 
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                ULTIMATE PLAN
+              </div>
+              <div style={{ 
+                fontSize: '4rem', 
+                fontWeight: '300', 
+                color: '#8B5E3C', 
+                marginBottom: '0.5rem',
+                lineHeight: '1',
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '8px'
+              }}>
+                ${billingType === 'yearly' ? '13' : '14'}<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
+              </div>
+              
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited messages
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited one-time reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100+ languages supported
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  ChatGPT
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Repeat reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Google / Outlook Calendar
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  500 Voice Notes / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 Image Analysis / Month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 Internet Searches
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Send/Receive reminders with friends
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  AI Memory of You
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Create Lists
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Need Yaya for your Team */}
+          <div className="animate-on-scroll" style={{
+            fontSize: '1.1rem',
+            color: '#8B5E3C',
+            marginTop: '3rem',
+            textAlign: 'center'
+          }}>
+            Need Yaya for your Team?
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer style={{ background: '#1a202c', color: '#a0aec0', padding: '3rem 0' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', textAlign: 'center' }}>
+          <div style={{ marginBottom: '2rem' }}>
+            <span style={{ fontSize: '1.5rem', fontWeight: '500', color: 'white' }}>Yaya</span>
+          </div>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '2rem',
+            flexWrap: 'wrap',
+            fontSize: '0.875rem'
+          }}>
+            <a href={getUrlWithCode('/privacy-policy')} style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
+            <a href={getUrlWithCode('/terms-of-service')} style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Service</a>
+            <a href={getUrlWithCode('/posts')} style={{ color: 'inherit', textDecoration: 'none' }}>Blog</a>
+            <a href="https://discord.gg/BRxAAq47xv" style={{ color: 'inherit', textDecoration: 'none' }}>Discord</a>
+            <a href="https://x.com/yayagent" style={{ color: 'inherit', textDecoration: 'none' }}>X/Twitter</a>
+            <a href="mailto:info@yayagent.com" style={{ color: 'inherit', textDecoration: 'none' }}>info@yayagent.com</a>
+          </div>
+        </div>
+      </footer>
+
+      {/* WhatsApp Floating Button */}
+      <a
+        title="Chat with Yaya on WhatsApp"
+        href={registrationCode 
+          ? https://wa.me/972559943649?text=My code: ${registrationCode}
+          : "https://wa.me/972559943649"
+        }
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          background: '#25d366',
+          color: 'white',
+          borderRadius: '50%',
+          width: '56px',
+          height: '56px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textDecoration: 'none',
+          boxShadow: '0 8px 25px rgba(37, 211, 102, 0.4)',
+          zIndex: 1000,
+          transition: 'transform 0.3s ease'
+        }}
+        onMouseEnter={(e) => (e.target as HTMLElement).style.transform = 'scale(1.1)'}
+        onMouseLeave={(e) => (e.target as HTMLElement).style.transform = 'scale(1)'}
+      >
+        <MessageCircle size={24} />
+      </a>
+    </div>
+  )
+}
