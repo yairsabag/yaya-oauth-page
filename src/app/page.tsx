@@ -379,17 +379,31 @@ export default function Home() {
             <MessageCircle size={18} style={{ color: '#25d366' }} />
           </div>
 
-          <div className="animate-on-scroll" style={{
-            fontSize: '1.5rem',
-            fontWeight: '400',
-            margin: '2rem 0',
-            color: '#1a202c',
-            letterSpacing: '-0.01em'
-          }}>
-            <a href="https://wa.me/972559943649" style={{ color: 'inherit', textDecoration: 'none' }}>
-              +972 55-994-3649
-            </a>
-          </div>
+          <a 
+  href={registrationCode 
+    ? `https://wa.me/972559943649?text=My code: ${registrationCode}`
+    : "https://wa.me/972559943649"
+  }
+  className="animate-on-scroll" 
+  style={{
+    background: '#25d366',
+    color: 'white',
+    padding: '16px 32px',
+    borderRadius: '50px',
+    textDecoration: 'none',
+    fontSize: '1.1rem',
+    fontWeight: '500',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '12px',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 20px rgba(37, 211, 102, 0.3)',
+    margin: '2rem 0'
+  }}
+>
+  <MessageCircle size={20} />
+  Start Here
+</a>
 
           <a href={getUrlWithCode('/payment')} className="animate-on-scroll" style={{
             background: '#2d5016',
