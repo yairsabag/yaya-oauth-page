@@ -88,7 +88,7 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
                 justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
                 opacity: 0,
                 animation: 'slideInMessage 0.5s ease-out forwards',
-                animationDelay: `${index * 0.3}s`
+                animationDelay: ${index * 0.3}s
               }}
             >
               <div style={{
@@ -210,7 +210,7 @@ export default function Home() {
     if (planId === 'basic') {
       // עבור תוכנית חינמית - פתיחת WhatsApp עם קוד אם קיים
       const whatsappUrl = registrationCode 
-        ? `https://api.whatsapp.com/send/?phone=972559943649&text=My code: ${registrationCode}&type=phone_number&app_absent=0`
+        ? https://api.whatsapp.com/send/?phone=972559943649&text=My code: ${registrationCode}&type=phone_number&app_absent=0
         : 'https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0'
       window.open(whatsappUrl, '_blank')
     } else {
@@ -379,31 +379,17 @@ export default function Home() {
             <MessageCircle size={18} style={{ color: '#25d366' }} />
           </div>
 
-          <a 
-  href={registrationCode 
-    ? `https://wa.me/972559943649?text=My code: ${registrationCode}`
-    : "https://wa.me/972559943649"
-  }
-  className="animate-on-scroll" 
-  style={{
-    background: '#25d366',
-    color: 'white',
-    padding: '16px 32px',
-    borderRadius: '50px',
-    textDecoration: 'none',
-    fontSize: '1.1rem',
-    fontWeight: '500',
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '12px',
-    transition: 'all 0.3s ease',
-    boxShadow: '0 4px 20px rgba(37, 211, 102, 0.3)',
-    margin: '2rem 0'
-  }}
->
-  <MessageCircle size={20} />
-  Start Here
-</a>
+          <div className="animate-on-scroll" style={{
+            fontSize: '1.5rem',
+            fontWeight: '400',
+            margin: '2rem 0',
+            color: '#1a202c',
+            letterSpacing: '-0.01em'
+          }}>
+            <a href="https://wa.me/972559943649" style={{ color: 'inherit', textDecoration: 'none' }}>
+              +972 55-994-3649
+            </a>
+          </div>
 
           <a href={getUrlWithCode('/payment')} className="animate-on-scroll" style={{
             background: '#2d5016',
@@ -939,7 +925,7 @@ export default function Home() {
       <a
         title="Chat with Yaya on WhatsApp"
         href={registrationCode 
-          ? `https://wa.me/972559943649?text=My code: ${registrationCode}`
+          ? https://wa.me/972559943649?text=My code: ${registrationCode}
           : "https://wa.me/972559943649"
         }
         style={{
