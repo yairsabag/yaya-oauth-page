@@ -88,7 +88,7 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
                 justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
                 opacity: 0,
                 animation: 'slideInMessage 0.5s ease-out forwards',
-                animationDelay: ${index * 0.3}s
+                animationDelay: `${index * 0.3}s`
               }}
             >
               <div style={{
@@ -210,7 +210,7 @@ export default function Home() {
     if (planId === 'basic') {
       // עבור תוכנית חינמית - פתיחת WhatsApp עם קוד אם קיים
       const whatsappUrl = registrationCode 
-        ? https://api.whatsapp.com/send/?phone=972559943649&text=My code: ${registrationCode}&type=phone_number&app_absent=0
+        ? `https://api.whatsapp.com/send/?phone=972559943649&text=My code: ${registrationCode}&type=phone_number&app_absent=0`
         : 'https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0'
       window.open(whatsappUrl, '_blank')
     } else {
@@ -939,7 +939,7 @@ export default function Home() {
       <a
         title="Chat with Yaya on WhatsApp"
         href={registrationCode 
-          ? https://wa.me/972559943649?text=My code: ${registrationCode}
+          ? `https://wa.me/972559943649?text=My code: ${registrationCode}`
           : "https://wa.me/972559943649"
         }
         style={{
