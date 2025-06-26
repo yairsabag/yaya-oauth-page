@@ -380,16 +380,36 @@ export default function Home() {
           </div>
 
           <div className="animate-on-scroll" style={{
-            fontSize: '1.5rem',
-            fontWeight: '400',
-            margin: '2rem 0',
-            color: '#1a202c',
-            letterSpacing: '-0.01em'
+            margin: '2rem 0'
           }}>
-            <a href="https://wa.me/972559943649" style={{ color: 'inherit', textDecoration: 'none' }}>
-              +972 55-994-3649
-            </a>
-          </div>
+            <a
+              href={registrationCode 
+                ? `https://wa.me/972559943649?text=My code: ${registrationCode}`
+                : "https://wa.me/972559943649"
+               }
+               style={{
+                 display: 'inline-flex',
+                 alignItems: 'center',
+                 gap: '8px',
+                 backgroundColor: '#25D366',
+                 color: 'white',
+                 padding: '12px 24px',
+                 borderRadius: '24px',
+                 fontSize: '1rem',
+                 fontWeight: 500,
+                 textDecoration: 'none',
+                 boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                 transition: 'transform 0.2s ease'
+               }}
+               onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+               onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+             >
+               <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" width="20" height="20">
+                <path d="M20.52 3.48A12.07 12.07 0 0 0 12 0C5.38 0 .02 5.38 0 12c0 2.11.55 4.18 1.6 6.03L0 24l6.28-1.63A11.98 11.98 0 0 0 12 24c6.63 0 12-5.38 12-12 0-3.2-1.26-6.2-3.48-8.52ZM12 22a9.94 9.94 0 0 1-5.14-1.4l-.37-.22-3.72.97.99-3.63-.24-.37A9.95 9.95 0 0 1 2 12c0-5.53 4.48-10 10-10s10 4.47 10 10-4.48 10-10 10Zm5.44-7.57c-.3-.15-1.77-.88-2.05-.98s-.48-.15-.69.15-.79.98-.96 1.18-.36.22-.66.07c-.3-.15-1.26-.47-2.39-1.51-.88-.79-1.47-1.77-1.65-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.36.45-.54.15-.18.2-.3.3-.5.1-.2.05-.37-.02-.51-.07-.15-.69-1.67-.95-2.29-.25-.61-.5-.52-.69-.53-.18 0-.37-.02-.57-.02-.2 0-.52.07-.79.37-.27.3-1.04 1.01-1.04 2.46 0 1.45 1.07 2.85 1.22 3.05.15.2 2.11 3.22 5.12 4.51.72.31 1.28.49 1.72.63.72.23 1.37.2 1.89.12.58-.09 1.77-.73 2.02-1.43.25-.7.25-1.3.18-1.43-.08-.13-.28-.2-.58-.35Z" />
+               </svg>
+               Start Here
+             </a>
+           </div>
 
           <a href={getUrlWithCode('/payment')} className="animate-on-scroll" style={{
             background: '#2d5016',
