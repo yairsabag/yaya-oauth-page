@@ -8,19 +8,68 @@ export default function SuccessPage() {
     plan: '',
     email: '',
     price: '',
-    code: ''
+    code: '',
+    billing: ''
   })
+  const [planUpdateStatus, setPlanUpdateStatus] = useState<'loading' | 'success' | 'error'>('loading')
 
   useEffect(() => {
     // Get URL parameters from window.location
     const params = new URLSearchParams(window.location.search)
-    setUrlParams({
+    const planData = {
       plan: params.get('plan') || '',
       email: params.get('email') || '',
       price: params.get('price') || '',
-      code: params.get('code') || ''
-    })
+      code: params.get('code') || '',
+      billing: params.get('billing') || 'monthly'
+    }
+    setUrlParams(planData)
+
+    // Update user plan in database after successful payment
+    updateUserPlan(planData)
   }, [])
+
+  const updateUserPlan = async (planData: typeof urlParams) => {
+    if (!planData.code || !planData.plan) {
+      setPlanUpdateStatus('error')
+      return
+    }
+
+    try {
+      // Calculate expiration date (1 month or 1 year from now)
+      const expirationDate = new Date()
+      if (planData.billing === 'yearly') {
+        expirationDate.setFullYear(expirationDate.getFullYear() + 1)
+      } else {
+        expirationDate.setMonth(expirationDate.getMonth() + 1)
+      }
+
+      const response = await fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          registration_code: planData.code,
+          plan: planData.plan,
+          email: planData.email,
+          expires_at: expirationDate.toISOString(),
+          billing_type: planData.billing,
+          status: 'active'
+        })
+      })
+
+      if (response.ok) {
+        setPlanUpdateStatus('success')
+        console.log('User plan updated successfully')
+      } else {
+        throw new Error('Failed to update plan')
+      }
+    } catch (error) {
+      console.error('Error updating user plan:', error)
+      setPlanUpdateStatus('error')
+    }
+  }
 
   const planNames = {
     executive: 'Executive Plan',
@@ -54,11 +103,35 @@ export default function SuccessPage() {
           </div>
 
           <h1 style={{ fontSize: '3rem', fontWeight: '400', color: '#8B5E3C', marginBottom: '1rem', letterSpacing: '-0.02em' }}>
-            🎉 You're Almost Done!
+            🎉 Payment Successful!
           </h1>
 
+          {planUpdateStatus === 'loading' && (
+            <div style={{ background: 'rgba(255, 193, 7, 0.1)', border: '1px solid rgba(255, 193, 7, 0.3)', borderRadius: '8px', padding: '12px', marginBottom: '2rem' }}>
+              <p style={{ color: '#f59e0b', fontSize: '0.9rem', margin: 0 }}>
+                ⏳ Setting up your account...
+              </p>
+            </div>
+          )}
+
+          {planUpdateStatus === 'success' && (
+            <div style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px', padding: '12px', marginBottom: '2rem' }}>
+              <p style={{ color: '#22c55e', fontSize: '0.9rem', margin: 0 }}>
+                ✅ Your account is ready! Connect Google to unlock all features.
+              </p>
+            </div>
+          )}
+
+          {planUpdateStatus === 'error' && (
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '12px', marginBottom: '2rem' }}>
+              <p style={{ color: '#ef4444', fontSize: '0.9rem', margin: 0 }}>
+                ⚠️ There was an issue setting up your account. Don't worry - your payment went through. Contact support if needed.
+              </p>
+            </div>
+          )}
+
           <p style={{ fontSize: '1.2rem', color: '#718096', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem' }}>
-            To activate smart features like calendar & reminders, connect your Google account:
+            Your 7-day free trial has started! Connect your Google account to activate calendar & reminders:
           </p>
 
           {/* Google OAuth Button */}
@@ -111,10 +184,10 @@ export default function SuccessPage() {
                     1. Message Yaya on WhatsApp
                   </h3>
                   <p style={{ color: '#8B5E3C', fontSize: '0.9rem', opacity: 0.8 }}>
-                    Send a message to +972 55-994-3649 to activate your account
+                    Send: "My code: {urlParams.code}" to activate your {planNames[urlParams.plan as keyof typeof planNames]}
                   </p>
                   <a 
-                    href="https://wa.me/972559943649?text=Hi! I just subscribed to the Executive plan" 
+                    href={`https://wa.me/972559943649?text=My code: ${urlParams.code}`}
                     style={{ 
                       display: 'inline-block',
                       marginTop: '0.5rem',
@@ -141,10 +214,10 @@ export default function SuccessPage() {
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                    2. Connect Your Calendar
+                    2. Connect Your Calendar (Above)
                   </h3>
                   <p style={{ color: '#8B5E3C', fontSize: '0.9rem', opacity: 0.8 }}>
-                    Link your Google or Outlook calendar for seamless scheduling
+                    Link your Google Calendar for seamless scheduling
                   </p>
                 </div>
               </div>
@@ -167,14 +240,14 @@ export default function SuccessPage() {
 
           <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: '20px', padding: '1.5rem', border: '1px solid #E5DDD5', marginBottom: '2rem', backdropFilter: 'blur(10px)' }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem' }}>
-              📧 Important Details
+              📧 Subscription Details
             </h3>
             <div style={{ textAlign: 'left', maxWidth: '500px', margin: '0 auto' }}>
               <p style={{ color: '#8B5E3C', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
                 <strong>Email:</strong> {urlParams.email}
               </p>
               <p style={{ color: '#8B5E3C', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
-                <strong>Plan:</strong> {planNames[urlParams.plan as keyof typeof planNames]} - ${urlParams.price}/month
+                <strong>Plan:</strong> {planNames[urlParams.plan as keyof typeof planNames]} - ${urlParams.price}/{urlParams.billing === 'yearly' ? 'year' : 'month'}
               </p>
               <p style={{ color: '#8B5E3C', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
                 <strong>Registration Code:</strong> {urlParams.code || 'N/A'}
@@ -190,7 +263,7 @@ export default function SuccessPage() {
 
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a 
-              href="https://wa.me/972559943649?text=Hi! I just subscribed to Yaya and want to get started" 
+              href={`https://wa.me/972559943649?text=My code: ${urlParams.code}`}
               style={{ 
                 background: '#8B5E3C', 
                 color: 'white', 
