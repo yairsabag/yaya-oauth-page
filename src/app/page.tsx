@@ -308,17 +308,6 @@ export default function Home() {
               }}>
               Get Started
             </a>
-            <a
-              href="http://yayagent.com"
-              style={{
-                color: '#4a5568',
-                textDecoration: 'none',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                padding: '8px 16px'
-              }}>
-              Login
-            </a>
           </div>
         </div>
       </header>
@@ -410,21 +399,6 @@ export default function Home() {
                Start Here
              </a>
            </div>
-
-          <a href={getUrlWithCode('/payment')} className="animate-on-scroll" style={{
-            background: '#2d5016',
-            color: 'white',
-            padding: '16px 32px',
-            borderRadius: '8px',
-            textDecoration: 'none',
-            fontSize: '1.1rem',
-            fontWeight: '500',
-            display: 'inline-block',
-            transition: 'all 0.3s ease',
-            boxShadow: '0 4px 20px rgba(45, 80, 22, 0.3)'
-          }}>
-            Start Free Trial
-          </a>
         </div>
       </section>
       {/* Features Section */}
