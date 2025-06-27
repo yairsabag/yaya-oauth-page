@@ -880,7 +880,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Want a custom bot just for you? Contact us!  */}
+          {/* Want a custom bot just for you? Contact us! */}
           <div className="animate-on-scroll" style={{
             fontSize: '1.1rem',
             color: '#8B5E3C',
