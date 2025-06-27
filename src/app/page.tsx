@@ -887,7 +887,7 @@ export default function Home() {
             marginTop: '3rem',
             textAlign: 'center'
           }}>
-            Need Yaya for your Team?
+            Want a custom bot just for you? Contact us!
           </div>
         </div>
       </section>
