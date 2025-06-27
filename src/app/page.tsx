@@ -280,6 +280,7 @@ export default function Home() {
             />
             <span style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
           </div>
+          
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <span style={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
