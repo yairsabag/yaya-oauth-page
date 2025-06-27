@@ -224,69 +224,62 @@ export default function Home() {
   }
 
   return (
-  <div style={{ fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
-    <style jsx>{`
-      .animate-on-scroll {
-        opacity: 0;
-        transform: translateY(30px);
-        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .animate-on-scroll.animate-in {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      .slide-in-left {
-        transform: translateX(-50px);
-      }
-      .slide-in-right {
-        transform: translateX(50px);
-      }
-      .slide-in-left.animate-in,
-      .slide-in-right.animate-in {
-        transform: translateX(0);
-      }
-      @media (prefers-reduced-motion: reduce) {
+    <div style={{ fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+      <style jsx>{`
         .animate-on-scroll {
-          transition: none !important;
-          transform: none !important;
-          opacity: 1 !important;
+          opacity: 0;
+          transform: translateY(30px);
+          transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
-      }
-    `}</style>
+        .animate-on-scroll.animate-in {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .slide-in-left {
+          transform: translateX(-50px);
+        }
+        .slide-in-right {
+          transform: translateX(50px);
+        }
+        .slide-in-left.animate-in,
+        .slide-in-right.animate-in {
+          transform: translateX(0);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .animate-on-scroll {
+            transition: none !important;
+            transform: none !important;
+            opacity: 1 !important;
+          }
+        }
+      `}</style>
 
-    {/* Header */}
-    <header style={{
-      background: 'rgba(255,255,255,0.95)',
-      backdropFilter: 'blur(10px)',
-      borderBottom: '1px solid rgba(0,0,0,0.05)',
-      padding: '1rem 0',
-      position: 'fixed',
-      top: 0, left: 0, right: 0,
-      zIndex: 100
-    }}>
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '0 2rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+      {/* Header */}
+      <header style={{
+        background: 'rgba(255,255,255,0.95)',
+        backdropFilter: 'blur(10px)',
+        borderBottom: '1px solid rgba(0,0,0,0.05)',
+        padding: '1rem 0',
+        position: 'fixed',
+        top: 0, left: 0, right: 0,
+        zIndex: 100
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <img
-            src="/yaya-logo.png"
-            alt="Yaya Assistant Logo"
-            style={{ width: '80px', height: '80px', objectFit: 'contain' }}
-          />
-          <span style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
-        </div>
-
-        {/* אם היה כאן login - הוסר */}
-      </div>
-    </header>
-
-    {/* שאר העמוד כאן... */}
-          
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0 2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <img
+              src="/yaya-logo.png"
+              alt="Yaya Assistant Logo"
+              style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+            />
+            <span style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
+          </div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <span style={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -314,6 +307,17 @@ export default function Home() {
                 transition: 'all 0.2s ease'
               }}>
               Get Started
+            </a>
+            <a
+              href="http://yayagent.com"
+              style={{
+                color: '#4a5568',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                fontWeight: '500',
+                padding: '8px 16px'
+              }}>
+              Login
             </a>
           </div>
         </div>
@@ -407,6 +411,19 @@ export default function Home() {
              </a>
            </div>
 
+          <a href={getUrlWithCode('/payment')} className="animate-on-scroll" style={{
+            background: '#2d5016',
+            color: 'white',
+            padding: '16px 32px',
+            borderRadius: '8px',
+            textDecoration: 'none',
+            fontSize: '1.1rem',
+            fontWeight: '500',
+            display: 'inline-block',
+            transition: 'all 0.3s ease',
+            boxShadow: '0 4px 20px rgba(45, 80, 22, 0.3)'
+          }}>
+            Start Free Trial
           </a>
         </div>
       </section>
