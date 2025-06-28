@@ -11,8 +11,11 @@ export default function PaymentPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const code = params.get('code')
+    console.log('URL params:', window.location.search) // Debug log
+    console.log('Code from URL:', code) // Debug log
     if (code) {
       setRegistrationCode(code)
+      console.log('Registration code set to:', code) // Debug log
     }
   }, [])
 
@@ -90,6 +93,8 @@ export default function PaymentPage() {
     const plan = plans.find(p => p.id === planId)
     if (!plan) return
 
+    console.log('Current registrationCode:', registrationCode) // Debug log
+
     if (planId === 'basic') {
       const message = registrationCode ? `My code: ${registrationCode}` : ''
       const whatsappUrl = `https://api.whatsapp.com/send/?phone=972559943649&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`
@@ -97,8 +102,14 @@ export default function PaymentPage() {
     } else {
       const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
       
-      // השתמש בקוד הקיים אם יש, אחרת צור חדש רק אם אין בכלל
-      const codeToUse = registrationCode || Math.random().toString(36).substring(2, 8).toUpperCase()
+      // אם יש קוד רגיסטרציה - השתמש בו, אחרת אל תיצור כלום
+      let codeToUse = registrationCode
+      if (!codeToUse) {
+        // רק אם באמת אין קוד, תיצור חדש
+        codeToUse = Math.random().toString(36).substring(2, 8).toUpperCase()
+      }
+
+      console.log('Code to use:', codeToUse) // Debug log
 
       const url = new URL(window.location.origin + '/payment/checkout')
       url.searchParams.set('plan', planId)
@@ -107,6 +118,7 @@ export default function PaymentPage() {
       url.searchParams.set('code', codeToUse)
       url.searchParams.set('planName', plan.name)
 
+      console.log('Final URL:', url.toString()) // Debug log
       window.location.href = url.toString()
     }
   }
