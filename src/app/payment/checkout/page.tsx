@@ -35,6 +35,46 @@ export default function CheckoutPage() {
     ultimate: 'Ultimate Plan'
   }
 
+  const updateUserPlan = async () => {
+    if (!urlParams.code || !urlParams.plan) {
+      console.warn('Missing registration code or plan')
+      return false
+    }
+
+    try {
+      // Calculate expiration date (1 month or 1 year from now)
+      const expirationDate = new Date()
+      if (urlParams.billing === 'yearly') {
+        expirationDate.setFullYear(expirationDate.getFullYear() + 1)
+      } else {
+        expirationDate.setMonth(expirationDate.getMonth() + 1)
+      }
+
+      const response = await fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          registration_code: urlParams.code,
+          plan: urlParams.plan,
+          email: formData.email,
+          expires_at: expirationDate.toISOString(),
+          billing_type: urlParams.billing,
+          status: 'active'
+        })
+      })
+
+      const result = await response.json()
+      console.log('Plan update result:', result)
+
+      return result.success
+    } catch (error) {
+      console.error('Error updating user plan:', error)
+      return false
+    }
+  }
+
   const handleSubmit = async () => {
     setIsLoading(true)
     setErrors({})
@@ -52,20 +92,29 @@ export default function CheckoutPage() {
     }
 
     try {
+      // First update the user plan in the database
+      const planUpdateSuccess = await updateUserPlan()
+      
+      if (!planUpdateSuccess) {
+        console.warn('Plan update failed, but continuing with payment...')
+      }
+
       // Here you would integrate with Tranzila
       // For now, simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000))
       
       // Simulate 90% success rate for demo
       if (Math.random() > 0.1) {
-        // Redirect to success page with registration code
-        window.location.href = `/payment/success?plan=${urlParams.plan}&email=${formData.email}&price=${urlParams.price}&code=${urlParams.code}`
+        // Redirect to success page with registration code (SAME CODE!)
+        window.location.href = `/payment/success?plan=${urlParams.plan}&email=${formData.email}&price=${urlParams.price}&code=${urlParams.code}&billing=${urlParams.billing}`
       } else {
         // Redirect to failed page
         window.location.href = '/payment/failed'
       }
     } catch (error) {
       window.location.href = '/payment/failed'
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -92,7 +141,7 @@ export default function CheckoutPage() {
       <main style={{ padding: '2rem 0' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 2rem' }}>
           <a 
-            href="/payment" 
+            href={`/payment?code=${urlParams.code}`}
             style={{ 
               display: 'inline-flex', 
               alignItems: 'center', 
@@ -106,6 +155,27 @@ export default function CheckoutPage() {
             <ArrowLeft size={16} />
             Back to Plans
           </a>
+
+          {/* Show registration code */}
+          {urlParams.code && (
+            <div style={{ 
+              background: 'rgba(37, 211, 102, 0.1)', 
+              borderRadius: '12px', 
+              padding: '1rem', 
+              border: '1px solid rgba(37, 211, 102, 0.3)',
+              marginBottom: '2rem',
+              textAlign: 'center'
+            }}>
+              <p style={{ 
+                color: '#25d366', 
+                fontSize: '1rem', 
+                fontWeight: '600',
+                margin: '0'
+              }}>
+                ✅ Registration Code: {urlParams.code}
+              </p>
+            </div>
+          )}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
             {/* Order Summary */}
