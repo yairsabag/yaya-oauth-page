@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Check, MessageCircle } from 'lucide-react'
 
 export default function PaymentPage() {
-  const [billingType, setBillingType] = useState('monthly')
+  const [billingType, setBillingType] = useState<'monthly' | 'yearly'>('monthly')
   const [registrationCode, setRegistrationCode] = useState<string | null>(null)
 
   // Get registration code from URL when component mounts
@@ -87,22 +87,25 @@ export default function PaymentPage() {
   ]
 
   const handlePlanSelection = (planId: string) => {
+    const plan = plans.find(p => p.id === planId)
+    if (!plan) return
+
     if (planId === 'basic') {
-      // For free plan, redirect to WhatsApp directly with existing code
-      const whatsappUrl = registrationCode 
-        ? `https://api.whatsapp.com/send/?phone=972559943649&text=My code: ${registrationCode}&type=phone_number&app_absent=0`
-        : 'https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0'
+      const message = registrationCode ? `My code: ${registrationCode}` : ''
+      const whatsappUrl = `https://api.whatsapp.com/send/?phone=972559943649&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`
       window.open(whatsappUrl, '_blank')
     } else {
-      // For paid plans, go directly to checkout with EXISTING code
-      const plan = plans.find(p => p.id === planId)
-      const price = billingType === 'yearly' ? plan?.yearlyPrice : plan?.monthlyPrice
-      
-      // Use EXISTING registration code, don't generate new one!
+      const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
       const codeToUse = registrationCode || Math.random().toString(36).substring(2, 8).toUpperCase()
-      
-      // Redirect directly to checkout with plan details and EXISTING code
-      window.location.href = `/payment/checkout?plan=${planId}&price=${price}&billing=${billingType}&code=${codeToUse}&planName=${encodeURIComponent(plan?.name || '')}`
+
+      const url = new URL(window.location.origin + '/payment/checkout')
+      url.searchParams.set('plan', planId)
+      url.searchParams.set('price', price.toString())
+      url.searchParams.set('billing', billingType)
+      url.searchParams.set('code', codeToUse)
+      url.searchParams.set('planName', plan.name)
+
+      window.location.href = url.toString()
     }
   }
 
@@ -128,83 +131,47 @@ export default function PaymentPage() {
       <main style={{ padding: '4rem 0' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h1 style={{ 
-              fontSize: '3rem', 
-              fontWeight: '400', 
-              color: '#2d5016', 
-              marginBottom: '1.5rem',
-              letterSpacing: '-0.02em'
-            }}>
+            <h1 style={{ fontSize: '3rem', fontWeight: '400', color: '#2d5016', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
               Choose Your Plan
             </h1>
             <p style={{ fontSize: '1.2rem', color: '#718096', maxWidth: '600px', margin: '0 auto 2rem' }}>
               Get started with Yaya Assistant. Start your 7-day free trial today.
             </p>
 
-            {/* Show registration code if available */}
             {registrationCode && (
-              <div style={{ 
-                background: 'rgba(37, 211, 102, 0.1)', 
-                borderRadius: '12px', 
-                padding: '1rem', 
-                border: '1px solid rgba(37, 211, 102, 0.3)',
-                display: 'inline-block',
-                marginBottom: '2rem'
-              }}>
-                <p style={{ 
-                  color: '#25d366', 
-                  fontSize: '1rem', 
-                  fontWeight: '600',
-                  margin: '0'
-                }}>
+              <div style={{ background: 'rgba(37, 211, 102, 0.1)', borderRadius: '12px', padding: '1rem', border: '1px solid rgba(37, 211, 102, 0.3)', display: 'inline-block', marginBottom: '2rem' }}>
+                <p style={{ color: '#25d366', fontSize: '1rem', fontWeight: '600', margin: 0 }}>
                   ✅ Registration Code: {registrationCode}
                 </p>
               </div>
             )}
 
             {/* Billing Toggle */}
-            <div style={{
-              display: 'flex',
-              gap: '4px',
-              justifyContent: 'center',
-              marginBottom: '4rem',
-              background: '#f7fafc',
-              borderRadius: '8px',
-              padding: '4px',
-              width: 'fit-content',
-              margin: '0 auto 4rem',
-              cursor: 'pointer'
-            }}>
-              <span 
-                onClick={() => setBillingType('yearly')}
-                style={{
-                  background: billingType === 'yearly' ? 'white' : 'transparent',
-                  color: billingType === 'yearly' ? '#2d5016' : '#999',
-                  padding: '8px 20px',
-                  borderRadius: '6px',
-                  fontSize: '1.1rem',
-                  fontWeight: '500',
-                  boxShadow: billingType === 'yearly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-              >
+            <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', marginBottom: '4rem', background: '#f7fafc', borderRadius: '8px', padding: '4px', width: 'fit-content', margin: '0 auto 4rem', cursor: 'pointer' }}>
+              <span onClick={() => setBillingType('yearly')} style={{
+                background: billingType === 'yearly' ? 'white' : 'transparent',
+                color: billingType === 'yearly' ? '#2d5016' : '#999',
+                padding: '8px 20px',
+                borderRadius: '6px',
+                fontSize: '1.1rem',
+                fontWeight: '500',
+                boxShadow: billingType === 'yearly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}>
                 Yearly Billing
               </span>
-              <span 
-                onClick={() => setBillingType('monthly')}
-                style={{
-                  background: billingType === 'monthly' ? 'white' : 'transparent',
-                  color: billingType === 'monthly' ? '#2d5016' : '#999',
-                  padding: '8px 20px',
-                  borderRadius: '6px',
-                  fontSize: '1.1rem',
-                  fontWeight: '500',
-                  boxShadow: billingType === 'monthly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-              >
+              <span onClick={() => setBillingType('monthly')} style={{
+                background: billingType === 'monthly' ? 'white' : 'transparent',
+                color: billingType === 'monthly' ? '#2d5016' : '#999',
+                padding: '8px 20px',
+                borderRadius: '6px',
+                fontSize: '1.1rem',
+                fontWeight: '500',
+                boxShadow: billingType === 'monthly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}>
                 Monthly Billing
               </span>
             </div>
@@ -213,22 +180,19 @@ export default function PaymentPage() {
           {/* Pricing Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
             {plans.map((plan) => (
-              <div
-                key={plan.id}
-                onClick={() => handlePlanSelection(plan.id)}
-                style={{
-                  background: '#F5F1EB',
-                  borderRadius: '20px',
-                  padding: '2.5rem 2rem',
-                  textAlign: 'left',
-                  position: 'relative',
-                  border: plan.popular ? '2px solid #2d5016' : '1px solid #c3d9c6',
-                  transform: plan.popular ? 'scale(1.02)' : 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-                  opacity: plan.id === 'basic' ? 0.7 : 1
-                }}
+              <div key={plan.id} onClick={() => handlePlanSelection(plan.id)} style={{
+                background: '#F5F1EB',
+                borderRadius: '20px',
+                padding: '2.5rem 2rem',
+                textAlign: 'left',
+                position: 'relative',
+                border: plan.popular ? '2px solid #2d5016' : '1px solid #c3d9c6',
+                transform: plan.popular ? 'scale(1.02)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                opacity: plan.id === 'basic' ? 0.7 : 1
+              }}
                 onMouseEnter={(e) => {
                   if (plan.id !== 'basic') {
                     e.currentTarget.style.transform = plan.popular ? 'scale(1.05)' : 'scale(1.02)'
@@ -260,10 +224,10 @@ export default function PaymentPage() {
                   </div>
                 )}
 
-                <div style={{ 
-                  fontSize: '0.9rem', 
-                  color: '#2d5016', 
-                  fontWeight: '500', 
+                <div style={{
+                  fontSize: '0.9rem',
+                  color: '#2d5016',
+                  fontWeight: '500',
                   marginBottom: '0.5rem',
                   textTransform: 'uppercase',
                   letterSpacing: '0.05em'
@@ -271,34 +235,31 @@ export default function PaymentPage() {
                   {plan.name.toUpperCase()}
                 </div>
 
-                <div style={{ 
-                  fontSize: '4rem', 
-                  fontWeight: '300', 
-                  color: '#2d5016', 
+                <div style={{
+                  fontSize: '4rem',
+                  fontWeight: '300',
+                  color: '#2d5016',
                   marginBottom: plan.id === 'basic' ? '2rem' : '0.5rem',
                   lineHeight: '1',
                   display: 'flex',
                   alignItems: 'baseline',
                   gap: '8px'
                 }}>
-                  {plan.displayPrice ? 
-                    plan.displayPrice : 
-                    `$${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}`
-                  }
+                  {plan.displayPrice ? plan.displayPrice : `$${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}`}
                   {!plan.displayPrice && (
                     <span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
                   )}
                 </div>
-                
+
                 <div style={{ marginBottom: '2rem' }}>
                   {plan.features.map((feature, index) => (
-                    <div key={index} style={{ 
-                      color: '#2d5016', 
-                      marginBottom: '0.75rem', 
-                      fontSize: '0.95rem', 
-                      display: 'flex', 
-                      alignItems: 'flex-start', 
-                      gap: '8px' 
+                    <div key={index} style={{
+                      color: '#2d5016',
+                      marginBottom: '0.75rem',
+                      fontSize: '0.95rem',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '8px'
                     }}>
                       <span style={{ color: '#2d5016', fontSize: '1rem' }}>•</span>
                       {feature}
@@ -306,7 +267,6 @@ export default function PaymentPage() {
                   ))}
                 </div>
 
-                {/* Action Button */}
                 <div style={{
                   background: plan.id === 'basic' ? 'rgba(37, 211, 102, 0.1)' : '#2d5016',
                   color: plan.id === 'basic' ? '#25d366' : 'white',
@@ -348,12 +308,7 @@ export default function PaymentPage() {
             ))}
           </div>
 
-          <div style={{
-            fontSize: '1.1rem',
-            color: '#2d5016',
-            marginTop: '3rem',
-            textAlign: 'center'
-          }}>
+          <div style={{ fontSize: '1.1rem', color: '#2d5016', marginTop: '3rem', textAlign: 'center' }}>
             Need Yaya for your Team?{' '}
             <a href="mailto:info@textcoco.com" style={{ color: '#2d5016', textDecoration: 'underline' }}>
               Contact us
