@@ -22,12 +22,17 @@ export default function CheckoutPage() {
   useEffect(() => {
     // Get URL parameters from window.location
     const params = new URLSearchParams(window.location.search)
-    setUrlParams({
+    const extractedParams = {
       plan: params.get('plan') || '',
       price: params.get('price') || '',
       billing: params.get('billing') || '',
       code: params.get('code') || ''
-    })
+    }
+    
+    console.log('Checkout page - URL params:', window.location.search) // Debug log
+    console.log('Checkout page - Extracted params:', extractedParams) // Debug log
+    
+    setUrlParams(extractedParams)
   }, [])
 
   const planNames = {
@@ -36,7 +41,16 @@ export default function CheckoutPage() {
   }
 
   const updateUserPlan = async () => {
-    if (!urlParams.code || !urlParams.plan) {
+    // קרא את הפרמטרים ישירות מה-URL כדי להימנע מ-race condition
+    const params = new URLSearchParams(window.location.search)
+    const currentCode = params.get('code')
+    const currentPlan = params.get('plan')
+    const currentBilling = params.get('billing')
+    
+    console.log('updateUserPlan - current code from URL:', currentCode) // Debug log
+    console.log('updateUserPlan - current plan from URL:', currentPlan) // Debug log
+    
+    if (!currentCode || !currentPlan) {
       console.warn('Missing registration code or plan')
       return false
     }
@@ -44,7 +58,7 @@ export default function CheckoutPage() {
     try {
       // Calculate expiration date (1 month or 1 year from now)
       const expirationDate = new Date()
-      if (urlParams.billing === 'yearly') {
+      if (currentBilling === 'yearly') {
         expirationDate.setFullYear(expirationDate.getFullYear() + 1)
       } else {
         expirationDate.setMonth(expirationDate.getMonth() + 1)
@@ -56,11 +70,11 @@ export default function CheckoutPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          registration_code: urlParams.code,
-          plan: urlParams.plan,
+          registration_code: currentCode,
+          plan: currentPlan,
           email: formData.email,
           expires_at: expirationDate.toISOString(),
-          billing_type: urlParams.billing,
+          billing_type: currentBilling,
           status: 'active'
         })
       })
@@ -103,10 +117,17 @@ export default function CheckoutPage() {
       // For now, simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000))
       
+      // קרא את הפרמטרים ישירות מה-URL לניווט
+      const params = new URLSearchParams(window.location.search)
+      const currentCode = params.get('code')
+      const currentPlan = params.get('plan')
+      const currentPrice = params.get('price')
+      const currentBilling = params.get('billing')
+      
       // Simulate 90% success rate for demo
       if (Math.random() > 0.1) {
         // Redirect to success page with registration code (SAME CODE!)
-        window.location.href = `/payment/success?plan=${urlParams.plan}&email=${formData.email}&price=${urlParams.price}&code=${urlParams.code}&billing=${urlParams.billing}`
+        window.location.href = `/payment/success?plan=${currentPlan}&email=${formData.email}&price=${currentPrice}&code=${currentCode}&billing=${currentBilling}`
       } else {
         // Redirect to failed page
         window.location.href = '/payment/failed'
