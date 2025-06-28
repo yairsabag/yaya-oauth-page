@@ -9,10 +9,20 @@ export default function PaymentPage() {
 
   // Get registration code from URL when component mounts
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
+    // תקן URL אם יש שני סימני שאלה
+    let searchParams = window.location.search
+    if (searchParams.includes('?code=') && searchParams.indexOf('?') !== searchParams.lastIndexOf('?')) {
+      // יש שני סימני שאלה - תקן את זה
+      searchParams = searchParams.replace('?code=', '&code=')
+      console.log('Fixed malformed URL params:', searchParams) // Debug log
+    }
+    
+    const params = new URLSearchParams(searchParams)
     const code = params.get('code')
-    console.log('URL params:', window.location.search) // Debug log
+    console.log('Original URL params:', window.location.search) // Debug log
+    console.log('Parsed params:', searchParams) // Debug log
     console.log('Code from URL:', code) // Debug log
+    
     if (code) {
       setRegistrationCode(code)
       console.log('Registration code set to:', code) // Debug log
@@ -89,38 +99,33 @@ export default function PaymentPage() {
     }
   ]
 
-  const getCurrentCode = () => {
-    // תמיד קרא את הקוד ישירות מה-URL כדי להבטיח עדכניות
-    const params = new URLSearchParams(window.location.search)
-    const urlCode = params.get('code')
-    return urlCode || registrationCode
-  }
-
   const handlePlanSelection = (planId: string) => {
     const plan = plans.find(p => p.id === planId)
     if (!plan) return
 
-    // קבל את הקוד הנוכחי
-    const currentCode = getCurrentCode()
+    // קרא את הקוד ישירות מה-URL (לא מה-state כדי להימנע מ-race conditions)
+    const params = new URLSearchParams(window.location.search)
+    const urlCode = params.get('code')
     
-    console.log('Current registrationCode from state:', registrationCode) // Debug log
-    console.log('Current code from URL:', currentCode) // Debug log
+    console.log('URL search:', window.location.search) // Debug log
+    console.log('Code from URL:', urlCode) // Debug log
+    console.log('Registration code from state:', registrationCode) // Debug log
 
     if (planId === 'basic') {
-      const message = currentCode ? `My code: ${currentCode}` : ''
+      const message = urlCode ? `My code: ${urlCode}` : ''
       const whatsappUrl = `https://api.whatsapp.com/send/?phone=972559943649&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`
       window.open(whatsappUrl, '_blank')
     } else {
       const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
       
-      // אם אין קוד, צור חדש
-      let codeToUse = currentCode
+      // השתמש בקוד הקיים מה-URL או מה-state, ורק אם אין - צור חדש
+      let codeToUse = urlCode || registrationCode
       if (!codeToUse) {
         codeToUse = Math.random().toString(36).substring(2, 8).toUpperCase()
-        console.log('Generated new code:', codeToUse) // Debug log
+        console.log('No existing code found, generated new code:', codeToUse) // Debug log
+      } else {
+        console.log('Using existing code:', codeToUse) // Debug log
       }
-
-      console.log('Code to use:', codeToUse) // Debug log
 
       const url = new URL(window.location.origin + '/payment/checkout')
       url.searchParams.set('plan', planId)
@@ -129,7 +134,7 @@ export default function PaymentPage() {
       url.searchParams.set('code', codeToUse)
       url.searchParams.set('planName', plan.name)
 
-      console.log('Final URL:', url.toString()) // Debug log
+      console.log('Final checkout URL:', url.toString()) // Debug log
       window.location.href = url.toString()
     }
   }
