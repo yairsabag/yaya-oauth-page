@@ -614,11 +614,8 @@ export default function Home() {
               padding: '2.5rem 2rem',
               textAlign: 'left',
               border: '1px solid #E5DDD5',
-              cursor: 'pointer',
               transition: 'all 0.3s ease'
-            }}
-            onClick={() => handlePlanAction('basic')}
-            >
+            }}>
               <div style={{ 
                 fontSize: '0.9rem', 
                 color: '#8B5E3C', 
@@ -669,6 +666,26 @@ export default function Home() {
                   Receive reminders from friends
                 </div>
               </div>
+
+              <a
+                href="https://wa.me/972559943649?text=היי%20Yaya%2C%20אני%20מעוניין%20להתחיל%20עם%20המסלול%20החינמי"
+                style={{
+                  display: 'block',
+                  background: '#25d366',
+                  color: 'white',
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => (e.target as HTMLElement).style.background = '#22c55e'}
+                onMouseLeave={(e) => (e.target as HTMLElement).style.background = '#25d366'}
+              >
+                💬 התחל עכשיו
+              </a>
             </div>
 
             {/* Executive Plan */}
@@ -679,11 +696,8 @@ export default function Home() {
               textAlign: 'left',
               position: 'relative',
               border: '2px solid #8B5E3C',
-              cursor: 'pointer',
               transition: 'all 0.3s ease'
-            }}
-            onClick={() => handlePlanAction('executive')}
-            >
+            }}>
               <div style={{
                 position: 'absolute',
                 top: '1rem',
@@ -766,13 +780,33 @@ export default function Home() {
                   Create Lists
                 </div>
               </div>
+
+              <a
+                href="https://wa.me/972559943649?text=היי%20Yaya%2C%20אני%20מעוניין%20במסלול%20Executive%20עם%20ניסיון%20חינם%20למשך%207%20ימים"
+                style={{
+                  display: 'block',
+                  background: '#8B5E3C',
+                  color: 'white',
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => (e.target as HTMLElement).style.background = '#7c4a32'}
+                onMouseLeave={(e) => (e.target as HTMLElement).style.background = '#8B5E3C'}
+              >
+                🚀 התחל ניסיון חינם
+              </a>
               
               <div style={{
                 textAlign: 'center',
                 fontSize: '0.9rem',
                 color: '#8B5E3C',
                 fontWeight: '400',
-                marginTop: '1.5rem'
+                marginTop: '1rem'
               }}>
                 4,100+ users loving this plan
               </div>
@@ -786,11 +820,8 @@ export default function Home() {
               textAlign: 'left',
               position: 'relative',
               border: '1px solid #E5DDD5',
-              cursor: 'pointer',
               transition: 'all 0.3s ease'
-            }}
-            onClick={() => handlePlanAction('ultimate')}
-            >
+            }}>
               <div style={{
                 position: 'absolute',
                 top: '1rem',
@@ -877,73 +908,25 @@ export default function Home() {
                   Create Lists
                 </div>
               </div>
+
+              <a
+                href="https://wa.me/972559943649?text=היי%20Yaya%2C%20אני%20מעוניין%20במסלול%20Ultimate%20עם%20ניסיון%20חינם%20למשך%207%20ימים"
+                style={{
+                  display: 'block',
+                  background: '#8B5E3C',
+                  color: 'white',
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => (e.target as HTMLElement).style.background = '#7c4a32'}
+                onMouseLeave={(e) => (e.target as HTMLElement).style.background = '#8B5E3C'}
+              >
+                🚀 התחל ניסיון חינם
+              </a>
             </div>
           </div>
-
-          {/* Want a custom bot just for you? Contact us! */}
-          <div className="animate-on-scroll" style={{
-            fontSize: '1.1rem',
-            color: '#8B5E3C',
-            marginTop: '3rem',
-            textAlign: 'center'
-          }}>
-            Want a custom bot just for you? Contact us!
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer style={{ background: '#1a202c', color: '#a0aec0', padding: '3rem 0' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', textAlign: 'center' }}>
-          <div style={{ marginBottom: '2rem' }}>
-            <span style={{ fontSize: '1.5rem', fontWeight: '500', color: 'white' }}>Yaya</span>
-          </div>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '2rem',
-            flexWrap: 'wrap',
-            fontSize: '0.875rem'
-          }}>
-            <a href={getUrlWithCode('/privacy-policy')} style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
-            <a href={getUrlWithCode('/terms-of-service')} style={{ color: 'inherit', textDecoration: 'none' }}>Terms of Service</a>
-            <a href={getUrlWithCode('/posts')} style={{ color: 'inherit', textDecoration: 'none' }}>Blog</a>
-            <a href="https://discord.gg/BRxAAq47xv" style={{ color: 'inherit', textDecoration: 'none' }}>Discord</a>
-            <a href="https://x.com/yayagent" style={{ color: 'inherit', textDecoration: 'none' }}>X/Twitter</a>
-            <a href="mailto:info@yayagent.com" style={{ color: 'inherit', textDecoration: 'none' }}>info@yayagent.com</a>
-          </div>
-        </div>
-      </footer>
-
-      {/* WhatsApp Floating Button */}
-      <a
-        title="Chat with Yaya on WhatsApp"
-        href={registrationCode 
-          ? `https://wa.me/972559943649?text=My code: ${registrationCode}`
-          : "https://wa.me/972559943649"
-        }
-        style={{
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          background: '#25d366',
-          color: 'white',
-          borderRadius: '50%',
-          width: '56px',
-          height: '56px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textDecoration: 'none',
-          boxShadow: '0 8px 25px rgba(37, 211, 102, 0.4)',
-          zIndex: 1000,
-          transition: 'transform 0.3s ease'
-        }}
-        onMouseEnter={(e) => (e.target as HTMLElement).style.transform = 'scale(1.1)'}
-        onMouseLeave={(e) => (e.target as HTMLElement).style.transform = 'scale(1)'}
-      >
-        <MessageCircle size={24} />
-      </a>
-    </div>
-  )
-}
