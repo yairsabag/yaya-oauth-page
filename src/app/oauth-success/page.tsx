@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { CheckCircle, MessageCircle, Copy, ExternalLink } from 'lucide-react'
+import { CheckCircle, MessageCircle, Copy, ExternalLink, Calendar, Clock, Users } from 'lucide-react'
 
 export default function OAuthSuccessPage() {
   const [registrationCode, setRegistrationCode] = useState('')
@@ -70,330 +70,329 @@ export default function OAuthSuccessPage() {
 
       <main style={{ padding: '4rem 0' }}>
         <div style={{ 
-          maxWidth: '800px', 
+          maxWidth: '900px', 
           margin: '0 auto', 
           padding: '0 2rem', 
           textAlign: 'center' 
         }}>
-          {/* Success Animation */}
-          <div style={{ marginBottom: '2rem' }}>
-            <CheckCircle size={80} style={{ color: '#25d366', margin: '0 auto' }} />
+          {/* Success Icon & Title */}
+          <div style={{ 
+            background: 'rgba(37, 211, 102, 0.1)', 
+            borderRadius: '50%', 
+            width: '120px', 
+            height: '120px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            margin: '0 auto 2rem',
+            border: '3px solid rgba(37, 211, 102, 0.3)',
+            animation: 'bounce 0.6s ease-in-out'
+          }}>
+            <CheckCircle size={80} style={{ color: '#25d366' }} />
           </div>
 
           <h1 style={{ 
-            fontSize: '3rem', 
+            fontSize: '3.5rem', 
             fontWeight: '400', 
-            color: '#8B5E3C', 
+            color: '#2d5016', 
             marginBottom: '1rem', 
             letterSpacing: '-0.02em' 
           }}>
-            🎉 Google Account Connected!
+            🎉 Google Connected!
           </h1>
 
           <p style={{ 
-            fontSize: '1.3rem', 
+            fontSize: '1.4rem', 
             color: '#718096', 
-            marginBottom: '3rem', 
-            maxWidth: '600px', 
-            margin: '0 auto 3rem',
+            marginBottom: '4rem', 
+            maxWidth: '700px', 
+            margin: '0 auto 4rem',
             lineHeight: '1.6'
           }}>
-            Your Google account is now connected successfully! Send this code to our WhatsApp bot to activate all premium features.
+            Your Google Calendar is now connected! Share your activation code with our WhatsApp bot to unlock all premium features.
           </p>
+
+          {/* Features Preview */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+            gap: '1.5rem', 
+            marginBottom: '4rem' 
+          }}>
+            <div style={{ 
+              background: 'rgba(255,255,255,0.8)', 
+              borderRadius: '16px', 
+              padding: '2rem', 
+              border: '1px solid #E5DDD5',
+              textAlign: 'center'
+            }}>
+              <Calendar size={48} style={{ color: '#25d366', margin: '0 auto 1rem' }} />
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#2d5016', marginBottom: '0.5rem' }}>
+                Smart Scheduling
+              </h3>
+              <p style={{ fontSize: '0.95rem', color: '#718096', lineHeight: '1.5' }}>
+                "Schedule a meeting with John tomorrow at 2pm"
+              </p>
+            </div>
+            
+            <div style={{ 
+              background: 'rgba(255,255,255,0.8)', 
+              borderRadius: '16px', 
+              padding: '2rem', 
+              border: '1px solid #E5DDD5',
+              textAlign: 'center'
+            }}>
+              <Clock size={48} style={{ color: '#4285f4', margin: '0 auto 1rem' }} />
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#2d5016', marginBottom: '0.5rem' }}>
+                Smart Reminders
+              </h3>
+              <p style={{ fontSize: '0.95rem', color: '#718096', lineHeight: '1.5' }}>
+                "Remind me about the dentist appointment in 2 hours"
+              </p>
+            </div>
+            
+            <div style={{ 
+              background: 'rgba(255,255,255,0.8)', 
+              borderRadius: '16px', 
+              padding: '2rem', 
+              border: '1px solid #E5DDD5',
+              textAlign: 'center'
+            }}>
+              <Users size={48} style={{ color: '#8B5E3C', margin: '0 auto 1rem' }} />
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#2d5016', marginBottom: '0.5rem' }}>
+                Team Coordination
+              </h3>
+              <p style={{ fontSize: '0.95rem', color: '#718096', lineHeight: '1.5' }}>
+                "Set up a weekly team standup every Monday"
+              </p>
+            </div>
+          </div>
 
           {/* Code Section - Main Focus */}
           <div style={{ 
             background: '#F5F1EB', 
-            borderRadius: '20px', 
-            padding: '3rem 2rem', 
+            borderRadius: '24px', 
+            padding: '3.5rem 2.5rem', 
             border: '3px solid #25d366', 
             marginBottom: '3rem', 
-            boxShadow: '0 15px 35px rgba(37, 211, 102, 0.25)' 
+            boxShadow: '0 20px 40px rgba(37, 211, 102, 0.15)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
-            <h2 style={{ 
-              fontSize: '2rem', 
-              fontWeight: '600', 
-              color: '#25d366', 
-              marginBottom: '1.5rem' 
-            }}>
-              📱 Send this code to WhatsApp
-            </h2>
+            {/* Background Pattern */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(37, 211, 102, 0.05) 1px, transparent 0)',
+              backgroundSize: '20px 20px',
+              zIndex: 0
+            }} />
             
-            {/* Big Code Display */}
-            <div style={{ 
-              background: '#fff', 
-              border: '4px solid #25d366', 
-              borderRadius: '16px', 
-              padding: '2.5rem', 
-              marginBottom: '2rem',
-              boxShadow: '0 8px 25px rgba(37, 211, 102, 0.15)'
-            }}>
-              <div style={{ 
-                fontSize: '4rem', 
-                fontWeight: '700', 
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <h2 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: '600', 
                 color: '#25d366', 
-                marginBottom: '1.5rem', 
-                letterSpacing: '0.15em',
-                fontFamily: 'monospace'
-              }}>
-                {registrationCode || 'LOADING...'}
-              </div>
-              
-              <div style={{ 
-                display: 'flex', 
-                gap: '1rem', 
-                justifyContent: 'center', 
-                flexWrap: 'wrap' 
-              }}>
-                <button
-                  onClick={copyCode}
-                  style={{
-                    background: '#25d366',
-                    color: 'white',
-                    border: 'none',
-                    padding: '16px 32px',
-                    borderRadius: '12px',
-                    fontSize: '1.1rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 4px 15px rgba(37, 211, 102, 0.3)'
-                  }}
-                  onMouseEnter={(e) => (e.target as HTMLElement).style.background = '#22c55e'}
-                  onMouseLeave={(e) => (e.target as HTMLElement).style.background = '#25d366'}
-                >
-                  <Copy size={20} />
-                  {codeCopied ? '✅ Copied!' : 'Copy Code'}
-                </button>
-                
-                <button
-                  onClick={openWhatsAppWithCode}
-                  style={{
-                    background: '#8B5E3C',
-                    color: 'white',
-                    border: 'none',
-                    padding: '16px 32px',
-                    borderRadius: '12px',
-                    fontSize: '1.1rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 4px 15px rgba(139, 94, 60, 0.3)'
-                  }}
-                  onMouseEnter={(e) => (e.target as HTMLElement).style.background = '#7c4a32'}
-                  onMouseLeave={(e) => (e.target as HTMLElement).style.background = '#8B5E3C'}
-                >
-                  <ExternalLink size={20} />
-                  Send via WhatsApp
-                </button>
-              </div>
-            </div>
-
-            <div style={{ 
-              background: 'rgba(37, 211, 102, 0.1)', 
-              borderRadius: '12px', 
-              padding: '1.5rem', 
-              border: '2px solid rgba(37, 211, 102, 0.3)',
-              marginBottom: '1rem'
-            }}>
-              <p style={{ 
-                color: '#25d366', 
-                fontSize: '1.2rem', 
-                fontWeight: '600',
-                marginBottom: '0.5rem'
-              }}>
-                📞 Bot Number: +972 55-994-3649
-              </p>
-              <p style={{ 
-                color: '#8B5E3C', 
-                fontSize: '1rem',
-                margin: '0'
-              }}>
-                Just send the code (or write "My code: {registrationCode}") and your account will be activated!
-              </p>
-            </div>
-          </div>
-
-          {/* Instructions */}
-          <div style={{ 
-            background: 'rgba(255,255,255,0.8)', 
-            borderRadius: '20px', 
-            padding: '2.5rem', 
-            border: '1px solid #E5DDD5', 
-            marginBottom: '3rem'
-          }}>
-            <h3 style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: '600', 
-              color: '#8B5E3C', 
-              marginBottom: '1.5rem' 
-            }}>
-              📋 What's Next?
-            </h3>
-            <div style={{ 
-              maxWidth: '500px', 
-              margin: '0 auto'
-            }}>
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '1rem',
-                marginBottom: '1rem'
-              }}>
-                <div style={{ 
-                  background: '#25d366', 
-                  borderRadius: '50%', 
-                  width: '40px', 
-                  height: '40px', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  color: 'white', 
-                  fontWeight: 'bold',
-                  fontSize: '1.2rem'
-                }}>
-                  1
-                </div>
-                <div style={{ textAlign: 'left' }}>
-                  <p style={{ 
-                    color: '#8B5E3C', 
-                    fontSize: '1.1rem', 
-                    margin: '0',
-                    fontWeight: '600'
-                  }}>
-                    Copy the code above
-                  </p>
-                </div>
-              </div>
-              
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: '1rem',
-                marginBottom: '1rem'
-              }}>
-                <div style={{ 
-                  background: '#4285f4', 
-                  borderRadius: '50%', 
-                  width: '40px', 
-                  height: '40px', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  color: 'white', 
-                  fontWeight: 'bold',
-                  fontSize: '1.2rem'
-                }}>
-                  2
-                </div>
-                <div style={{ textAlign: 'left' }}>
-                  <p style={{ 
-                    color: '#8B5E3C', 
-                    fontSize: '1.1rem', 
-                    margin: '0',
-                    fontWeight: '600'
-                  }}>
-                    Send it to our WhatsApp bot
-                  </p>
-                </div>
-              </div>
-              
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+                marginBottom: '2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 gap: '1rem'
               }}>
+                <MessageCircle size={40} />
+                Send Your Activation Code
+              </h2>
+              
+              {/* Big Code Display */}
+              <div style={{ 
+                background: 'linear-gradient(145deg, #ffffff, #f8f9fa)', 
+                border: '4px solid #25d366', 
+                borderRadius: '20px', 
+                padding: '3rem 2rem', 
+                marginBottom: '2.5rem',
+                boxShadow: '0 10px 30px rgba(37, 211, 102, 0.2), inset 0 1px 0 rgba(255,255,255,0.8)'
+              }}>
                 <div style={{ 
-                  background: '#8B5E3C', 
-                  borderRadius: '50%', 
-                  width: '40px', 
-                  height: '40px', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  color: 'white', 
-                  fontWeight: 'bold',
-                  fontSize: '1.2rem'
+                  fontSize: '5rem', 
+                  fontWeight: '800', 
+                  color: '#25d366', 
+                  marginBottom: '1.5rem', 
+                  letterSpacing: '0.1em',
+                  fontFamily: 'monospace',
+                  textShadow: '0 2px 4px rgba(37, 211, 102, 0.3)'
                 }}>
-                  3
+                  {registrationCode || 'LOADING...'}
                 </div>
-                <div style={{ textAlign: 'left' }}>
-                  <p style={{ 
-                    color: '#8B5E3C', 
-                    fontSize: '1.1rem', 
-                    margin: '0',
-                    fontWeight: '600'
-                  }}>
-                    Start using Yaya!
-                  </p>
-                  <p style={{ 
-                    color: '#8B5E3C', 
-                    fontSize: '0.9rem', 
-                    margin: '0.25rem 0 0 0',
-                    opacity: 0.8
-                  }}>
-                    Try: "Schedule a meeting with John tomorrow at 2pm"
-                  </p>
+                
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '1.5rem', 
+                  justifyContent: 'center', 
+                  flexWrap: 'wrap' 
+                }}>
+                  <button
+                    onClick={copyCode}
+                    style={{
+                      background: codeCopied ? '#22c55e' : '#25d366',
+                      color: 'white',
+                      border: 'none',
+                      padding: '18px 36px',
+                      borderRadius: '14px',
+                      fontSize: '1.2rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 6px 20px rgba(37, 211, 102, 0.4)',
+                      transform: codeCopied ? 'scale(0.95)' : 'scale(1)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!codeCopied) {
+                        (e.target as HTMLElement).style.background = '#22c55e'
+                        ;(e.target as HTMLElement).style.transform = 'scale(1.05)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!codeCopied) {
+                        (e.target as HTMLElement).style.background = '#25d366'
+                        ;(e.target as HTMLElement).style.transform = 'scale(1)'
+                      }
+                    }}
+                  >
+                    <Copy size={22} />
+                    {codeCopied ? '✅ Copied!' : 'Copy Code'}
+                  </button>
+                  
+                  <button
+                    onClick={openWhatsAppWithCode}
+                    style={{
+                      background: '#2d5016',
+                      color: 'white',
+                      border: 'none',
+                      padding: '18px 36px',
+                      borderRadius: '14px',
+                      fontSize: '1.2rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 6px 20px rgba(45, 80, 22, 0.4)'
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.target as HTMLElement).style.background = '#1f3910'
+                      ;(e.target as HTMLElement).style.transform = 'scale(1.05)'
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.target as HTMLElement).style.background = '#2d5016'
+                      ;(e.target as HTMLElement).style.transform = 'scale(1)'
+                    }}
+                  >
+                    <ExternalLink size={22} />
+                    Send via WhatsApp
+                  </button>
                 </div>
+              </div>
+
+              <div style={{ 
+                background: 'rgba(37, 211, 102, 0.1)', 
+                borderRadius: '16px', 
+                padding: '2rem', 
+                border: '2px solid rgba(37, 211, 102, 0.3)'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '1rem',
+                  marginBottom: '1rem',
+                  flexWrap: 'wrap'
+                }}>
+                  <MessageCircle size={28} style={{ color: '#25d366' }} />
+                  <span style={{ 
+                    color: '#25d366', 
+                    fontSize: '1.4rem', 
+                    fontWeight: '700'
+                  }}>
+                    +972 55-994-3649
+                  </span>
+                </div>
+                <p style={{ 
+                  color: '#2d5016', 
+                  fontSize: '1.1rem',
+                  margin: '0',
+                  fontWeight: '500'
+                }}>
+                  Just send: "<strong>My code: {registrationCode}</strong>" and you're all set! 🚀
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Contact */}
+          {/* Quick Actions */}
           <div style={{ 
             display: 'flex', 
-            gap: '1rem', 
+            gap: '1.5rem', 
             justifyContent: 'center', 
             flexWrap: 'wrap',
-            marginBottom: '2rem'
+            marginBottom: '3rem'
           }}>
             <a 
               href="https://wa.me/972559943649" 
               style={{ 
-                background: '#25d366', 
+                background: 'linear-gradient(145deg, #25d366, #22c55e)', 
                 color: 'white', 
-                padding: '14px 28px', 
-                borderRadius: '10px', 
+                padding: '16px 32px', 
+                borderRadius: '12px', 
                 textDecoration: 'none', 
                 fontWeight: '600',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.2s ease',
-                fontSize: '1rem'
+                gap: '10px',
+                transition: 'all 0.3s ease',
+                fontSize: '1.1rem',
+                boxShadow: '0 6px 20px rgba(37, 211, 102, 0.3)'
               }}
-              onMouseEnter={(e) => (e.target as HTMLElement).style.background = '#22c55e'}
-              onMouseLeave={(e) => (e.target as HTMLElement).style.background = '#25d366'}
+              onMouseEnter={(e) => {
+                (e.target as HTMLElement).style.transform = 'translateY(-2px)'
+                ;(e.target as HTMLElement).style.boxShadow = '0 8px 25px rgba(37, 211, 102, 0.4)'
+              }}
+              onMouseLeave={(e) => {
+                (e.target as HTMLElement).style.transform = 'translateY(0)'
+                ;(e.target as HTMLElement).style.boxShadow = '0 6px 20px rgba(37, 211, 102, 0.3)'
+              }}
             >
-              <MessageCircle size={20} />
+              <MessageCircle size={22} />
               Open WhatsApp
             </a>
             <a 
               href="/" 
               style={{ 
                 background: 'transparent', 
-                color: '#8B5E3C', 
-                padding: '14px 28px', 
-                borderRadius: '10px', 
+                color: '#2d5016', 
+                padding: '16px 32px', 
+                borderRadius: '12px', 
                 textDecoration: 'none', 
                 fontWeight: '600',
-                border: '2px solid #8B5E3C',
-                transition: 'all 0.2s ease',
-                fontSize: '1rem'
+                border: '2px solid #2d5016',
+                transition: 'all 0.3s ease',
+                fontSize: '1.1rem'
               }}
               onMouseEnter={(e) => {
-                (e.target as HTMLElement).style.background = '#8B5E3C'
+                (e.target as HTMLElement).style.background = '#2d5016'
                 ;(e.target as HTMLElement).style.color = 'white'
+                ;(e.target as HTMLElement).style.transform = 'translateY(-2px)'
               }}
               onMouseLeave={(e) => {
                 (e.target as HTMLElement).style.background = 'transparent'
-                ;(e.target as HTMLElement).style.color = '#8B5E3C'
+                ;(e.target as HTMLElement).style.color = '#2d5016'
+                ;(e.target as HTMLElement).style.transform = 'translateY(0)'
               }}
             >
               Back to Home
@@ -401,14 +400,28 @@ export default function OAuthSuccessPage() {
           </div>
 
           <p style={{ 
-            fontSize: '0.9rem', 
+            fontSize: '1rem', 
             color: '#718096', 
             textAlign: 'center'
           }}>
-            Need help? Contact us: <a href="mailto:info@textcoco.com" style={{ color: '#8B5E3C' }}>info@textcoco.com</a>
+            Need help? Contact us: <a href="mailto:info@textcoco.com" style={{ color: '#2d5016', fontWeight: '600' }}>info@textcoco.com</a>
           </p>
         </div>
       </main>
+
+      <style jsx>{`
+        @keyframes bounce {
+          0%, 20%, 50%, 80%, 100% {
+            transform: translateY(0);
+          }
+          40% {
+            transform: translateY(-10px);
+          }
+          60% {
+            transform: translateY(-5px);
+          }
+        }
+      `}</style>
     </div>
   )
 }
