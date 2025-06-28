@@ -693,6 +693,7 @@ export default function Home() {
     Get Started on WhatsApp
   </button>
 </div>
+            
             {/* Executive Plan */}
 <div className="animate-on-scroll" style={{
   background: '#F5F1EB',
