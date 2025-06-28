@@ -100,8 +100,13 @@ export default function PaymentPage() {
   ]
 
   const handlePlanSelection = (planId: string) => {
+    console.log('Plan selection started for:', planId) // Debug log
+    
     const plan = plans.find(p => p.id === planId)
-    if (!plan) return
+    if (!plan) {
+      console.error('Plan not found:', planId) // Debug log
+      return
+    }
 
     // קרא את הקוד ישירות מה-URL (לא מה-state כדי להימנע מ-race conditions)
     const params = new URLSearchParams(window.location.search)
@@ -112,30 +117,37 @@ export default function PaymentPage() {
     console.log('Registration code from state:', registrationCode) // Debug log
 
     if (planId === 'basic') {
+      console.log('Handling basic plan - opening WhatsApp') // Debug log
       const message = urlCode ? `My code: ${urlCode}` : ''
       const whatsappUrl = `https://api.whatsapp.com/send/?phone=972559943649&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`
       window.open(whatsappUrl, '_blank')
+      return
+    }
+
+    console.log('Handling paid plan - navigating to checkout') // Debug log
+    const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
+    
+    // השתמש בקוד הקיים מה-URL או מה-state, ורק אם אין - צור חדש
+    let codeToUse = urlCode || registrationCode
+    if (!codeToUse) {
+      codeToUse = Math.random().toString(36).substring(2, 8).toUpperCase()
+      console.log('No existing code found, generated new code:', codeToUse) // Debug log
     } else {
-      const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
-      
-      // השתמש בקוד הקיים מה-URL או מה-state, ורק אם אין - צור חדש
-      let codeToUse = urlCode || registrationCode
-      if (!codeToUse) {
-        codeToUse = Math.random().toString(36).substring(2, 8).toUpperCase()
-        console.log('No existing code found, generated new code:', codeToUse) // Debug log
-      } else {
-        console.log('Using existing code:', codeToUse) // Debug log
-      }
+      console.log('Using existing code:', codeToUse) // Debug log
+    }
 
-      const url = new URL(window.location.origin + '/payment/checkout')
-      url.searchParams.set('plan', planId)
-      url.searchParams.set('price', price.toString())
-      url.searchParams.set('billing', billingType)
-      url.searchParams.set('code', codeToUse)
-      url.searchParams.set('planName', plan.name)
+    // בנה את ה-URL של הדף checkout
+    const checkoutUrl = `/payment/checkout?plan=${planId}&price=${price}&billing=${billingType}&code=${codeToUse}&planName=${encodeURIComponent(plan.name)}`
 
-      console.log('Final checkout URL:', url.toString()) // Debug log
-      window.location.href = url.toString()
+    console.log('Final checkout URL:', checkoutUrl) // Debug log
+    console.log('Current location:', window.location.href) // Debug log
+    console.log('Navigating to checkout...') // Debug log
+    
+    // נווט לדף החדש
+    try {
+      window.location.href = checkoutUrl
+    } catch (error) {
+      console.error('Navigation error:', error) // Debug log
     }
   }
 
