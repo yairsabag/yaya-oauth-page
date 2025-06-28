@@ -947,9 +947,7 @@ export default function Home() {
     <MessageCircle size={18} />
     Request Purchase Link
   </button>
-</div>
-
-          {/* Want a custom bot just for you? Contact us! */}
+</div> {/* Want a custom bot just for you? Contact us! */}
           <div className="animate-on-scroll" style={{
             fontSize: '1.1rem',
             color: '#8B5E3C',
