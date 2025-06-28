@@ -887,6 +887,8 @@ export default function Home() {
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
                   500 Voice Notes / Month
                 </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95
+                </div>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
                   100 Image Analysis / Month
