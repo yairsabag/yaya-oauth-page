@@ -607,6 +607,7 @@ export default function Home() {
             gap: '2rem',
             marginBottom: '3rem'
           }}>
+            
             {/* Basic Plan */}
 <div className="animate-on-scroll" style={{
   background: '#F5F1EB',
