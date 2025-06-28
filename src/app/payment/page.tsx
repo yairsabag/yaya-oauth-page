@@ -136,8 +136,8 @@ export default function PaymentPage() {
       console.log('Using existing code:', codeToUse) // Debug log
     }
 
-    // בנה את ה-URL של הדף checkout
-    const checkoutUrl = `/payment/checkout?plan=${planId}&price=${price}&billing=${billingType}&code=${codeToUse}&planName=${encodeURIComponent(plan.name)}`
+    // בנה את ה-URL של הדף checkout - נסה נתיבים שונים
+    const checkoutUrl = `/checkout?plan=${planId}&price=${price}&billing=${billingType}&code=${codeToUse}&planName=${encodeURIComponent(plan.name)}`
 
     console.log('Final checkout URL:', checkoutUrl) // Debug log
     console.log('Current location:', window.location.href) // Debug log
