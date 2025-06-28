@@ -5,6 +5,16 @@ import { Check, MessageCircle } from 'lucide-react'
 
 export default function PaymentPage() {
   const [billingType, setBillingType] = useState('monthly')
+  const [registrationCode, setRegistrationCode] = useState<string | null>(null)
+
+  // Get registration code from URL when component mounts
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const code = params.get('code')
+    if (code) {
+      setRegistrationCode(code)
+    }
+  }, [])
 
   const plans = [
     {
@@ -78,18 +88,21 @@ export default function PaymentPage() {
 
   const handlePlanSelection = (planId: string) => {
     if (planId === 'basic') {
-      // For free plan, redirect to WhatsApp directly
-      window.open('https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0', '_blank')
+      // For free plan, redirect to WhatsApp directly with existing code
+      const whatsappUrl = registrationCode 
+        ? `https://api.whatsapp.com/send/?phone=972559943649&text=My code: ${registrationCode}&type=phone_number&app_absent=0`
+        : 'https://api.whatsapp.com/send/?phone=972559943649&text&type=phone_number&app_absent=0'
+      window.open(whatsappUrl, '_blank')
     } else {
-      // For paid plans, go directly to checkout
+      // For paid plans, go directly to checkout with EXISTING code
       const plan = plans.find(p => p.id === planId)
       const price = billingType === 'yearly' ? plan?.yearlyPrice : plan?.monthlyPrice
       
-      // Generate unique registration code for tracking
-      const registrationCode = Math.random().toString(36).substring(2, 8).toUpperCase()
+      // Use EXISTING registration code, don't generate new one!
+      const codeToUse = registrationCode || Math.random().toString(36).substring(2, 8).toUpperCase()
       
-      // Redirect directly to checkout with plan details
-      window.location.href = `/payment/checkout?plan=${planId}&price=${price}&billing=${billingType}&code=${registrationCode}&planName=${encodeURIComponent(plan?.name || '')}`
+      // Redirect directly to checkout with plan details and EXISTING code
+      window.location.href = `/payment/checkout?plan=${planId}&price=${price}&billing=${billingType}&code=${codeToUse}&planName=${encodeURIComponent(plan?.name || '')}`
     }
   }
 
@@ -127,6 +140,27 @@ export default function PaymentPage() {
             <p style={{ fontSize: '1.2rem', color: '#718096', maxWidth: '600px', margin: '0 auto 2rem' }}>
               Get started with Yaya Assistant. Start your 7-day free trial today.
             </p>
+
+            {/* Show registration code if available */}
+            {registrationCode && (
+              <div style={{ 
+                background: 'rgba(37, 211, 102, 0.1)', 
+                borderRadius: '12px', 
+                padding: '1rem', 
+                border: '1px solid rgba(37, 211, 102, 0.3)',
+                display: 'inline-block',
+                marginBottom: '2rem'
+              }}>
+                <p style={{ 
+                  color: '#25d366', 
+                  fontSize: '1rem', 
+                  fontWeight: '600',
+                  margin: '0'
+                }}>
+                  ✅ Registration Code: {registrationCode}
+                </p>
+              </div>
+            )}
 
             {/* Billing Toggle */}
             <div style={{
