@@ -9,20 +9,10 @@ export default function PaymentPage() {
 
   // Get registration code from URL when component mounts
   useEffect(() => {
-    // תקן URL אם יש שני סימני שאלה
-    let searchParams = window.location.search
-    if (searchParams.includes('?code=') && searchParams.indexOf('?') !== searchParams.lastIndexOf('?')) {
-      // יש שני סימני שאלה - תקן את זה
-      searchParams = searchParams.replace('?code=', '&code=')
-      console.log('Fixed malformed URL params:', searchParams) // Debug log
-    }
-    
-    const params = new URLSearchParams(searchParams)
+    const params = new URLSearchParams(window.location.search)
     const code = params.get('code')
-    console.log('Original URL params:', window.location.search) // Debug log
-    console.log('Parsed params:', searchParams) // Debug log
+    console.log('URL params:', window.location.search) // Debug log
     console.log('Code from URL:', code) // Debug log
-    
     if (code) {
       setRegistrationCode(code)
       console.log('Registration code set to:', code) // Debug log
@@ -100,54 +90,41 @@ export default function PaymentPage() {
   ]
 
   const handlePlanSelection = (planId: string) => {
-    console.log('Plan selection started for:', planId) // Debug log
-    
     const plan = plans.find(p => p.id === planId)
-    if (!plan) {
-      console.error('Plan not found:', planId) // Debug log
-      return
-    }
+    if (!plan) return
 
-    // קרא את הקוד ישירות מה-URL (לא מה-state כדי להימנע מ-race conditions)
+    // קרא את הקוד ישירות מה-URL כדי להימנע מ-race condition
     const params = new URLSearchParams(window.location.search)
-    const urlCode = params.get('code')
+    const currentCode = params.get('code')
     
-    console.log('URL search:', window.location.search) // Debug log
-    console.log('Code from URL:', urlCode) // Debug log
-    console.log('Registration code from state:', registrationCode) // Debug log
+    console.log('Current registrationCode from state:', registrationCode) // Debug log
+    console.log('Current code from URL:', currentCode) // Debug log
 
     if (planId === 'basic') {
-      console.log('Handling basic plan - opening WhatsApp') // Debug log
-      const message = urlCode ? `My code: ${urlCode}` : ''
+      const message = currentCode ? `My code: ${currentCode}` : ''
       const whatsappUrl = `https://api.whatsapp.com/send/?phone=972559943649&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`
       window.open(whatsappUrl, '_blank')
-      return
-    }
-
-    console.log('Handling paid plan - navigating to checkout') // Debug log
-    const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
-    
-    // השתמש בקוד הקיים מה-URL או מה-state, ורק אם אין - צור חדש
-    let codeToUse = urlCode || registrationCode
-    if (!codeToUse) {
-      codeToUse = Math.random().toString(36).substring(2, 8).toUpperCase()
-      console.log('No existing code found, generated new code:', codeToUse) // Debug log
     } else {
-      console.log('Using existing code:', codeToUse) // Debug log
-    }
+      const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
+      
+      // השתמש בקוד מה-URL תחילה, אחר כך מהstate, ואחרון צור חדש
+      let codeToUse = currentCode || registrationCode
+      if (!codeToUse) {
+        // רק אם באמת אין קוד, תיצור חדש
+        codeToUse = Math.random().toString(36).substring(2, 8).toUpperCase()
+      }
 
-    // בנה את ה-URL של הדף checkout - נסה נתיבים שונים
-    const checkoutUrl = `/checkout?plan=${planId}&price=${price}&billing=${billingType}&code=${codeToUse}&planName=${encodeURIComponent(plan.name)}`
+      console.log('Code to use:', codeToUse) // Debug log
 
-    console.log('Final checkout URL:', checkoutUrl) // Debug log
-    console.log('Current location:', window.location.href) // Debug log
-    console.log('Navigating to checkout...') // Debug log
-    
-    // נווט לדף החדש
-    try {
-      window.location.href = checkoutUrl
-    } catch (error) {
-      console.error('Navigation error:', error) // Debug log
+      const url = new URL(window.location.origin + '/payment/checkout')
+      url.searchParams.set('plan', planId)
+      url.searchParams.set('price', price.toString())
+      url.searchParams.set('billing', billingType)
+      url.searchParams.set('code', codeToUse)
+      url.searchParams.set('planName', plan.name)
+
+      console.log('Final URL:', url.toString()) // Debug log
+      window.location.href = url.toString()
     }
   }
 
@@ -352,7 +329,7 @@ export default function PaymentPage() {
 
           <div style={{ fontSize: '1.1rem', color: '#2d5016', marginTop: '3rem', textAlign: 'center' }}>
             Need Yaya for your Team?{' '}
-            <a href="mailto:info@textcoco.com" style={{ color: '#2d5016', textDecoration: 'underline' }}>
+            <a href="mailto:info@yayagent.com" style={{ color: '#2d5016', textDecoration: 'underline' }}>
               Contact us
             </a>
           </div>
