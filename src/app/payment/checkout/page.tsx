@@ -1,4 +1,4 @@
-use client'
+'use client'
 
 import React, { useState, useEffect } from 'react'
 import { ArrowLeft, Shield, CreditCard } from 'lucide-react'
@@ -8,7 +8,8 @@ export default function CheckoutPage() {
     plan: '',
     price: '',
     billing: '',
-    code: ''
+    code: '',
+    planName: ''
   })
 
   const [formData, setFormData] = useState({
@@ -22,12 +23,16 @@ export default function CheckoutPage() {
   useEffect(() => {
     // Get URL parameters from window.location
     const params = new URLSearchParams(window.location.search)
-    setUrlParams({
+    const extractedParams = {
       plan: params.get('plan') || '',
       price: params.get('price') || '',
       billing: params.get('billing') || '',
-      code: params.get('code') || ''
-    })
+      code: params.get('code') || '',
+      planName: params.get('planName') || ''
+    }
+    
+    console.log('Checkout - URL params:', extractedParams) // Debug log
+    setUrlParams(extractedParams)
   }, [])
 
   const planNames = {
@@ -58,15 +63,30 @@ export default function CheckoutPage() {
       
       // Simulate 90% success rate for demo
       if (Math.random() > 0.1) {
-        // Redirect to success page with registration code
-        window.location.href = `/payment/success?plan=${urlParams.plan}&email=${formData.email}&price=${urlParams.price}&code=${urlParams.code}`
+        // Redirect to success page with all necessary parameters including the code
+        const successUrl = new URL(window.location.origin + '/payment/success')
+        successUrl.searchParams.set('plan', urlParams.plan)
+        successUrl.searchParams.set('email', formData.email)
+        successUrl.searchParams.set('price', urlParams.price)
+        successUrl.searchParams.set('billing', urlParams.billing)
+        successUrl.searchParams.set('code', urlParams.code)
+        successUrl.searchParams.set('planName', urlParams.planName)
+        
+        console.log('Redirecting to success with URL:', successUrl.toString()) // Debug log
+        window.location.href = successUrl.toString()
       } else {
         // Redirect to failed page
         window.location.href = '/payment/failed'
       }
     } catch (error) {
+      console.error('Payment error:', error) // Debug log
       window.location.href = '/payment/failed'
     }
+  }
+
+  // Get current plan name - prefer planName from URL, fallback to mapped name
+  const getCurrentPlanName = () => {
+    return urlParams.planName || planNames[urlParams.plan as keyof typeof planNames] || 'Selected Plan'
   }
 
   return (
@@ -92,7 +112,7 @@ export default function CheckoutPage() {
       <main style={{ padding: '2rem 0' }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 2rem' }}>
           <a 
-            href="/payment" 
+            href={`/payment${urlParams.code ? `?code=${urlParams.code}` : ''}`}
             style={{ 
               display: 'inline-flex', 
               alignItems: 'center', 
@@ -117,12 +137,27 @@ export default function CheckoutPage() {
               <div style={{ background: '#F5F1EB', borderRadius: '20px', padding: '2rem', border: '1px solid #E5DDD5' }}>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                    {planNames[urlParams.plan as keyof typeof planNames] || 'Selected Plan'}
+                    {getCurrentPlanName()}
                   </h3>
                   <p style={{ color: '#8B5E3C', fontSize: '0.9rem', opacity: 0.8 }}>
                     {urlParams.billing === 'yearly' ? 'Annual' : 'Monthly'} subscription
                   </p>
                 </div>
+
+                {/* Show registration code if available */}
+                {urlParams.code && (
+                  <div style={{ 
+                    background: 'rgba(37, 211, 102, 0.1)', 
+                    borderRadius: '12px', 
+                    padding: '1rem', 
+                    border: '1px solid rgba(37, 211, 102, 0.3)',
+                    marginBottom: '1.5rem'
+                  }}>
+                    <p style={{ color: '#25d366', fontSize: '0.9rem', fontWeight: '600', margin: 0 }}>
+                      ✅ Registration Code: {urlParams.code}
+                    </p>
+                  </div>
+                )}
 
                 <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem', marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C' }}>
