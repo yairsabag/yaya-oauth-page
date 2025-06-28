@@ -93,17 +93,22 @@ export default function PaymentPage() {
     const plan = plans.find(p => p.id === planId)
     if (!plan) return
 
-    console.log('Current registrationCode:', registrationCode) // Debug log
+    // קרא את הקוד ישירות מה-URL כדי להימנע מ-race condition
+    const params = new URLSearchParams(window.location.search)
+    const currentCode = params.get('code')
+    
+    console.log('Current registrationCode from state:', registrationCode) // Debug log
+    console.log('Current code from URL:', currentCode) // Debug log
 
     if (planId === 'basic') {
-      const message = registrationCode ? `My code: ${registrationCode}` : ''
+      const message = currentCode ? `My code: ${currentCode}` : ''
       const whatsappUrl = `https://api.whatsapp.com/send/?phone=972559943649&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`
       window.open(whatsappUrl, '_blank')
     } else {
       const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
       
-      // אם יש קוד רגיסטרציה - השתמש בו, אחרת אל תיצור כלום
-      let codeToUse = registrationCode
+      // השתמש בקוד מה-URL תחילה, אחר כך מהstate, ואחרון צור חדש
+      let codeToUse = currentCode || registrationCode
       if (!codeToUse) {
         // רק אם באמת אין קוד, תיצור חדש
         codeToUse = Math.random().toString(36).substring(2, 8).toUpperCase()
