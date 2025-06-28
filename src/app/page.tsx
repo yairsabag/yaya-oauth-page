@@ -212,7 +212,7 @@ export default function Home() {
     ? `https://api.whatsapp.com/send/?phone=972559943649&text=My code: ${registrationCode}. I want to upgrade to ${planId} plan&type=phone_number&app_absent=0`
     : `https://api.whatsapp.com/send/?phone=972559943649&text=I want to subscribe to ${planId} plan&type=phone_number&app_absent=0`
   window.open(whatsappUrl, '_blank')
-}
+  }
 
   return (
     <div style={{ fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
