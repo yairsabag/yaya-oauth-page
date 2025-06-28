@@ -89,13 +89,19 @@ export default function PaymentPage() {
     }
   ]
 
+  const getCurrentCode = () => {
+    // תמיד קרא את הקוד ישירות מה-URL כדי להבטיח עדכניות
+    const params = new URLSearchParams(window.location.search)
+    const urlCode = params.get('code')
+    return urlCode || registrationCode
+  }
+
   const handlePlanSelection = (planId: string) => {
     const plan = plans.find(p => p.id === planId)
     if (!plan) return
 
-    // קרא את הקוד ישירות מה-URL כדי להימנע מ-race condition
-    const params = new URLSearchParams(window.location.search)
-    const currentCode = params.get('code')
+    // קבל את הקוד הנוכחי
+    const currentCode = getCurrentCode()
     
     console.log('Current registrationCode from state:', registrationCode) // Debug log
     console.log('Current code from URL:', currentCode) // Debug log
@@ -107,11 +113,11 @@ export default function PaymentPage() {
     } else {
       const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
       
-      // השתמש בקוד מה-URL תחילה, אחר כך מהstate, ואחרון צור חדש
-      let codeToUse = currentCode || registrationCode
+      // אם אין קוד, צור חדש
+      let codeToUse = currentCode
       if (!codeToUse) {
-        // רק אם באמת אין קוד, תיצור חדש
         codeToUse = Math.random().toString(36).substring(2, 8).toUpperCase()
+        console.log('Generated new code:', codeToUse) // Debug log
       }
 
       console.log('Code to use:', codeToUse) // Debug log
