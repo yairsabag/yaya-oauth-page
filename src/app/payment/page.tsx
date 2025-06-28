@@ -96,6 +96,8 @@ export default function PaymentPage() {
       window.open(whatsappUrl, '_blank')
     } else {
       const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
+      
+      // השתמש בקוד הקיים אם יש, אחרת צור חדש רק אם אין בכלל
       const codeToUse = registrationCode || Math.random().toString(36).substring(2, 8).toUpperCase()
 
       const url = new URL(window.location.origin + '/payment/checkout')
