@@ -924,23 +924,11 @@ export default function Home() {
                 </div>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Repeat reminders
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Google Calendar
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
                   500 Voice Notes / Month
                 </div>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100 Image Analysis / Month
-                </div>
-                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  100 Internet Searches
+                  Create Lists
                 </div>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
@@ -948,13 +936,30 @@ export default function Home() {
                 </div>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  AI Memory of You
+                  Google Calendar
                 </div>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-                  Create Lists
+                  Expense tracking
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Repeat reminders 
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 Image Analysis / Month 
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Food Tracking (Calories) 
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 Internet Searches 
                 </div>
               </div>
+
 
               <WhatsAppButton
                 planType="ultimate"
