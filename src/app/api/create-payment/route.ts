@@ -18,11 +18,11 @@ export async function POST(request: NextRequest) {
     const prices = {
       executive: { 
         monthly: 5, 
-        yearly: 48  // 5$ לחודש * 12
+        yearly: 48  // 4$ לחודש * 12
       },
       ultimate: { 
         monthly: 14, 
-        yearly: 156 // 14$ לחודש * 12
+        yearly: 156 // 13$ לחודש * 12
       }
     };
     
@@ -49,13 +49,13 @@ export async function POST(request: NextRequest) {
     deferredDate.setDate(deferredDate.getDate() + 7);
     const deferredDateStr = deferredDate.toISOString().split('T')[0].replace(/-/g, '');
     
-    // הכנת פרמטרים ל-Tranzila
-    const tranzilaParams = {
+    // הכנת פרמטרים ל-Tranzila - כל הערכים חייבים להיות strings
+    const tranzilaParams: Record<string, string> = {
       // חובה
       terminal: terminal,
       
       // סכום
-      sum: amount,
+      sum: amount.toString(),
       currency: '1', // 1 = ILS, 2 = USD
       
       // סוג עסקה - תשלום דחוי (לאחר 7 ימי trial)
