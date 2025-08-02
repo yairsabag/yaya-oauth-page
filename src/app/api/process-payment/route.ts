@@ -19,11 +19,16 @@ export async function POST(request: NextRequest) {
     const deferredDate = new Date();
     deferredDate.setDate(deferredDate.getDate() + 7);
     const deferredDateStr = deferredDate.toISOString().split('T')[0].replace(/-/g, '');
+
+    console.log('Terminal:', terminal);
+console.log('Password:', password);
+console.log('Sending to Tranzila:', tranzilaParams.toString());
     
     // הכן את הפרמטרים ל-Tranzila Direct API
     const tranzilaParams = new URLSearchParams({
       // Merchant details
       supplier: terminal,
+      terminal_name: terminal,
       
       // Transaction details
       sum: body.amount,
@@ -63,7 +68,7 @@ export async function POST(request: NextRequest) {
     });
     
     // שלח ל-Tranzila Direct API
-    const tranzilaResponse = await fetch('https://secure5.tranzila.com/cgi-bin/tranzila71u.cgi', {
+    const tranzilaResponse = await fetch('https://direct.tranzila.com/fxpyairsabagtok/tranzila71u.cgi', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
