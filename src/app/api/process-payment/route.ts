@@ -15,6 +15,11 @@ export async function POST(request: NextRequest) {
       );
     }
     
+    // חישוב תאריך דחוי (7 ימי trial)
+    const deferredDate = new Date();
+    deferredDate.setDate(deferredDate.getDate() + 7);
+    const deferredDateStr = deferredDate.toISOString().split('T')[0].replace(/-/g, '');
+    
     // הכן את הפרמטרים ל-Tranzila Direct API
     const tranzilaParams = new URLSearchParams({
       // Merchant details
@@ -38,11 +43,8 @@ export async function POST(request: NextRequest) {
       
       // Transaction mode
       TranzilaPW: password,
-      tranmode: 'A', // A = regular transaction
-      
-      // For recurring/deferred (7 days trial)
-      'tranmode': 'D', // D = Deferred
-      'DeferredPaymentDate': new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0].replace(/-/g, ''),
+      tranmode: 'D', // D = Deferred (תשלום דחוי)
+      DeferredPaymentDate: deferredDateStr,
       
       // Custom fields
       custom1: body.registrationCode,
@@ -56,7 +58,8 @@ export async function POST(request: NextRequest) {
     console.log('Processing payment for:', {
       plan: body.plan,
       amount: body.amount,
-      registrationCode: body.registrationCode
+      registrationCode: body.registrationCode,
+      deferredDate: deferredDateStr
     });
     
     // שלח ל-Tranzila Direct API
