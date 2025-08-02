@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ArrowLeft, Shield, CreditCard } from 'lucide-react'
+import { ArrowLeft, Shield, CreditCard, Lock } from 'lucide-react'
 
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState({
@@ -17,11 +17,19 @@ export default function CheckoutPage() {
     fullName: '',
     phone: ''
   })
+  
+  const [cardData, setCardData] = useState({
+    cardNumber: '',
+    expiryMonth: '',
+    expiryYear: '',
+    cvv: '',
+    idNumber: ''
+  })
+  
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    // Get URL parameters from window.location
     const params = new URLSearchParams(window.location.search)
     const extractedParams = {
       plan: params.get('plan') || '',
@@ -30,14 +38,28 @@ export default function CheckoutPage() {
       code: params.get('code') || '',
       planName: params.get('planName') || ''
     }
-    
-    console.log('Checkout - URL params:', extractedParams) // Debug log
     setUrlParams(extractedParams)
   }, [])
 
   const planNames = {
     executive: 'Executive Plan',
     ultimate: 'Ultimate Plan'
+  }
+  
+  // Format card number with spaces
+  const formatCardNumber = (value: string) => {
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
+    const matches = v.match(/\d{4,16}/g)
+    const match = (matches && matches[0]) || ''
+    const parts = []
+    for (let i = 0, len = match.length; i < len; i += 4) {
+      parts.push(match.substring(i, i + 4))
+    }
+    if (parts.length) {
+      return parts.join(' ')
+    } else {
+      return value
+    }
   }
 
   const handleSubmit = async () => {
@@ -49,6 +71,20 @@ export default function CheckoutPage() {
     if (!formData.email) newErrors.email = 'Email is required'
     if (!formData.fullName) newErrors.fullName = 'Full name is required'
     if (!formData.phone) newErrors.phone = 'Phone number is required'
+    
+    // Validate card
+    if (!cardData.cardNumber || cardData.cardNumber.replace(/\s/g, '').length < 16) {
+      newErrors.cardNumber = 'Valid card number is required'
+    }
+    if (!cardData.expiryMonth || !cardData.expiryYear) {
+      newErrors.expiry = 'Expiry date is required'
+    }
+    if (!cardData.cvv || cardData.cvv.length < 3) {
+      newErrors.cvv = 'CVV is required'
+    }
+    if (!cardData.idNumber || cardData.idNumber.length < 9) {
+      newErrors.idNumber = 'ID number is required'
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -57,34 +93,77 @@ export default function CheckoutPage() {
     }
 
     try {
-      // Here you would integrate with Tranzila
-      // For now, simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Simulate 90% success rate for demo
-      if (Math.random() > 0.1) {
-        // Redirect to success page with all necessary parameters including the code
+      // Process payment through our API
+      const response = await fetch('/api/process-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          // Payment details
+          plan: urlParams.plan,
+          amount: urlParams.price,
+          billing: urlParams.billing,
+          
+          // Customer details
+          email: formData.email,
+          fullName: formData.fullName,
+          phone: formData.phone,
+          
+          // Card details
+          cardNumber: cardData.cardNumber.replace(/\s/g, ''),
+          expiryMonth: cardData.expiryMonth,
+          expiryYear: cardData.expiryYear,
+          cvv: cardData.cvv,
+          idNumber: cardData.idNumber,
+          
+          // Registration code
+          registrationCode: urlParams.code
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update user plan in the database
+        await fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            registration_code: urlParams.code,
+            plan: urlParams.plan,
+            email: formData.email,
+            expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString(),
+            billing_type: urlParams.billing,
+            status: 'active',
+            transaction_id: result.transactionId
+          })
+        });
+        
+        // Redirect to success page
         const successUrl = new URL(window.location.origin + '/payment/success')
         successUrl.searchParams.set('plan', urlParams.plan)
         successUrl.searchParams.set('email', formData.email)
         successUrl.searchParams.set('price', urlParams.price)
         successUrl.searchParams.set('billing', urlParams.billing)
         successUrl.searchParams.set('code', urlParams.code)
-        successUrl.searchParams.set('planName', urlParams.planName)
+        successUrl.searchParams.set('transactionId', result.transactionId)
         
-        console.log('Redirecting to success with URL:', successUrl.toString()) // Debug log
         window.location.href = successUrl.toString()
       } else {
-        // Redirect to failed page
-        window.location.href = '/payment/failed'
+        // Show error
+        alert(result.error || 'Payment failed. Please check your card details and try again.')
+        setIsLoading(false)
       }
     } catch (error) {
-      console.error('Payment error:', error) // Debug log
-      window.location.href = '/payment/failed'
+      console.error('Payment error:', error)
+      alert('An error occurred while processing your payment. Please try again.')
+      setIsLoading(false)
     }
   }
 
-  // Get current plan name - prefer planName from URL, fallback to mapped name
   const getCurrentPlanName = () => {
     return urlParams.planName || planNames[urlParams.plan as keyof typeof planNames] || 'Selected Plan'
   }
@@ -144,7 +223,6 @@ export default function CheckoutPage() {
                   </p>
                 </div>
 
-                {/* Show registration code if available */}
                 {urlParams.code && (
                   <div style={{ 
                     background: 'rgba(37, 211, 102, 0.1)', 
@@ -182,80 +260,249 @@ export default function CheckoutPage() {
                     🎉 Free for 7 days, then ${urlParams.price}/{urlParams.billing === 'yearly' ? 'year' : 'month'}. Cancel anytime.
                   </p>
                 </div>
+                
+                {/* Security badges */}
+                <div style={{ marginTop: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#8B5E3C', fontSize: '0.85rem' }}>
+                    <Lock size={16} />
+                    <span>SSL Secured</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#8B5E3C', fontSize: '0.85rem' }}>
+                    <Shield size={16} />
+                    <span>PCI Compliant</span>
+                  </div>
+                </div>
               </div>
             </div>
 
             {/* Payment Form */}
             <div>
               <h2 style={{ fontSize: '2rem', fontWeight: '400', marginBottom: '1.5rem', color: '#8B5E3C', letterSpacing: '-0.02em' }}>
-                Contact Information
+                Payment Details
               </h2>
 
               <div style={{ background: '#F5F1EB', borderRadius: '20px', padding: '2rem', border: '1px solid #E5DDD5' }}>
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: errors.email ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                      borderRadius: '8px',
-                      fontSize: '0.9rem',
-                      boxSizing: 'border-box',
-                      background: 'white'
-                    }}
-                    placeholder="your@email.com"
-                  />
-                  {errors.email && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.email}</p>}
-                </div>
-
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: errors.fullName ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                      borderRadius: '8px',
-                      fontSize: '0.9rem',
-                      boxSizing: 'border-box',
-                      background: 'white'
-                    }}
-                    placeholder="John Doe"
-                  />
-                  {errors.fullName && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.fullName}</p>}
-                </div>
-
+                {/* Contact Information */}
                 <div style={{ marginBottom: '2rem' }}>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: errors.phone ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                      borderRadius: '8px',
-                      fontSize: '0.9rem',
-                      boxSizing: 'border-box',
-                      background: 'white'
-                    }}
-                    placeholder="+972-50-123-4567"
-                  />
-                  {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem' }}>
+                    Contact Information
+                  </h3>
+                  
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: errors.email ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                        borderRadius: '8px',
+                        fontSize: '0.9rem',
+                        boxSizing: 'border-box',
+                        background: 'white'
+                      }}
+                      placeholder="your@email.com"
+                    />
+                    {errors.email && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.email}</p>}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                        Full Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.fullName}
+                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: errors.fullName ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                          borderRadius: '8px',
+                          fontSize: '0.9rem',
+                          boxSizing: 'border-box',
+                          background: 'white'
+                        }}
+                        placeholder="John Doe"
+                      />
+                      {errors.fullName && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.fullName}</p>}
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                        Phone Number *
+                      </label>
+                      <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: errors.phone ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                          borderRadius: '8px',
+                          fontSize: '0.9rem',
+                          boxSizing: 'border-box',
+                          background: 'white'
+                        }}
+                        placeholder="+972-50-123-4567"
+                      />
+                      {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Information */}
+                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '2rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem' }}>
+                    Payment Information
+                  </h3>
+                  
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                      Card Number *
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        value={formatCardNumber(cardData.cardNumber)}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\s/g, '');
+                          if (value.length <= 16) {
+                            setCardData({ ...cardData, cardNumber: value });
+                          }
+                        }}
+                        maxLength={19}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          paddingLeft: '3rem',
+                          border: errors.cardNumber ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                          borderRadius: '8px',
+                          fontSize: '0.9rem',
+                          boxSizing: 'border-box',
+                          background: 'white'
+                        }}
+                        placeholder="1234 5678 9012 3456"
+                      />
+                      <CreditCard size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#8B5E3C' }} />
+                    </div>
+                    {errors.cardNumber && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.cardNumber}</p>}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                        Expiry Date *
+                      </label>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input
+                          type="text"
+                          value={cardData.expiryMonth}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            if (value.length <= 2) {
+                              setCardData({ ...cardData, expiryMonth: value });
+                            }
+                          }}
+                          maxLength={2}
+                          style={{
+                            width: '50%',
+                            padding: '0.75rem',
+                            border: errors.expiry ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                            borderRadius: '8px',
+                            fontSize: '0.9rem',
+                            boxSizing: 'border-box',
+                            background: 'white'
+                          }}
+                          placeholder="MM"
+                        />
+                        <input
+                          type="text"
+                          value={cardData.expiryYear}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '');
+                            if (value.length <= 2) {
+                              setCardData({ ...cardData, expiryYear: value });
+                            }
+                          }}
+                          maxLength={2}
+                          style={{
+                            width: '50%',
+                            padding: '0.75rem',
+                            border: errors.expiry ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                            borderRadius: '8px',
+                            fontSize: '0.9rem',
+                            boxSizing: 'border-box',
+                            background: 'white'
+                          }}
+                          placeholder="YY"
+                        />
+                      </div>
+                      {errors.expiry && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.expiry}</p>}
+                    </div>
+                    
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                        CVV *
+                      </label>
+                      <input
+                        type="text"
+                        value={cardData.cvv}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '');
+                          if (value.length <= 4) {
+                            setCardData({ ...cardData, cvv: value });
+                          }
+                        }}
+                        maxLength={4}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          border: errors.cvv ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                          borderRadius: '8px',
+                          fontSize: '0.9rem',
+                          boxSizing: 'border-box',
+                          background: 'white'
+                        }}
+                        placeholder="123"
+                      />
+                      {errors.cvv && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.cvv}</p>}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '2rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                      ID Number *
+                    </label>
+                    <input
+                      type="text"
+                      value={cardData.idNumber}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '');
+                        if (value.length <= 9) {
+                          setCardData({ ...cardData, idNumber: value });
+                        }
+                      }}
+                      maxLength={9}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        border: errors.idNumber ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                        borderRadius: '8px',
+                        fontSize: '0.9rem',
+                        boxSizing: 'border-box',
+                        background: 'white'
+                      }}
+                      placeholder="123456789"
+                    />
+                    {errors.idNumber && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.idNumber}</p>}
+                  </div>
                 </div>
 
                 <button
@@ -288,13 +535,13 @@ export default function CheckoutPage() {
                     }
                   }}
                 >
-                  <CreditCard size={20} />
-                  {isLoading ? 'Processing...' : 'Start Free Trial'}
+                  <Lock size={20} />
+                  {isLoading ? 'Processing...' : 'Start Free Trial - $0.00'}
                 </button>
 
                 <p style={{ fontSize: '0.8rem', color: '#8B5E3C', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
                   By continuing, you agree to our Terms of Service and Privacy Policy.
-                  Your trial starts today and you can cancel anytime before it ends.
+                  Your payment information is encrypted and secure.
                 </p>
               </div>
             </div>
