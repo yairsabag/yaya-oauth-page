@@ -69,33 +69,30 @@ export default function RegisterPage() {
   }
 
   const handlePayment = async () => {
-    setIsLoading(true)
+  setIsLoading(true)
+  
+  try {
+    // במקום לקרוא ל-API, הפנה לדף checkout עם כל הפרמטרים
+    const checkoutUrl = new URL(window.location.origin + '/payment/checkout')
+    checkoutUrl.searchParams.set('plan', selectedPlan)
+    checkoutUrl.searchParams.set('price', billingType === 'yearly' 
+      ? plans[selectedPlan as keyof typeof plans].yearlyPrice.toString()
+      : plans[selectedPlan as keyof typeof plans].monthlyPrice.toString()
+    )
+    checkoutUrl.searchParams.set('billing', billingType)
+    checkoutUrl.searchParams.set('code', registrationCode || '')
+    checkoutUrl.searchParams.set('planName', plans[selectedPlan as keyof typeof plans].name)
     
-    try {
-      // שליחת נתונים ל-n8n webhook
-      const response = await fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          plan: selectedPlan,
-          registration_code: registrationCode,
-          billing_type: billingType,
-          price: billingType === 'yearly' ? plans[selectedPlan as keyof typeof plans].yearlyPrice : plans[selectedPlan as keyof typeof plans].monthlyPrice
-        })
-      })
-      
-      console.log('Webhook response:', response.status)
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      setStep('oauth')
-    } catch (error) {
-      console.error('Payment error:', error)
-      setStep('oauth')
-    } finally {
-      setIsLoading(false)
-    }
+    // הפנה לדף checkout
+    window.location.href = checkoutUrl.toString()
+    
+  } catch (error) {
+    console.error('Error redirecting to checkout:', error)
+    alert('שגיאה במעבר לדף התשלום')
+  } finally {
+    setIsLoading(false)
   }
+}
 
   const handleGoogleOAuth = () => {
   const clientId = '314964896562-o93h71h2cpiqgcikaqeg2a34ht2ipl2j.apps.googleusercontent.com';
