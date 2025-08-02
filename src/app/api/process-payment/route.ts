@@ -19,10 +19,6 @@ export async function POST(request: NextRequest) {
     const deferredDate = new Date();
     deferredDate.setDate(deferredDate.getDate() + 7);
     const deferredDateStr = deferredDate.toISOString().split('T')[0].replace(/-/g, '');
-
-    console.log('Terminal:', terminal);
-console.log('Password:', password);
-console.log('Sending to Tranzila:', tranzilaParams.toString());
     
     // הכן את הפרמטרים ל-Tranzila Direct API
     const tranzilaParams = new URLSearchParams({
@@ -60,6 +56,8 @@ console.log('Sending to Tranzila:', tranzilaParams.toString());
       response_return_format: 'json'
     });
     
+    console.log('Terminal:', terminal);
+    console.log('Password:', password ? '[HIDDEN]' : 'NOT SET');
     console.log('Processing payment for:', {
       plan: body.plan,
       amount: body.amount,
@@ -68,7 +66,7 @@ console.log('Sending to Tranzila:', tranzilaParams.toString());
     });
     
     // שלח ל-Tranzila Direct API
-    const tranzilaResponse = await fetch('https://direct.tranzila.com/fxpyairsabagtok/tranzila71u.cgi', {
+    const tranzilaResponse = await fetch(`https://direct.tranzila.com/${terminal}/tranzila71u.cgi`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -119,6 +117,7 @@ console.log('Sending to Tranzila:', tranzilaParams.toString());
         '061': 'מעבר לסכום המותר',
         '062': 'מספר עסקאות מקסימלי',
         '065': 'מעבר למגבלת אשראי',
+        '20006': 'שגיאת הרשאה - בדוק את פרטי המסוף',
         '999': 'שגיאה כללית'
       };
       
