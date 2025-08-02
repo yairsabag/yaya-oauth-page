@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
       tranmode: 'D', // D = Deferred (תשלום דחוי)
       DeferredPaymentDate: deferredDateStr,
       
+      // Additional required fields
+      'TranzilaTK': '', // Token field - ריק לעסקה חדשה
+      
       // Custom fields
       custom1: body.registrationCode,
       custom2: body.plan,
@@ -75,7 +78,9 @@ export async function POST(request: NextRequest) {
     });
     
     const responseText = await tranzilaResponse.text();
-    console.log('Tranzila response:', responseText);
+    console.log('Tranzila response status:', tranzilaResponse.status);
+    console.log('Tranzila response headers:', Object.fromEntries(tranzilaResponse.headers.entries()));
+    console.log('Tranzila response text:', responseText);
     
     // נסה לפרסר כ-JSON או כ-URL params
     let result;
@@ -87,7 +92,19 @@ export async function POST(request: NextRequest) {
       result = Object.fromEntries(params.entries());
     }
     
+    console.log('Parsed result:', result);
+    
     // בדוק האם העסקה הצליחה
+    if (!result.Response) {
+      console.error('No Response field in result:', result);
+      return NextResponse.json({
+        success: false,
+        error: 'תשובה לא תקינה מהשרת',
+        errorCode: 'INVALID_RESPONSE',
+        details: result
+      });
+    }
+    
     if (result.Response === '000') {
       // הצלחה!
       return NextResponse.json({
