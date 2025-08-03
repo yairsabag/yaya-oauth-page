@@ -450,3 +450,168 @@ footer a:hover {
   border-radius: 2rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
+
+* Register Page Mobile Styles */
+@media (max-width: 768px) {
+  /* Progress Bar Mobile */
+  div[style*="gap: '1rem'"] {
+    gap: 0.5rem !important;
+  }
+  
+  div[style*="width: '100px'"] {
+    width: 60px !important;
+  }
+  
+  div[style*="gap: '6rem'"] {
+    gap: 2rem !important;
+    font-size: 0.75rem !important;
+  }
+  
+  /* Plan Selection Mobile */
+  h1[style*="fontSize: '3rem'"] {
+    font-size: 2rem !important;
+  }
+  
+  p[style*="fontSize: '1.2rem'"] {
+    font-size: 1rem !important;
+  }
+  
+  /* Registration Code Box */
+  div[style*="background: 'rgba(37, 211, 102, 0.1)'"] {
+    font-size: 0.875rem !important;
+    padding: 0.75rem !important;
+  }
+  
+  /* Billing Toggle Mobile */
+  div[style*="gap: '4px'"][style*="background: '#f7fafc'"] {
+    padding: 3px !important;
+  }
+  
+  div[style*="gap: '4px'"][style*="background: '#f7fafc'"] span {
+    font-size: 0.875rem !important;
+    padding: 6px 12px !important;
+  }
+  
+  /* Plan Cards Grid - Single Column on Mobile */
+  div[style*="gridTemplateColumns: '1fr 1fr'"] {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+  
+  /* Plan Card Mobile */
+  div[style*="padding: '2.5rem 2rem'"] {
+    padding: 1.5rem !important;
+  }
+  
+  /* Most Popular Badge */
+  div[style*="position: 'absolute'"][style*="top: '1rem'"] {
+    top: 0.75rem !important;
+    right: 0.75rem !important;
+    font-size: 0.625rem !important;
+    padding: 3px 8px !important;
+  }
+  
+  /* Plan Price */
+  div[style*="fontSize: '3.5rem'"] {
+    font-size: 2.5rem !important;
+  }
+  
+  /* Features List */
+  div[style*="fontSize: '0.95rem'"] {
+    font-size: 0.875rem !important;
+  }
+  
+  /* Continue Button */
+  button[style*="padding: '1rem 3rem'"] {
+    padding: 0.875rem 2rem !important;
+    font-size: 1rem !important;
+    width: 100%;
+  }
+  
+  /* Payment Step Mobile */
+  h1[style*="fontSize: '2.5rem'"] {
+    font-size: 1.875rem !important;
+  }
+  
+  /* Order Summary Box */
+  div[style*="background: '#F5F1EB'"][style*="padding: '2rem'"] {
+    padding: 1.5rem !important;
+  }
+  
+  h3[style*="fontSize: '1.2rem'"] {
+    font-size: 1.1rem !important;
+  }
+  
+  /* Payment Button */
+  button[style*="width: '100%'"][style*="padding: '1rem 2rem'"] {
+    padding: 0.875rem 1.5rem !important;
+    font-size: 1rem !important;
+  }
+  
+  /* Success Icon */
+  svg[style*="width: '80'"] {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  /* Why Connect Google Box */
+  div[style*="textAlign: 'left'"] {
+    font-size: 0.875rem !important;
+  }
+  
+  /* Small adjustments for text */
+  p[style*="fontSize: '0.8rem'"] {
+    font-size: 0.75rem !important;
+  }
+  
+  /* Back button */
+  button[style*="marginBottom: '2rem'"] {
+    font-size: 0.875rem !important;
+  }
+}
+
+/* Tablet Styles for Register */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Plan Cards - Keep 2 columns on tablet */
+  div[style*="gridTemplateColumns: '1fr 1fr'"] {
+    gap: 1.5rem !important;
+  }
+  
+  div[style*="padding: '2.5rem 2rem'"] {
+    padding: 2rem 1.5rem !important;
+  }
+}
+
+/* Extra Small Phones */
+@media (max-width: 375px) {
+  /* Even smaller progress indicators */
+  div[style*="width: '40px'"] {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.875rem !important;
+  }
+  
+  div[style*="width: '100px'"] {
+    width: 40px !important;
+  }
+  
+  /* Progress labels */
+  div[style*="gap: '6rem'"] {
+    gap: 1rem !important;
+    font-size: 0.625rem !important;
+  }
+  
+  /* Smaller prices */
+  div[style*="fontSize: '3.5rem'"] {
+    font-size: 2rem !important;
+  }
+  
+  /* Smaller padding overall */
+  main[style*="padding: '2rem 0'"] {
+    padding: 1rem 0 !important;
+  }
+  
+  div[style*="padding: '0 2rem'"] {
+    padding: 0 1rem !important;
+  }
+}
