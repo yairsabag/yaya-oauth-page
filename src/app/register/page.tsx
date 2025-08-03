@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { CheckCircle, MessageCircle, Calendar, Bell, Shield, CreditCard, ArrowLeft } from 'lucide-react'
+import { CheckCircle, MessageCircle, Calendar, Bell, Shield, CreditCard } from 'lucide-react'
 
 export default function RegisterPage() {
   const searchParams = useSearchParams()
@@ -11,6 +11,17 @@ export default function RegisterPage() {
   const [selectedPlan, setSelectedPlan] = useState('executive')
   const [billingType, setBillingType] = useState('monthly')
   const [isLoading, setIsLoading] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const plans = {
     executive: {
@@ -119,17 +130,52 @@ export default function RegisterPage() {
 
   if (!registrationCode) {
     return (
-      <div className="font-system min-h-screen bg-gradient-to-br from-[#faf5f0] to-[#f7f3ed] flex items-center justify-center p-4">
-        <div className="bg-yaya-bg rounded-[20px] p-6 sm:p-8 lg:p-12 text-center max-w-[500px] w-full border border-[#E5DDD5]">
-          <h1 className="text-2xl sm:text-3xl font-semibold text-yaya-brown mb-4">
+      <div style={{ 
+        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", 
+        minHeight: '100vh', 
+        background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem'
+      }}>
+        <div style={{ 
+          background: '#F5F1EB', 
+          borderRadius: '20px', 
+          padding: isMobile ? '2rem 1.5rem' : '3rem 2rem', 
+          textAlign: 'center',
+          maxWidth: '500px',
+          width: '100%',
+          border: '1px solid #E5DDD5'
+        }}>
+          <h1 style={{ 
+            fontSize: isMobile ? '1.5rem' : '2rem', 
+            fontWeight: '600', 
+            color: '#8B5E3C', 
+            marginBottom: '1rem' 
+          }}>
             Access Denied
           </h1>
-          <p className="text-yaya-brown mb-6 text-base sm:text-lg opacity-80">
+          <p style={{ 
+            color: '#8B5E3C', 
+            marginBottom: '2rem', 
+            fontSize: isMobile ? '0.95rem' : '1.1rem',
+            opacity: 0.8 
+          }}>
             You need to receive a registration link from our WhatsApp bot to access this page.
           </p>
           <a 
             href="/" 
-            className="inline-block bg-yaya-brown text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-opacity-90"
+            style={{ 
+              background: '#8B5E3C',
+              color: 'white',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontWeight: '600',
+              display: 'inline-block',
+              transition: 'all 0.2s ease'
+            }}
           >
             Back to Home
           </a>
@@ -139,47 +185,105 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="font-system min-h-screen bg-gradient-to-br from-[#faf5f0] to-[#f7f3ed]">
-      {/* Header */}
-      <header className="bg-white/95 backdrop-blur-[10px] border-b border-black/5 py-3 sm:py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <a href="/" className="flex items-center gap-2 sm:gap-3">
-              <img
-                src="/yaya-logo.png"
-                alt="Yaya Assistant Logo"
-                className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 object-contain"
-              />
-              <span className="text-xl sm:text-2xl font-semibold text-yaya-green">Yaya</span>
-            </a>
-            {step === 'payment' && (
-              <div className="flex items-center gap-2 text-[#4a5568] text-sm sm:text-base">
-                <Shield size={16} />
-                <span className="hidden sm:inline">Secure Registration</span>
-              </div>
-            )}
-          </div>
+    <div style={{ 
+      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)' 
+    }}>
+      <header style={{ 
+        background: 'rgba(255,255,255,0.95)', 
+        backdropFilter: 'blur(10px)', 
+        borderBottom: '1px solid rgba(0,0,0,0.05)', 
+        padding: '1rem 0' 
+      }}>
+        <div style={{ 
+          maxWidth: '1200px', 
+          margin: '0 auto', 
+          padding: isMobile ? '0 1rem' : '0 2rem', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center' 
+        }}>
+          <a href="/" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.75rem', 
+            textDecoration: 'none' 
+          }}>
+            <img
+              src="/yaya-logo.png"
+              alt="Yaya Assistant Logo"
+              style={{ width: isMobile ? '60px' : '80px', height: isMobile ? '60px' : '80px', objectFit: 'contain' }}
+            />
+            <span style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
+          </a>
+          {step === 'payment' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#4a5568' }}>
+              <Shield size={16} />
+              {!isMobile && <span style={{ fontSize: '0.9rem' }}>Secure Registration</span>}
+            </div>
+          )}
         </div>
       </header>
 
-      <main className="py-6 sm:py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main style={{ padding: isMobile ? '1.5rem 0' : '2rem 0' }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '0 1rem' : '0 2rem' }}>
           {/* Progress Bar */}
-          <div className="mb-8 sm:mb-12 text-center">
-            <div className="flex items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-4">
-              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${step === 'plan' ? 'bg-yaya-brown' : 'bg-[#c3d9c6]'} text-white flex items-center justify-center font-semibold text-sm sm:text-base`}>
-                1
-              </div>
-              <div className={`w-12 sm:w-20 lg:w-24 h-1 ${step !== 'plan' ? 'bg-yaya-brown' : 'bg-[#c3d9c6]'} rounded-full`}></div>
-              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${step === 'payment' || step === 'oauth' ? 'bg-yaya-brown' : 'bg-[#c3d9c6]'} text-white flex items-center justify-center font-semibold text-sm sm:text-base`}>
-                2
-              </div>
-              <div className={`w-12 sm:w-20 lg:w-24 h-1 ${step === 'oauth' ? 'bg-yaya-brown' : 'bg-[#c3d9c6]'} rounded-full`}></div>
-              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${step === 'oauth' ? 'bg-yaya-brown' : 'bg-[#c3d9c6]'} text-white flex items-center justify-center font-semibold text-sm sm:text-base`}>
-                3
-              </div>
+          <div style={{ marginBottom: isMobile ? '2rem' : '3rem', textAlign: 'center' }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              gap: isMobile ? '0.5rem' : '1rem',
+              marginBottom: '1rem'
+            }}>
+              <div style={{
+                width: isMobile ? '32px' : '40px',
+                height: isMobile ? '32px' : '40px',
+                borderRadius: '50%',
+                background: step === 'plan' ? '#8B5E3C' : '#c3d9c6',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '600',
+                fontSize: isMobile ? '0.875rem' : '1rem'
+              }}>1</div>
+              <div style={{ width: isMobile ? '40px' : '100px', height: '4px', background: step !== 'plan' ? '#8B5E3C' : '#c3d9c6', borderRadius: '2px' }}></div>
+              <div style={{
+                width: isMobile ? '32px' : '40px',
+                height: isMobile ? '32px' : '40px',
+                borderRadius: '50%',
+                background: step === 'payment' ? '#8B5E3C' : (step === 'oauth') ? '#8B5E3C' : '#c3d9c6',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '600',
+                fontSize: isMobile ? '0.875rem' : '1rem'
+              }}>2</div>
+              <div style={{ width: isMobile ? '40px' : '100px', height: '4px', background: step === 'oauth' ? '#8B5E3C' : '#c3d9c6', borderRadius: '2px' }}></div>
+              <div style={{
+                width: isMobile ? '32px' : '40px',
+                height: isMobile ? '32px' : '40px',
+                borderRadius: '50%',
+                background: step === 'oauth' ? '#8B5E3C' : '#c3d9c6',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '600',
+                fontSize: isMobile ? '0.875rem' : '1rem'
+              }}>3</div>
             </div>
-            <div className="flex justify-center gap-4 sm:gap-8 lg:gap-24 text-xs sm:text-sm text-yaya-brown font-medium">
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: isMobile ? '2rem' : '6rem',
+              fontSize: isMobile ? '0.75rem' : '0.9rem', 
+              color: '#8B5E3C',
+              fontWeight: '500'
+            }}>
               <span>Choose Plan</span>
               <span>Payment</span>
               <span>Connect</span>
@@ -188,93 +292,207 @@ export default function RegisterPage() {
 
           {/* Step 1: Plan Selection */}
           {step === 'plan' && (
-            <div className="max-w-5xl mx-auto">
-              <div className="text-center mb-8 sm:mb-12">
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-light text-yaya-brown mb-3 sm:mb-4 tracking-tight">
+            <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+              <div style={{ textAlign: 'center', marginBottom: isMobile ? '2rem' : '3rem' }}>
+                <h1 style={{ 
+                  fontSize: isMobile ? '2rem' : '3rem', 
+                  fontWeight: '400', 
+                  color: '#8B5E3C', 
+                  marginBottom: '1rem',
+                  letterSpacing: '-0.02em'
+                }}>
                   Choose Your Plan
                 </h1>
-                <p className="text-base sm:text-lg lg:text-xl text-[#718096] mb-6 sm:mb-8">
+                <p style={{ 
+                  fontSize: isMobile ? '1rem' : '1.2rem', 
+                  color: '#718096', 
+                  marginBottom: '2rem'
+                }}>
                   Select the perfect plan for your needs. Start your 7-day free trial today.
                 </p>
                 
-                <div className="inline-block bg-green-50 rounded-xl px-4 py-3 border border-green-200">
-                  <p className="text-whatsapp text-sm sm:text-base font-semibold">
+                <div style={{ 
+                  background: 'rgba(37, 211, 102, 0.1)', 
+                  borderRadius: '12px', 
+                  padding: isMobile ? '0.75rem' : '1rem', 
+                  border: '1px solid rgba(37, 211, 102, 0.3)',
+                  display: 'inline-block',
+                  fontSize: isMobile ? '0.875rem' : '1rem'
+                }}>
+                  <p style={{ 
+                    color: '#25d366', 
+                    fontWeight: '600',
+                    margin: '0'
+                  }}>
                     ✅ Registration Code: {registrationCode}
                   </p>
                 </div>
               </div>
 
               {/* Billing Toggle */}
-              <div className="flex gap-1 justify-center mb-8 sm:mb-12 bg-[#f7fafc] rounded-lg p-1 w-fit mx-auto">
-                <button
+              <div style={{
+                display: 'flex',
+                gap: '4px',
+                justifyContent: 'center',
+                marginBottom: '3rem',
+                background: '#f7fafc',
+                borderRadius: '8px',
+                padding: '4px',
+                width: 'fit-content',
+                margin: '0 auto 3rem',
+                cursor: 'pointer'
+              }}>
+                <span 
                   onClick={() => setBillingType('monthly')}
-                  className={`${
-                    billingType === 'monthly'
-                      ? 'bg-white text-yaya-brown shadow-sm'
-                      : 'bg-transparent text-gray-400'
-                  } px-3 sm:px-5 py-1.5 sm:py-2 rounded-md text-sm sm:text-base font-medium transition-all duration-200`}
+                  style={{
+                    background: billingType === 'monthly' ? 'white' : 'transparent',
+                    color: billingType === 'monthly' ? '#8B5E3C' : '#999',
+                    padding: isMobile ? '6px 12px' : '8px 20px',
+                    borderRadius: '6px',
+                    fontSize: isMobile ? '0.875rem' : '1rem',
+                    fontWeight: '500',
+                    boxShadow: billingType === 'monthly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
                   Monthly Billing
-                </button>
-                <button
+                </span>
+                <span 
                   onClick={() => setBillingType('yearly')}
-                  className={`${
-                    billingType === 'yearly'
-                      ? 'bg-white text-yaya-brown shadow-sm'
-                      : 'bg-transparent text-gray-400'
-                  } px-3 sm:px-5 py-1.5 sm:py-2 rounded-md text-sm sm:text-base font-medium transition-all duration-200`}
+                  style={{
+                    background: billingType === 'yearly' ? 'white' : 'transparent',
+                    color: billingType === 'yearly' ? '#8B5E3C' : '#999',
+                    padding: isMobile ? '6px 12px' : '8px 20px',
+                    borderRadius: '6px',
+                    fontSize: isMobile ? '0.875rem' : '1rem',
+                    fontWeight: '500',
+                    boxShadow: billingType === 'yearly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
                   Yearly Billing
-                </button>
+                </span>
               </div>
 
               {/* Plan Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+                gap: isMobile ? '1.5rem' : '2rem', 
+                marginBottom: '3rem' 
+              }}>
                 {Object.entries(plans).map(([planId, plan]) => (
                   <div
                     key={planId}
                     onClick={() => setSelectedPlan(planId)}
-                    className={`
-                      relative cursor-pointer transition-all duration-300
-                      bg-yaya-bg rounded-[20px] p-6 sm:p-8 lg:p-10
-                      ${plan.popular ? 'border-2 border-yaya-brown scale-[1.02]' : 
-                        selectedPlan === planId ? 'border-2 border-yaya-brown' : 'border border-[#E5DDD5]'}
-                      ${selectedPlan === planId ? 'bg-opacity-50' : ''}
-                      hover:scale-[1.02] hover:shadow-lg hover:border-yaya-brown
-                    `}
+                    style={{
+                      background: selectedPlan === planId ? 'rgba(139, 94, 60, 0.1)' : '#F5F1EB',
+                      borderRadius: '20px',
+                      padding: isMobile ? '1.5rem' : '2.5rem 2rem',
+                      textAlign: 'left',
+                      position: 'relative',
+                      border: plan.popular ? '2px solid #8B5E3C' : selectedPlan === planId ? '2px solid #8B5E3C' : '1px solid #E5DDD5',
+                      transform: plan.popular ? 'scale(1.02)' : 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isMobile) {
+                        e.currentTarget.style.transform = plan.popular ? 'scale(1.05)' : 'scale(1.02)'
+                        e.currentTarget.style.boxShadow = '0 20px 25px rgba(139, 94, 60, 0.15)'
+                        e.currentTarget.style.border = '2px solid #8B5E3C'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isMobile) {
+                        e.currentTarget.style.transform = plan.popular ? 'scale(1.02)' : 'scale(1)'
+                        e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)'
+                        e.currentTarget.style.border = plan.popular ? '2px solid #8B5E3C' : selectedPlan === planId ? '2px solid #8B5E3C' : '1px solid #E5DDD5'
+                      }
+                    }}
                   >
                     {plan.popular && (
-                      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-yaya-brown text-white px-2 sm:px-3 py-1 rounded-xl text-[10px] sm:text-xs font-medium">
+                      <div style={{
+                        position: 'absolute',
+                        top: isMobile ? '0.75rem' : '1rem',
+                        right: isMobile ? '0.75rem' : '1rem',
+                        background: '#8B5E3C',
+                        color: 'white',
+                        padding: isMobile ? '3px 8px' : '4px 12px',
+                        borderRadius: '12px',
+                        fontSize: isMobile ? '0.625rem' : '0.75rem',
+                        fontWeight: '500'
+                      }}>
                         MOST POPULAR
                       </div>
                     )}
 
-                    <div className="text-xs sm:text-sm text-yaya-brown font-medium mb-2 uppercase tracking-wider">
+                    <div style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#8B5E3C', 
+                      fontWeight: '500', 
+                      marginBottom: '0.5rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
                       {plan.name.toUpperCase()}
                     </div>
 
-                    <div className="text-4xl sm:text-5xl lg:text-6xl font-light text-yaya-brown mb-1 sm:mb-2 leading-none flex items-baseline gap-2">
+                    <div style={{ 
+                      fontSize: isMobile ? '2.5rem' : '3.5rem', 
+                      fontWeight: '300', 
+                      color: '#8B5E3C', 
+                      marginBottom: '1rem',
+                      lineHeight: '1',
+                      display: 'flex',
+                      alignItems: 'baseline',
+                      gap: '8px'
+                    }}>
                       ${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}
-                      <span className="text-sm sm:text-base font-normal">/month</span>
+                      <span style={{ fontSize: isMobile ? '0.875rem' : '1rem', fontWeight: '400' }}>/month</span>
                     </div>
 
                     {billingType === 'yearly' && (
-                      <div className="text-xs sm:text-sm text-whatsapp font-semibold mb-4 sm:mb-6">
+                      <div style={{ 
+                        fontSize: '0.85rem', 
+                        color: '#25d366', 
+                        fontWeight: '600', 
+                        marginBottom: '1.5rem'
+                      }}>
                         💰 Save ${(plan.monthlyPrice - plan.yearlyPrice) * 12}/year
                       </div>
                     )}
                     
-                    <div className="mb-6 sm:mb-8 space-y-2 sm:space-y-3">
+                    <div style={{ marginBottom: '2rem' }}>
                       {plan.features.map((feature, index) => (
-                        <div key={index} className="text-yaya-brown text-xs sm:text-sm lg:text-base flex items-start gap-2">
-                          <span className="text-whatsapp font-semibold">✓</span>
+                        <div key={index} style={{ 
+                          color: '#8B5E3C', 
+                          marginBottom: '0.75rem', 
+                          fontSize: isMobile ? '0.875rem' : '0.95rem', 
+                          display: 'flex', 
+                          alignItems: 'flex-start', 
+                          gap: '8px' 
+                        }}>
+                          <span style={{ color: '#25d366', fontSize: '1rem', fontWeight: '600' }}>✓</span>
                           {feature}
                         </div>
                       ))}
                     </div>
 
                     {selectedPlan === planId && (
-                      <div className="bg-yaya-brown text-white px-4 py-2 rounded-md text-center text-sm font-medium">
+                      <div style={{
+                        background: '#8B5E3C',
+                        color: 'white',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                        fontSize: '0.9rem',
+                        fontWeight: '500',
+                        marginBottom: '1rem'
+                      }}>
                         ✓ Selected
                       </div>
                     )}
@@ -282,10 +500,24 @@ export default function RegisterPage() {
                 ))}
               </div>
 
-              <div className="text-center">
+              <div style={{ textAlign: 'center' }}>
                 <button
                   onClick={handlePlanSelection}
-                  className="px-8 sm:px-12 py-3 sm:py-4 bg-yaya-brown text-white rounded-lg text-base sm:text-lg font-semibold transition-all duration-200 hover:bg-opacity-90 shadow-lg"
+                  style={{
+                    padding: isMobile ? '0.875rem 2rem' : '1rem 3rem',
+                    background: '#8B5E3C',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: isMobile ? '1rem' : '1.1rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 12px rgba(139, 94, 60, 0.3)',
+                    width: isMobile ? '100%' : 'auto'
+                  }}
+                  onMouseEnter={(e) => (e.target as HTMLElement).style.background = '#7c4a32'}
+                  onMouseLeave={(e) => (e.target as HTMLElement).style.background = '#8B5E3C'}
                 >
                   Continue with {plans[selectedPlan as keyof typeof plans].name}
                 </button>
@@ -295,51 +527,73 @@ export default function RegisterPage() {
 
           {/* Step 2: Payment */}
           {step === 'payment' && (
-            <div className="max-w-xl mx-auto">
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
               <button
                 onClick={() => setStep('plan')}
-                className="flex items-center gap-2 text-yaya-brown text-sm mb-6 hover:opacity-70 transition-opacity"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#8B5E3C',
+                  fontSize: isMobile ? '0.875rem' : '0.9rem',
+                  cursor: 'pointer',
+                  marginBottom: '2rem'
+                }}
               >
-                <ArrowLeft size={16} />
-                Back to Plan Selection
+                ← Back to Plan Selection
               </button>
 
-              <div className="text-center mb-8">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-light text-yaya-brown mb-3 tracking-tight">
-                  Secure Payment
-                </h1>
-              </div>
+              <h1 style={{ 
+                fontSize: isMobile ? '1.875rem' : '2.5rem', 
+                fontWeight: '400', 
+                color: '#8B5E3C', 
+                marginBottom: '1rem',
+                letterSpacing: '-0.02em'
+              }}>
+                Secure Payment
+              </h1>
 
-              <div className="bg-yaya-bg rounded-[20px] p-6 sm:p-8 border border-[#E5DDD5] mb-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-yaya-brown mb-4 sm:mb-6">
+              <div style={{ 
+                background: '#F5F1EB', 
+                borderRadius: '20px', 
+                padding: isMobile ? '1.5rem' : '2rem', 
+                border: '1px solid #E5DDD5',
+                marginBottom: '2rem'
+              }}>
+                <h3 style={{ 
+                  fontSize: isMobile ? '1.1rem' : '1.2rem', 
+                  fontWeight: '600', 
+                  color: '#8B5E3C', 
+                  marginBottom: '1.5rem' 
+                }}>
                   Order Summary
                 </h3>
                 
-                <div className="space-y-3 mb-4 sm:mb-6">
-                  <div className="flex justify-between text-sm sm:text-base text-yaya-brown">
-                    <span className="font-medium">Plan:</span>
-                    <span>{plans[selectedPlan as keyof typeof plans].name}</span>
+                <div style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C', fontSize: isMobile ? '0.875rem' : '1rem' }}>
+                    <span><strong>Plan:</strong> {plans[selectedPlan as keyof typeof plans].name}</span>
                   </div>
-                  <div className="flex justify-between text-sm sm:text-base text-yaya-brown">
-                    <span className="font-medium">Billing:</span>
-                    <span>{billingType === 'yearly' ? 'Annual' : 'Monthly'}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', color: '#8B5E3C', fontSize: isMobile ? '0.875rem' : '1rem' }}>
+                    <span><strong>Billing:</strong> {billingType === 'yearly' ? 'Annual' : 'Monthly'}</span>
                   </div>
                 </div>
 
-                <div className="border-t border-[#E5DDD5] pt-4 mb-4">
-                  <div className="flex justify-between mb-2 text-sm sm:text-base text-yaya-brown">
+                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C', fontSize: isMobile ? '0.875rem' : '1rem' }}>
                     <span>7-day free trial</span>
-                    <span className="text-whatsapp font-semibold">$0.00</span>
+                    <span style={{ color: '#25d366', fontWeight: '600' }}>$0.00</span>
                   </div>
-                  <div className="flex justify-between text-sm text-yaya-brown">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#8B5E3C', fontSize: isMobile ? '0.875rem' : '1rem' }}>
                     <span>Then ${billingType === 'yearly' ? plans[selectedPlan as keyof typeof plans].yearlyPrice : plans[selectedPlan as keyof typeof plans].monthlyPrice}/{billingType === 'yearly' ? 'year' : 'month'}</span>
                   </div>
                 </div>
 
-                <div className="border-t border-[#E5DDD5] pt-4">
-                  <div className="flex justify-between font-semibold text-base sm:text-lg text-yaya-brown">
+                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', fontSize: isMobile ? '1rem' : '1.1rem', color: '#8B5E3C' }}>
                     <span>Total today</span>
-                    <span className="text-whatsapp">$0.00</span>
+                    <span style={{ color: '#25d366' }}>$0.00</span>
                   </div>
                 </div>
               </div>
@@ -347,13 +601,28 @@ export default function RegisterPage() {
               <button
                 onClick={handlePayment}
                 disabled={isLoading}
-                className={`w-full py-3 sm:py-4 ${isLoading ? 'bg-gray-400' : 'bg-yaya-brown'} text-white rounded-lg text-base sm:text-lg font-semibold flex items-center justify-center gap-2 transition-all duration-200 ${!isLoading && 'hover:bg-opacity-90'}`}
+                style={{
+                  width: '100%',
+                  padding: isMobile ? '0.875rem 1.5rem' : '1rem 2rem',
+                  background: isLoading ? '#9ca3af' : '#8B5E3C',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: isMobile ? '1rem' : '1.1rem',
+                  fontWeight: '600',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 <CreditCard size={20} />
                 {isLoading ? 'Processing...' : 'Start Free Trial'}
               </button>
 
-              <p className="text-xs sm:text-sm text-yaya-brown text-center mt-4 opacity-80">
+              <p style={{ fontSize: isMobile ? '0.75rem' : '0.8rem', color: '#8B5E3C', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
                 By continuing, you agree to our Terms of Service and Privacy Policy.
                 Your trial starts today and you can cancel anytime before it ends.
               </p>
@@ -362,33 +631,54 @@ export default function RegisterPage() {
 
           {/* Step 3: OAuth */}
           {step === 'oauth' && (
-            <div className="max-w-xl mx-auto text-center">
-              <div className="mb-6">
-                <CheckCircle size={60} className="text-whatsapp mx-auto sm:w-20 sm:h-20" />
+            <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <CheckCircle size={isMobile ? 60 : 80} style={{ color: '#25d366', margin: '0 auto' }} />
               </div>
 
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-light text-yaya-brown mb-3 tracking-tight">
+              <h1 style={{ 
+                fontSize: isMobile ? '1.875rem' : '2.5rem', 
+                fontWeight: '400', 
+                color: '#8B5E3C', 
+                marginBottom: '1rem',
+                letterSpacing: '-0.02em'
+              }}>
                 🎉 Payment Successful!
               </h1>
 
-              <p className="text-base sm:text-lg lg:text-xl text-[#718096] mb-8">
+              <p style={{ 
+                fontSize: isMobile ? '1rem' : '1.2rem', 
+                color: '#718096', 
+                marginBottom: '3rem'
+              }}>
                 Now connect your Google account to enable smart calendar features and complete your setup.
               </p>
 
-              <div className="bg-yaya-bg rounded-[20px] p-6 sm:p-8 border border-[#E5DDD5] mb-6 text-left">
-                <h3 className="text-lg sm:text-xl font-semibold text-yaya-brown mb-4">
+              <div style={{ 
+                background: '#F5F1EB', 
+                borderRadius: '20px', 
+                padding: isMobile ? '1.5rem' : '2rem', 
+                border: '1px solid #E5DDD5',
+                marginBottom: '2rem'
+              }}>
+                <h3 style={{ 
+                  fontSize: isMobile ? '1.1rem' : '1.2rem', 
+                  fontWeight: '600', 
+                  color: '#8B5E3C', 
+                  marginBottom: '1rem' 
+                }}>
                   Why Connect Google?
                 </h3>
-                <div className="space-y-2 text-sm sm:text-base text-yaya-brown">
-                  <div className="flex items-center gap-2">
+                <div style={{ textAlign: 'left', color: '#8B5E3C', fontSize: isMobile ? '0.875rem' : '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                     <Calendar size={16} />
                     <span>Sync with your Google Calendar</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                     <Bell size={16} />
                     <span>Smart reminders and scheduling</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <MessageCircle size={16} />
                     <span>Seamless WhatsApp integration</span>
                   </div>
@@ -397,7 +687,23 @@ export default function RegisterPage() {
 
               <button
                 onClick={handleGoogleOAuth}
-                className="w-full py-3 sm:py-4 bg-[#4285f4] text-white rounded-lg text-base sm:text-lg font-semibold flex items-center justify-center gap-2 mb-4 transition-all duration-200 hover:bg-opacity-90"
+                style={{
+                  width: '100%',
+                  padding: isMobile ? '0.875rem 1.5rem' : '1rem 2rem',
+                  background: '#4285f4',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: isMobile ? '1rem' : '1.1rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '1rem',
+                  transition: 'all 0.2s ease'
+                }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24">
                   <path fill="white" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -408,12 +714,22 @@ export default function RegisterPage() {
                 Connect Google Account
               </button>
 
-              <p className="text-xs sm:text-sm text-[#718096] text-center">
+              <p style={{ fontSize: isMobile ? '0.75rem' : '0.8rem', color: '#718096', textAlign: 'center' }}>
                 Your data is encrypted and only used to help you manage your day via WhatsApp.
               </p>
 
-              <div className="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
-                <p className="text-whatsapp text-xs sm:text-sm">
+              <div style={{ 
+                marginTop: '2rem',
+                padding: '1rem',
+                background: 'rgba(37, 211, 102, 0.1)',
+                borderRadius: '12px',
+                border: '1px solid rgba(37, 211, 102, 0.2)'
+              }}>
+                <p style={{ 
+                  color: '#25d366', 
+                  fontSize: isMobile ? '0.875rem' : '0.9rem',
+                  margin: '0'
+                }}>
                   💡 <strong>Next:</strong> After connecting Google, you'll receive a confirmation code to send to our WhatsApp bot at +972 55-994-3649
                 </p>
               </div>
