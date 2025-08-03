@@ -451,7 +451,191 @@ footer a:hover {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
-* Register Page Mobile Styles */
+/* ============================================ */
+/* MOBILE RESPONSIVE STYLES - HOME PAGE */
+/* ============================================ */
+@media (max-width: 768px) {
+  /* Header Mobile */
+  header {
+    padding: 0.75rem 0;
+  }
+  
+  header .container > div {
+    padding: 0 1rem;
+  }
+  
+  header img {
+    width: 60px;
+    height: 60px;
+  }
+  
+  header span {
+    font-size: 1.25rem;
+  }
+  
+  header a {
+    font-size: 0.75rem;
+    padding: 6px 16px;
+  }
+  
+  /* Hide badge on mobile */
+  header span[style*="background: 'linear-gradient"] {
+    display: none;
+  }
+
+  /* Hero Section Mobile */
+  section[style*="background: 'linear-gradient(135deg, #faf5f0"] {
+    padding: 6rem 0 4rem !important;
+    margin-top: 60px !important;
+  }
+  
+  section h1 {
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 1rem;
+  }
+  
+  section h1 span {
+    padding: 4px 8px;
+    font-size: 1.8rem;
+  }
+  
+  /* WhatsApp badge */
+  div[style*="backdrop-filter: 'blur"] {
+    font-size: 0.875rem !important;
+    padding: 8px 16px !important;
+  }
+
+  /* Features Section Mobile */
+  section[style*="padding: '6rem 0'"] {
+    padding: 3rem 0 !important;
+  }
+  
+  h2[style*="fontSize: '2.5rem'"] {
+    font-size: 1.875rem !important;
+    margin-bottom: 2rem !important;
+  }
+  
+  h3[style*="fontSize: '1.5rem'"] {
+    font-size: 1.25rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+  
+  p[style*="marginBottom: '2rem'"] {
+    font-size: 0.875rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  /* Grid - Single column on mobile */
+  div[style*="gridTemplateColumns: 'repeat(auto-fit"] {
+    grid-template-columns: 1fr !important;
+    gap: 3rem !important;
+  }
+
+  /* Phone Mockup Mobile */
+  div[style*="width: '280px'"] {
+    transform: scale(0.8);
+    margin: 0 auto -40px;
+  }
+
+  /* Learning Section Mobile */
+  section[style*="padding: '6rem 0'"][style*="background: '#fafafa'"] {
+    padding: 3rem 0 !important;
+  }
+
+  /* Pricing Section Mobile */
+  h2[style*="fontSize: '3rem'"] {
+    font-size: 2rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  /* Billing Toggle */
+  div[style*="background: '#f7fafc'"] {
+    padding: 3px !important;
+  }
+  
+  div[style*="background: '#f7fafc'"] span {
+    font-size: 0.875rem !important;
+    padding: 6px 12px !important;
+  }
+
+  /* Pricing Cards Mobile */
+  div[style*="background: '#F5F1EB'"] {
+    padding: 1.5rem !important;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Price text */
+  div[style*="fontSize: '4rem'"] {
+    font-size: 3rem !important;
+  }
+  
+  /* Feature list */
+  div[style*="fontSize: '0.95rem'"] {
+    font-size: 0.875rem !important;
+  }
+  
+  /* Trial badge */
+  div[style*="position: 'absolute'"][style*="top: '1rem'"] {
+    top: 0.75rem !important;
+    right: 0.75rem !important;
+    font-size: 0.625rem !important;
+    padding: 2px 8px !important;
+  }
+
+  /* WhatsApp Button Mobile */
+  a[style*="background: '#25D366'"] {
+    padding: 12px 20px !important;
+    font-size: 0.875rem !important;
+  }
+  
+  a[style*="background: '#25D366'"] svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Footer Mobile */
+  footer {
+    padding: 1.5rem 0 !important;
+  }
+  
+  footer div[style*="display: 'flex'"][style*="justifyContent: 'center'"] {
+    flex-wrap: wrap;
+    gap: 1rem !important;
+    font-size: 0.75rem !important;
+  }
+  
+  footer a {
+    margin: 0 0.5rem !important;
+  }
+
+  /* Floating WhatsApp Button */
+  a[style*="position: 'fixed'"][style*="bottom: '24px'"] {
+    width: 48px !important;
+    height: 48px !important;
+    bottom: 16px !important;
+    right: 16px !important;
+  }
+  
+  a[style*="position: 'fixed'"] svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  /* General Container */
+  div[style*="maxWidth: '1200px'"] {
+    padding: 0 1rem !important;
+  }
+  
+  /* Text adjustments */
+  p {
+    line-height: 1.6;
+  }
+}
+
+/* ============================================ */
+/* MOBILE RESPONSIVE STYLES - REGISTER PAGE */
+/* ============================================ */
 @media (max-width: 768px) {
   /* Progress Bar Mobile */
   div[style*="gap: '1rem'"] {
@@ -570,9 +754,26 @@ footer a:hover {
   }
 }
 
-/* Tablet Styles for Register */
+/* ============================================ */
+/* TABLET STYLES */
+/* ============================================ */
 @media (min-width: 769px) and (max-width: 1024px) {
-  /* Plan Cards - Keep 2 columns on tablet */
+  /* Grid - 2 columns on tablet */
+  div[style*="gridTemplateColumns: 'repeat(auto-fit"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  /* Phone Mockup Tablet */
+  div[style*="width: '280px'"] {
+    transform: scale(0.9);
+  }
+  
+  /* Hero text */
+  section h1 {
+    font-size: 3rem !important;
+  }
+  
+  /* Register Page - Plan Cards on Tablet */
   div[style*="gridTemplateColumns: '1fr 1fr'"] {
     gap: 1.5rem !important;
   }
@@ -582,9 +783,34 @@ footer a:hover {
   }
 }
 
-/* Extra Small Phones */
+/* ============================================ */
+/* SMALL PHONES (iPhone SE, etc.) */
+/* ============================================ */
 @media (max-width: 375px) {
-  /* Even smaller progress indicators */
+  /* Even smaller adjustments */
+  section h1 {
+    font-size: 1.75rem !important;
+  }
+  
+  section h1 span {
+    font-size: 1.6rem !important;
+  }
+  
+  div[style*="fontSize: '4rem'"] {
+    font-size: 2.5rem !important;
+  }
+  
+  div[style*="width: '280px'"] {
+    transform: scale(0.7);
+    margin: 0 auto -60px;
+  }
+  
+  /* Even smaller padding */
+  div[style*="background: '#F5F1EB'"] {
+    padding: 1.25rem !important;
+  }
+  
+  /* Register Page - Extra small phones */
   div[style*="width: '40px'"] {
     width: 32px !important;
     height: 32px !important;
