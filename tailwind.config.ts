@@ -34,10 +34,17 @@ module.exports = {
           900: '#0c4a6e',
           950: '#082f49',
         },
+        // הוסף את הצבעים של Yaya
+        'yaya-brown': '#8B5E3C',
+        'yaya-green': '#2d5016',
+        'yaya-bg': '#F5F1EB',
+        'yaya-light-bg': '#faf5f0',
+        'whatsapp': '#25D366',
       },
       fontFamily: {
         'lato': ['Lato', 'sans-serif'],
         'montserrat': ['Montserrat', 'sans-serif'],
+        'system': ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
       },
     },
   },
