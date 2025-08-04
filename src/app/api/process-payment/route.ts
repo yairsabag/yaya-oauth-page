@@ -44,11 +44,10 @@ export async function POST(request: NextRequest) {
       
       // Transaction mode
       TranzilaPW: password,
-      tranmode: 'D', // D = Deferred (תשלום דחוי)
-      DeferredPaymentDate: deferredDateStr,
+      tranmode: 'V', // V = Verify (אימות בלבד, ללא חיוב)
       
       // Additional required fields
-      'TranzilaTK': '', // Token field - ריק לעסקה חדשה
+      'pdesc': `${body.plan} - ${body.billing}`, // תיאור המוצר
       
       // Custom fields
       custom1: body.registrationCode,
@@ -69,7 +68,11 @@ export async function POST(request: NextRequest) {
     });
     
     // שלח ל-Tranzila Direct API
-    const tranzilaResponse = await fetch(`https://direct.tranzila.com/${terminal}/tranzila71u.cgi`, {
+    const tranzilaUrl = 'https://direct.tranzila.com/fxpyairsabag/iframe.php';
+    console.log('Sending to URL:', tranzilaUrl);
+    console.log('Request params:', tranzilaParams.toString());
+    
+    const tranzilaResponse = await fetch(tranzilaUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
