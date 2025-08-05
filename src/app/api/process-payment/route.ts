@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     });
     
     // שלח ל-Tranzila Direct API
-    const tranzilaUrl = 'https://secure5.tranzila.com/cgi-bin/tranzila71u.cgi';
+    const tranzilaUrl = 'https://api.tranzila.com/v1/pr/create';
     console.log('Sending to URL:', tranzilaUrl);
     console.log('Request params:', tranzilaParams.toString());
     
