@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       
       // Transaction details
       sum: body.amount,
-      currency: '1', // ILS
+      currency: 'ILS', // ILS
       
       // Card details
       ccno: body.cardNumber,
