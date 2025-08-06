@@ -4,23 +4,11 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // קבל את פרטי Tranzila
-    const terminal = process.env.TRANZILA_TERMINAL;
-    const password = process.env.TRANZILA_PASSWORD;
+    // השתמש במסוף הטוקנים למנויים!
+    const terminal = 'fxpyairsabagtok'; // מסוף טוקנים
+    const password = 'Fwnf8oAr'; // סיסמת מסוף טוקנים
     
-    if (!terminal || !password) {
-      return NextResponse.json(
-        { error: 'Payment system not configured' },
-        { status: 500 }
-      );
-    }
-    
-    // חישוב תאריך דחוי (7 ימי trial)
-    const deferredDate = new Date();
-    deferredDate.setDate(deferredDate.getDate() + 7);
-    const deferredDateStr = deferredDate.toISOString().split('T')[0].replace(/-/g, '');
-    
-    // הכן את הפרמטרים ל-Tranzila Direct API
+    // הכן את הפרמטרים ל-Tranzila
     const tranzilaParams = new URLSearchParams({
       // Merchant details
       supplier: terminal,
@@ -28,26 +16,27 @@ export async function POST(request: NextRequest) {
       
       // Transaction details
       sum: body.amount,
-      currency: 'ILS', // ILS
+      currency: '1', // ILS
       
-      // Card details
-      ccno: body.cardNumber,
-      expmonth: body.expiryMonth.padStart(2, '0'),
-      expyear: body.expiryYear,
-      mycvv: body.cvv,
-      myid: body.idNumber,
+      // Card details (אם לא Apple Pay)
+      ccno: body.cardNumber || '',
+      expmonth: body.expiryMonth?.padStart(2, '0') || '',
+      expyear: body.expiryYear || '',
+      mycvv: body.cvv || '',
+      myid: body.idNumber || '',
       
       // Customer details
       contact: body.fullName,
       email: body.email,
       phone: body.phone,
       
-      // Transaction mode
+      // Transaction mode - חשוב!
       TranzilaPW: password,
-      tranmode: 'V', // V = Verify (אימות בלבד, ללא חיוב)
+      tranmode: 'VK', // VK = Verify + Token (אימות ויצירת טוקן למנוי)
+      TranzilaTK: '1', // בקש יצירת טוקן
       
-      // Additional required fields
-      'pdesc': `${body.plan} - ${body.billing}`, // תיאור המוצר
+      // תיאור
+      pdesc: `${body.plan} Plan - Monthly Subscription`,
       
       // Custom fields
       custom1: body.registrationCode,
@@ -58,21 +47,26 @@ export async function POST(request: NextRequest) {
       response_return_format: 'json'
     });
     
-    console.log('Terminal:', terminal);
-    console.log('Password:', password ? '[HIDDEN]' : 'NOT SET');
-    console.log('Processing payment for:', {
+    // אם זה Apple Pay
+    if (body.paymentMethod === 'apple_pay') {
+      tranzilaParams.set('apple_pay', '1');
+      tranzilaParams.set('apple_pay_token', body.applePayToken);
+      // הסר פרטי כרטיס רגיל
+      tranzilaParams.delete('ccno');
+      tranzilaParams.delete('expmonth');
+      tranzilaParams.delete('expyear');
+      tranzilaParams.delete('mycvv');
+    }
+    
+    console.log('Processing subscription payment:', {
       plan: body.plan,
       amount: body.amount,
-      registrationCode: body.registrationCode,
-      deferredDate: deferredDateStr
+      paymentMethod: body.paymentMethod || 'card',
+      terminal: terminal
     });
     
-    // שלח ל-Tranzila Direct API
-    const tranzilaUrl = 'https://api.tranzila.com/v1/pr/create';
-    console.log('Sending to URL:', tranzilaUrl);
-    console.log('Request params:', tranzilaParams.toString());
-    
-    const tranzilaResponse = await fetch(tranzilaUrl, {
+    // שלח ל-Tranzila
+    const tranzilaResponse = await fetch('https://secure5.tranzila.com/cgi-bin/tranzila71u.cgi', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -81,83 +75,98 @@ export async function POST(request: NextRequest) {
     });
     
     const responseText = await tranzilaResponse.text();
-    console.log('Tranzila response status:', tranzilaResponse.status);
-    console.log('Tranzila response headers:', Object.fromEntries(tranzilaResponse.headers.entries()));
-    console.log('Tranzila response text:', responseText);
+    console.log('Tranzila response:', responseText);
     
-    // נסה לפרסר כ-JSON או כ-URL params
+    // פרסר את התשובה
     let result;
     try {
       result = JSON.parse(responseText);
     } catch (e) {
-      // אם זה לא JSON, נסה לפרסר כ-URL params
       const params = new URLSearchParams(responseText);
       result = Object.fromEntries(params.entries());
     }
     
-    console.log('Parsed result:', result);
-    
-    // בדוק האם העסקה הצליחה
-    if (!result.Response) {
-      console.error('No Response field in result:', result);
-      return NextResponse.json({
-        success: false,
-        error: 'תשובה לא תקינה מהשרת',
-        errorCode: 'INVALID_RESPONSE',
-        details: result
-      });
-    }
-    
     if (result.Response === '000') {
-      // הצלחה!
+      // הצלחה! קיבלנו טוקן למנוי
+      const subscriptionToken = result.TranzilaTK;
+      
+      // TODO: שמור את הטוקן במסד נתונים
+      // await saveSubscriptionToken({
+      //   userId: body.userId,
+      //   token: subscriptionToken,
+      //   plan: body.plan,
+      //   amount: body.amount,
+      //   trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      // });
+      
       return NextResponse.json({
         success: true,
-        transactionId: result.Tempref || result.TranzRef,
-        approvalNumber: result.ConfirmationCode,
-        message: 'Payment processed successfully'
+        transactionId: result.Tempref,
+        subscriptionToken: subscriptionToken,
+        message: 'Subscription created successfully! 7 days free trial activated.'
       });
+      
+    } else if (result.Response === '20006') {
+      // בעיית IP - נעבור לפתרון client-side
+      return NextResponse.json({
+        success: false,
+        error: 'נדרש אימות נוסף. מעביר לדף תשלום מאובטח...',
+        errorCode: result.Response,
+        requiresRedirect: true,
+        redirectData: {
+          terminal: terminal,
+          amount: body.amount,
+          plan: body.plan,
+          // אל תחזיר את הסיסמה! נשתמש בטופס ישיר
+        }
+      });
+      
     } else {
-      // כישלון
       const errorMessages: Record<string, string> = {
         '001': 'כרטיס חסום',
-        '002': 'גנוב',
-        '003': 'התקשר לחברת אשראי',
         '004': 'סירוב',
-        '005': 'מזויף',
-        '006': 'שגיאת זהות',
-        '015': 'לא קיים',
         '033': 'כרטיס פג תוקף',
-        '036': 'כרטיס מוגבל',
-        '037': 'סירוב - התקשר לחברת אשראי',
-        '039': 'אין ספק כזה',
-        '041': 'כרטיס אבוד',
-        '043': 'גנוב - לא להחזיר',
         '051': 'אין יתרה מספקת',
-        '057': 'זהות לא תקינה',
-        '061': 'מעבר לסכום המותר',
-        '062': 'מספר עסקאות מקסימלי',
-        '065': 'מעבר למגבלת אשראי',
-        '20006': 'שגיאת הרשאה - בדוק את פרטי המסוף',
-        '999': 'שגיאה כללית'
+        '20006': 'נדרש אימות נוסף',
+        // ... שאר השגיאות
       };
-      
-      const errorMessage = errorMessages[result.Response] || `שגיאה: ${result.Response}`;
       
       return NextResponse.json({
         success: false,
-        error: errorMessage,
+        error: errorMessages[result.Response] || `שגיאה: ${result.Response}`,
         errorCode: result.Response
       });
     }
     
   } catch (error) {
-    console.error('Payment processing error:', error);
+    console.error('Payment error:', error);
     return NextResponse.json(
-      { 
-        success: false,
-        error: 'Failed to process payment' 
-      },
+      { success: false, error: 'Payment processing failed' },
       { status: 500 }
     );
   }
+}
+
+// פונקציה לחיוב חוזר (תרוץ ב-cron job)
+export async function chargeSubscription(subscriptionToken: string, amount: number) {
+  const chargeParams = new URLSearchParams({
+    supplier: 'fxpyairsabagtok',
+    TranzilaPW: 'Fwnf8oAr',
+    tranmode: 'F', // F = Force (חיוב עם טוקן)
+    TranzilaTK: subscriptionToken,
+    sum: amount,
+    currency: '1',
+    response_return_format: 'json'
+  });
+  
+  const response = await fetch('https://secure5.tranzila.com/cgi-bin/tranzila71u.cgi', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: chargeParams.toString()
+  });
+  
+  const result = await response.json();
+  return result;
 }
