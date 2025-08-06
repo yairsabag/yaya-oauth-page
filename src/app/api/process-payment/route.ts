@@ -7,8 +7,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // קבל את פרטי Tranzila מה-environment variables
-    const terminal = process.env.TRANZILA_TERMINAL || 'fxpyairsabagtok'; // מסוף טוקנים למנויים
-    const password = process.env.TRANZILA_PASSWORD || 'Fwnf8oAr'; // סיסמת מסוף טוקנים
+    const terminal = process.env.TRANZILA_TERMINAL || 'fxpyairsabag'; // נסה עם המסוף הרגיל
+    const password = process.env.TRANZILA_PASSWORD || 'Mhat5D1'; // סיסמת מסוף רגיל
+    
+    // בדיקה אם זה כרטיס בדיקה
+    const isTestCard = body.cardNumber.replace(/\s/g, '') === '4580458045804580';
     
     // הכן את הפרמטרים ל-Tranzila
     const tranzilaParams = new URLSearchParams({
@@ -35,8 +38,7 @@ export async function POST(request: NextRequest) {
       phone: body.phone.replace(/[-\s]/g, ''),
       
       // הגדרות מנוי
-      tranmode: 'VK', // V = Verify, K = Create Token
-      TranzilaTK: '1', // בקש יצירת טוקן
+      tranmode: 'A', // נסה עם A (אישור רגיל) במקום VK
       
       // תיאור
       pdesc: `${body.plan} Plan - ${body.billing} Subscription`,
@@ -47,13 +49,19 @@ export async function POST(request: NextRequest) {
       custom3: body.billing,
       
       // פורמט תשובה
-      response_return_format: 'json'
+      response_return_format: 'json',
+      
+      // הוסף פרמטרים נוספים שעשויים לעזור
+      lang: 'il',
+      IMaam: '0', // ללא מע"מ
     });
     
     console.log('Sending to Tranzila:', {
       terminal,
       amount: body.amount,
-      plan: body.plan
+      plan: body.plan,
+      clientIP: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+      vercelRegion: process.env.VERCEL_REGION
     });
     
     // שלח ל-Tranzila
@@ -61,6 +69,9 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'YayAgent/1.0',
+        'Accept': 'application/json,*/*',
+        'Origin': 'https://yayagent.com'
       },
       body: tranzilaParams.toString()
     });
