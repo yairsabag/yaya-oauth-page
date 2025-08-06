@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       terminal_name: terminal,
       
       // Transaction details
-      sum: body.amount,
+      sum: body.amount.toString(), // המר למחרוזת
       currency: '1', // ILS
       
       // Card details (אם לא Apple Pay)
@@ -147,14 +147,15 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// פונקציה לחיוב חוזר (תרוץ ב-cron job)
-export async function chargeSubscription(subscriptionToken: string, amount: number) {
+// פונקציה לחיוב חוזר (תועבר לקובץ נפרד)
+// TODO: העבר את הפונקציה הזו ל-/lib/subscription-manager.ts
+async function chargeSubscription(subscriptionToken: string, amount: number) {
   const chargeParams = new URLSearchParams({
     supplier: 'fxpyairsabagtok',
     TranzilaPW: 'Fwnf8oAr',
     tranmode: 'F', // F = Force (חיוב עם טוקן)
     TranzilaTK: subscriptionToken,
-    sum: amount,
+    sum: amount.toString(), // המר למחרוזת
     currency: '1',
     response_return_format: 'json'
   });
