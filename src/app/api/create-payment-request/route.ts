@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // המפתחות שלך
-    const appKey = 'WyztPVpPn13DTtQ2CLDxsaWGvFrh1vTLUkbKLdXeV4FTPRlcrZi8g8ycPHVUGbCJwgqKJlaQIcU'; // Public key
+    // המפתחות שלך - בוא נבדוק אם הם בסדר הנכון
+    const publicKey = 'WyztPVpPn13DTtQ2CLDxsaWGvFrh1vTLUkbKLdXeV4FTPRlcrZi8g8ycPHVUGbCJwgqKJlaQIcU'; // Public key
     const privateKey = 'Wnw8SPxfFs'; // Private key
     
     // הכן את הבקשה
@@ -50,8 +50,8 @@ export async function POST(request: NextRequest) {
         contact_person: body.fullName,
         email: body.email,
         phone_country_code: '972',
-        phone_area_code: body.phone.substring(1, 4), // מ-0542598700 ל-054
-        phone_number: body.phone.substring(4) // 2598700
+        phone_area_code: body.phone.replace(/^\+?972/, '').substring(0, 3), // הסר קידומת ארץ וקח 3 ספרות ראשונות
+        phone_number: body.phone.replace(/^\+?972/, '').substring(3).replace(/[-\s]/g, '') // השאר הספרות
       },
       
       items: [{
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     };
     
     const requestBody = JSON.stringify(paymentRequest);
-    const headers = generateTranzilaHeaders(appKey, privateKey, requestBody);
+    const headers = generateTranzilaHeaders(publicKey, privateKey, requestBody);
     
     console.log('Sending payment request to Tranzila:', {
       url: 'https://api.tranzila.com/v1/pr/create',
@@ -127,39 +127,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// src/components/checkout-form.tsx - עדכון
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
-  setError('');
-  
-  try {
-    // שלח לשרת ליצירת Payment Request
-    const response = await fetch('/api/create-payment-request', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...formData,
-        amount: price,
-        plan,
-        billing,
-        registrationCode
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.success && result.paymentUrl) {
-      // הפנה לדף התשלום של Tranzila
-      window.location.href = result.paymentUrl;
-    } else {
-      setError(result.error || 'שגיאה ביצירת בקשת תשלום');
-      setIsLoading(false);
-    }
-  } catch (error) {
-    console.error('Payment error:', error);
-    setError('שגיאה בתהליך התשלום');
-    setIsLoading(false);
-  }
-};
