@@ -64,9 +64,9 @@ export default function CheckoutForm({ plan, price, billing, registrationCode }:
     
     // כל השדות הנדרשים
     const fields = {
-      // פרטי מסוף
-      supplier: 'fxpyairsabagtok',
-      TranzilaPW: 'Fwnf8oAr',
+      // פרטי מסוף - נסה עם המסוף הרגיל
+      supplier: 'fxpyairsabag',
+      TranzilaPW: 'Mhat5D1',
       
       // פרטי עסקה
       sum: price,
