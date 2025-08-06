@@ -51,39 +51,8 @@ export default function CheckoutForm({ plan, price, billing, registrationCode }:
     setIsLoading(true);
     setError('');
     
-    try {
-      // תחילה נסה דרך השרת שלנו
-      const response = await fetch('/api/process-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          amount: price,
-          plan,
-          billing,
-          registrationCode
-        })
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        // הצלחה!
-        router.push(`/payment/success?transactionId=${result.transactionId}`);
-      } else if (result.errorCode === '20006' || result.error?.includes('location')) {
-        // בעיית IP - עבור לתשלום ישיר
-        console.log('IP issue detected, switching to direct payment...');
-        handleDirectPayment();
-      } else {
-        // שגיאה אחרת
-        setError(result.error || 'התשלום נכשל');
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error('Payment error:', error);
-      // במקרה של שגיאת רשת, נסה ישירות
-      handleDirectPayment();
-    }
+    // שלח ישירות ל-Tranzila (בגלל בעיית IP עם Vercel)
+    handleDirectPayment();
   };
 
   const handleDirectPayment = () => {
@@ -113,7 +82,7 @@ export default function CheckoutForm({ plan, price, billing, registrationCode }:
       // פרטי לקוח
       contact: formData.fullName,
       email: formData.email,
-      phone: formData.phone,
+      phone: formData.phone.replace(/[-\s]/g, ''), // הסר מקפים ורווחים
       
       // הגדרות מנוי
       tranmode: 'VK', // Verify + Token למנוי
