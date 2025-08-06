@@ -46,13 +46,40 @@ export default function CheckoutForm({ plan, price, billing, registrationCode }:
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
     
-    // שלח ישירות ל-Tranzila (בגלל בעיית IP עם Vercel)
-    handleDirectPayment();
+    // בנה URL עם כל הפרמטרים הנדרשים
+    const params = new URLSearchParams({
+      // פרטי מסוף
+      supplier: 'fxpyairsabag',
+      
+      // פרטי עסקה
+      sum: price,
+      currency: '1', // ILS
+      cred_type: '1',
+      
+      // פרטי לקוח
+      contact: formData.fullName,
+      email: formData.email,
+      phone: formData.phone.replace(/[-\s]/g, ''),
+      myid: formData.idNumber,
+      
+      // הגדרות
+      tranmode: 'VK', // Verify + Token למנוי
+      lang: 'il',
+      
+      // תיאור
+      pdesc: `${plan} Plan - Monthly Subscription`,
+      
+      // שדות מותאמים
+      custom1: registrationCode,
+      custom2: plan,
+      custom3: billing
+    });
+    
+    // הפנה לדף התשלום של Tranzila
+    window.location.href = `https://direct.tranzila.com/fxpyairsabag/iframenew.php?${params}`;
   };
 
   const handleDirectPayment = () => {
