@@ -25,7 +25,6 @@ interface PaymentFormData {
 
 export default function CheckoutForm({ plan, price, billing, registrationCode }: CheckoutFormProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState<PaymentFormData>({
     fullName: '',
@@ -292,14 +291,9 @@ export default function CheckoutForm({ plan, price, billing, registrationCode }:
         {/* כפתור שליחה */}
         <button
           type="submit"
-          disabled={isLoading}
-          className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
-            isLoading 
-              ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-blue-600 hover:bg-blue-700'
-          }`}
+          className="w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors bg-blue-600 hover:bg-blue-700"
         >
-          {isLoading ? 'מעבד...' : `התחל ניסיון חינם - ₪0.00`}
+          התחל ניסיון חינם - ₪0.00
         </button>
         
         <p className="text-xs text-gray-500 text-center mt-4">
