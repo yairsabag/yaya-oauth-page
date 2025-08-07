@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       : prices[plan as keyof typeof prices].monthly;
     
     // יצירת payment request
-    const paymentRequest = {
+    const paymentRequest: any = {
       terminal_name: process.env.TRANZILA_TERMINAL!,
       action_type: 1, // 1 = charge
       request_date: null, // יחייב מיידית
