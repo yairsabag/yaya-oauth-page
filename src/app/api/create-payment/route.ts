@@ -9,12 +9,12 @@ function createTranzilaHeaders() {
   const nonce = crypto.randomBytes(20).toString('hex'); // 40 characters
   const timestamp = Date.now().toString();
   
-  // יצירת ה-access token
+  // יצירת ה-access token - HMAC-SHA256
   const dataToSign = secretKey + timestamp + nonce;
   const accessToken = crypto
-    .createHmac('sha256', secretKey)
+    .createHmac('sha256', appKey)
     .update(dataToSign)
-    .digest('base64'); // base64, לא hex!
+    .digest('hex');
   
   return {
     'X-tranzila-api-app-key': appKey,
