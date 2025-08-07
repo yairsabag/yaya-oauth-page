@@ -5,21 +5,22 @@ import crypto from 'crypto';
 function createTranzilaHeaders() {
   const appKey = process.env.TRANZILA_API_APP_KEY!;
   const secretKey = process.env.TRANZILA_API_SECRET!;
-  const nonce = crypto.randomBytes(20).toString('hex');
-  const timestamp = Date.now().toString();
+  const nonce = crypto.randomBytes(40).toString('hex'); // 80 characters כמו בדוגמה
+  const timestamp = Math.floor(Date.now() / 1000).toString(); // Unix timestamp בשניות, לא במילישניות!
   
-  // נסה בלי ה-secret בהתחלה
-  const dataToSign = timestamp + nonce;
+  // הסדר הנכון לפי הדוקומנטציה
+  const dataToSign = secretKey + timestamp + nonce;
   
+  // hash_hmac עם appKey בתור ה-key
   const accessToken = crypto
-    .createHmac('sha256', secretKey) // secret key בתור ה-key של HMAC
+    .createHmac('sha256', appKey)
     .update(dataToSign)
     .digest('hex');
   
   return {
     'X-tranzila-api-app-key': appKey,
-    'X-tranzila-api-nonce': nonce,
     'X-tranzila-api-request-time': timestamp,
+    'X-tranzila-api-nonce': nonce,
     'X-tranzila-api-access-token': accessToken,
     'Content-Type': 'application/json'
   };
