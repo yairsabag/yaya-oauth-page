@@ -5,21 +5,27 @@ import crypto from 'crypto';
 function createTranzilaHeaders() {
   const appKey = process.env.TRANZILA_API_APP_KEY!;
   const secretKey = process.env.TRANZILA_API_SECRET!;
-  const nonce = crypto.randomBytes(40).toString('hex'); // 80 characters כמו בדוגמה
-  const timestamp = Math.floor(Date.now() / 1000).toString(); // Unix timestamp בשניות, לא במילישניות!
+  const time = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
+  const nonce = crypto.randomBytes(40).toString('hex'); // 80 character string
   
-  // הסדר הנכון לפי הדוקומנטציה
-  const dataToSign = secretKey + timestamp + nonce;
-  
-  // hash_hmac עם appKey בתור ה-key
+  // בדיוק כמו בדוגמה ב-PHP שלהם (גם אם זה נראה הפוך)
+  // PHP: hash_hmac('sha256', $appKey, $secret . $time . $nonce)
+  // ב-PHP הסדר הוא: algorithm, data, key
+  // אז data = appKey, key = secret+time+nonce
   const accessToken = crypto
-    .createHmac('sha256', appKey)
-    .update(dataToSign)
+    .createHmac('sha256', secretKey + time + nonce)
+    .update(appKey)
     .digest('hex');
+  
+  console.log('Auth calculation:', {
+    time,
+    nonceLength: nonce.length,
+    accessTokenLength: accessToken.length
+  });
   
   return {
     'X-tranzila-api-app-key': appKey,
-    'X-tranzila-api-request-time': timestamp,
+    'X-tranzila-api-request-time': time.toString(),
     'X-tranzila-api-nonce': nonce,
     'X-tranzila-api-access-token': accessToken,
     'Content-Type': 'application/json'
