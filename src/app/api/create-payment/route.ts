@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
         currency_code: "ILS"
       }],
       request_vat: 17, // מע"מ בישראל
+      deferred_charge: 7, // דחיית חיוב ל-7 ימים
       user_defined_fields: [
         { name: "registration_code", value: registrationCode },
         { name: "plan", value: plan },
