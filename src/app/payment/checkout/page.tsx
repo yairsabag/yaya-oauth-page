@@ -59,6 +59,24 @@ export default function CheckoutPage() {
 
   // Initialize Tranzila Hosted Fields
   useEffect(() => {
+    // Add custom styles for hosted fields
+    const style = document.createElement('style');
+    style.textContent = `
+      #card-number, #expiry, #cvv {
+        padding: 12px !important;
+      }
+      #card-number iframe, #expiry iframe, #cvv iframe {
+        width: 100% !important;
+        height: 44px !important;
+        vertical-align: middle !important;
+      }
+      .hosted-field-focus {
+        border-color: #8B5E3C !important;
+        box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.1) !important;
+      }
+    `;
+    document.head.appendChild(style);
+
     // Load Tranzila Hosted Fields script
     const script = document.createElement('script')
     script.src = 'https://hf.tranzila.com/assets/js/thostedf.js'
@@ -85,10 +103,19 @@ export default function CheckoutPage() {
           styles: {
             'input': {
               'font-family': 'system-ui, -apple-system, sans-serif',
-              'font-size': '0.9rem',
+              'font-size': '14px',
               'color': '#000',
-              'padding': '12px',
-              'height': '44px'
+              'line-height': '1.5',
+              'letter-spacing': '0.5px'
+            },
+            ':focus': {
+              'outline': 'none'
+            },
+            '.hosted-fields-invalid': {
+              'color': '#ef4444'
+            },
+            '.hosted-fields-valid': {
+              'color': '#10b981'
             }
           }
         })
@@ -97,6 +124,21 @@ export default function CheckoutPage() {
         fieldsRef.current?.onEvent('ready', () => {
           setFieldsReady(true)
         })
+        
+        // Listen for focus events
+        fieldsRef.current?.onEvent('focus', (event: any) => {
+          const element = document.getElementById(event.field);
+          if (element) {
+            element.classList.add('hosted-field-focus');
+          }
+        })
+        
+        fieldsRef.current?.onEvent('blur', (event: any) => {
+          const element = document.getElementById(event.field);
+          if (element) {
+            element.classList.remove('hosted-field-focus');
+          }
+        })
       }
     }
     document.body.appendChild(script)
@@ -104,6 +146,9 @@ export default function CheckoutPage() {
     return () => {
       if (script.parentNode) {
         script.parentNode.removeChild(script)
+      }
+      if (style.parentNode) {
+        style.parentNode.removeChild(style)
       }
     }
   }, [])
@@ -437,25 +482,24 @@ export default function CheckoutPage() {
                         id="card-number" 
                         style={{
                           width: '100%',
-                          padding: '0.75rem',
                           paddingLeft: '3rem',
                           border: errors.cardNumber ? '1px solid #ef4444' : '1px solid #E5DDD5',
                           borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
                           background: 'white',
-                          minHeight: '44px'
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          position: 'relative'
                         }}
                       />
-                      <CreditCard size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#8B5E3C' }} />
+                      <CreditCard size={20} style={{ position: 'absolute', left: '1rem', top: '12px', color: '#8B5E3C', pointerEvents: 'none' }} />
                     </div>
                     {errors.cardNumber && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.cardNumber}</p>}
                   </div>
 
                   <div style={{ 
-                    display: isMobile ? 'flex' : 'grid', 
-                    flexDirection: isMobile ? 'column' : undefined,
-                    gridTemplateColumns: isMobile ? undefined : '1fr 1fr', 
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr', 
                     gap: '1rem', 
                     marginBottom: '1rem' 
                   }}>
@@ -466,14 +510,13 @@ export default function CheckoutPage() {
                       <div 
                         id="expiry" 
                         style={{
-                          width: '50%',
-                          padding: '0.75rem',
+                          width: '100%',
                           border: errors.expiry ? '1px solid #ef4444' : '1px solid #E5DDD5',
                           borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
                           background: 'white',
-                          minHeight: '44px'
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center'
                         }}
                       />
                       {errors.expiry && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.expiry}</p>}
@@ -486,14 +529,13 @@ export default function CheckoutPage() {
                       <div 
                         id="cvv" 
                         style={{
-                          width: '50%',
-                          padding: '0.75rem',
+                          width: '100%',
                           border: errors.cvv ? '1px solid #ef4444' : '1px solid #E5DDD5',
                           borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
                           background: 'white',
-                          minHeight: '44px'
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center'
                         }}
                       />
                       {errors.cvv && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.cvv}</p>}
