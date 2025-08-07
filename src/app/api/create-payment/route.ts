@@ -6,20 +6,19 @@ import crypto from 'crypto';
 function createTranzilaHeaders() {
   const appKey = process.env.TRANZILA_API_APP_KEY!;
   const secretKey = process.env.TRANZILA_API_SECRET!;
-  const nonce = crypto.randomBytes(20).toString('hex'); // 40 characters
-  const timestamp = Date.now().toString();
+  const time = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
+  const nonce = crypto.randomBytes(40).toString('hex'); // 80 character string
   
-  // יצירת ה-access token - HMAC-SHA256
-  const dataToSign = secretKey + timestamp + nonce;
+  // בדיוק כמו בדוגמה ב-PHP שלהם
   const accessToken = crypto
-    .createHmac('sha256', appKey)
-    .update(dataToSign)
+    .createHmac('sha256', secretKey + time + nonce)
+    .update(appKey)
     .digest('hex');
   
   return {
     'X-tranzila-api-app-key': appKey,
+    'X-tranzila-api-request-time': time.toString(),
     'X-tranzila-api-nonce': nonce,
-    'X-tranzila-api-request-time': timestamp,
     'X-tranzila-api-access-token': accessToken,
     'Content-Type': 'application/json'
   };
@@ -49,16 +48,16 @@ export async function POST(request: NextRequest) {
       : prices[plan as keyof typeof prices].monthly;
     
     // יצירת payment request
-    const paymentRequest: any = {
+    const paymentRequest = {
       terminal_name: process.env.TRANZILA_TERMINAL!,
-      action_type: 1, // 1 = charge
-      request_date: null, // יחייב מיידית
-      request_language: "hebrew",
-      response_language: "hebrew",
-      request_currency: "ILS",
       created_by_user: "system",
       created_by_system: "YayaAgent",
       created_via: "TRAPI",
+      action_type: 1, // 1 = charge
+      request_date: null, // יחייב מיידית
+      request_language: "hebrew",
+      response_language: "hebrew", 
+      request_currency: "ILS",
       payment_plans: [1], // 1 = regular payment
       payment_methods: [1, 15], // 1 = credit card, 15 = Apple Pay
       payments_number: 1,
@@ -69,10 +68,7 @@ export async function POST(request: NextRequest) {
         name: fullName || "Yaya Customer",
         contact_person: fullName || "Yaya Customer",
         id: "", // תעודת זהות - אופציונלי
-        email: email || "",
-        phone_country_code: "972",
-        phone_area_code: "",
-        phone_number: ""
+        email: email || "customer@yayagent.com"
       },
       items: [{
         name: `Yaya ${plan.charAt(0).toUpperCase() + plan.slice(1)} - ${billing === 'yearly' ? 'שנתי' : 'חודשי'}`,
@@ -89,14 +85,13 @@ export async function POST(request: NextRequest) {
         { name: "plan", value: plan },
         { name: "billing", value: billing },
         { name: "trial_days", value: "7" },
-        { name: "DCdisable", value: `${registrationCode}-${Date.now()}` }, // למניעת כפל חיובים
-        { name: "notify_url", value: "https://yayagent.com/api/payment-webhook" }
+        { name: "DCdisable", value: `${registrationCode}-${Date.now()}` } // למניעת כפל חיובים
       ]
     };
     
-    // אם רוצים לשלוח דרישת תשלום במייל
+    // אם יש אימייל, הוסף אפשרות שליחה
     if (email) {
-      paymentRequest.send_email = {
+      (paymentRequest as any).send_email = {
         sender_name: "Yaya Agent",
         sender_email: "noreply@yayagent.com"
       };
@@ -133,13 +128,20 @@ export async function POST(request: NextRequest) {
       });
     } else {
       console.error('Tranzila error:', result);
-      throw new Error(result.message || 'Payment creation failed');
+      return NextResponse.json({
+        success: false,
+        error: result.message || 'Payment creation failed',
+        errorCode: result.error_code
+      });
     }
     
   } catch (error) {
     console.error('Error creating payment:', error);
     return NextResponse.json(
-      { error: 'Failed to create payment', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Failed to create payment', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      },
       { status: 500 }
     );
   }
