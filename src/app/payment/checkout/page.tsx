@@ -18,14 +18,6 @@ export default function CheckoutPage() {
     phone: ''
   })
   
-  const [cardData, setCardData] = useState({
-    cardNumber: '',
-    expiryMonth: '',
-    expiryYear: '',
-    cvv: '',
-    idNumber: ''
-  })
-  
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isMobile, setIsMobile] = useState(false)
@@ -56,46 +48,16 @@ export default function CheckoutPage() {
     executive: 'Executive Plan',
     ultimate: 'Ultimate Plan'
   }
-  
-  // Format card number with spaces
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
-    const matches = v.match(/\d{4,16}/g)
-    const match = (matches && matches[0]) || ''
-    const parts = []
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4))
-    }
-    if (parts.length) {
-      return parts.join(' ')
-    } else {
-      return value
-    }
-  }
 
   const handleSubmit = async () => {
     setIsLoading(true)
     setErrors({})
 
-    // Validate form
+    // Validate form - רק את הפרטים האישיים
     const newErrors: Record<string, string> = {}
     if (!formData.email) newErrors.email = 'Email is required'
     if (!formData.fullName) newErrors.fullName = 'Full name is required'
     if (!formData.phone) newErrors.phone = 'Phone number is required'
-    
-    // Validate card
-    if (!cardData.cardNumber || cardData.cardNumber.replace(/\s/g, '').length < 16) {
-      newErrors.cardNumber = 'Valid card number is required'
-    }
-    if (!cardData.expiryMonth || !cardData.expiryYear) {
-      newErrors.expiry = 'Expiry date is required'
-    }
-    if (!cardData.cvv || cardData.cvv.length < 3) {
-      newErrors.cvv = 'CVV is required'
-    }
-    if (!cardData.idNumber || cardData.idNumber.length < 9) {
-      newErrors.idNumber = 'ID number is required'
-    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -104,73 +66,40 @@ export default function CheckoutPage() {
     }
 
     try {
-      // Process payment through our API
-      const response = await fetch('/api/process-payment', {
+      // צור payment request עם Tranzila
+      const response = await fetch('/api/create-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          // Payment details
           plan: urlParams.plan,
-          amount: urlParams.price,
           billing: urlParams.billing,
-          
-          // Customer details
+          registrationCode: urlParams.code,
           email: formData.email,
-          fullName: formData.fullName,
-          phone: formData.phone,
-          
-          // Card details
-          cardNumber: cardData.cardNumber.replace(/\s/g, ''),
-          expiryMonth: cardData.expiryMonth,
-          expiryYear: cardData.expiryYear,
-          cvv: cardData.cvv,
-          idNumber: cardData.idNumber,
-          
-          // Registration code
-          registrationCode: urlParams.code
+          fullName: formData.fullName
         })
       });
 
       const result = await response.json();
 
-      if (result.success) {
-        // Update user plan in the database
-        await fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            registration_code: urlParams.code,
-            plan: urlParams.plan,
-            email: formData.email,
-            expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString(),
-            billing_type: urlParams.billing,
-            status: 'active',
-            transaction_id: result.transactionId
-          })
-        });
+      if (result.success && result.paymentUrl) {
+        // שמור נתונים לפני המעבר
+        sessionStorage.setItem('checkoutData', JSON.stringify({
+          ...formData,
+          ...urlParams,
+          paymentRequestId: result.paymentRequestId
+        }));
         
-        // Redirect to success page
-        const successUrl = new URL(window.location.origin + '/payment/success')
-        successUrl.searchParams.set('plan', urlParams.plan)
-        successUrl.searchParams.set('email', formData.email)
-        successUrl.searchParams.set('price', urlParams.price)
-        successUrl.searchParams.set('billing', urlParams.billing)
-        successUrl.searchParams.set('code', urlParams.code)
-        successUrl.searchParams.set('transactionId', result.transactionId)
-        
-        window.location.href = successUrl.toString()
+        // הפנה לדף התשלום המאובטח של Tranzila
+        window.location.href = result.paymentUrl;
       } else {
-        // Show error
-        alert(result.error || 'Payment failed. Please check your card details and try again.')
-        setIsLoading(false)
+        alert(result.error || 'Failed to create payment. Please try again.');
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Payment error:', error)
-      alert('An error occurred while processing your payment. Please try again.')
+      alert('An error occurred. Please try again.')
       setIsLoading(false)
     }
   }
@@ -291,245 +220,94 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Payment Form */}
+            {/* Contact Form Only */}
             <div style={{ order: isMobile ? 1 : 2 }}>
               <h2 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '400', marginBottom: '1.5rem', color: '#8B5E3C', letterSpacing: '-0.02em' }}>
-                Payment Details
+                Contact Information
               </h2>
 
               <div style={{ background: '#F5F1EB', borderRadius: '20px', padding: isMobile ? '1.5rem' : '2rem', border: '1px solid #E5DDD5' }}>
-                {/* Contact Information */}
-                <div style={{ marginBottom: '2rem' }}>
-                  <h3 style={{ fontSize: isMobile ? '1rem' : '1.1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem' }}>
-                    Contact Information
-                  </h3>
-                  
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: errors.email ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                        borderRadius: '8px',
-                        fontSize: isMobile ? '0.875rem' : '0.9rem',
-                        boxSizing: 'border-box',
-                        background: 'white'
-                      }}
-                      placeholder="your@email.com"
-                    />
-                    {errors.email && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.email}</p>}
-                  </div>
-
-                  <div style={{ 
-                    display: isMobile ? 'flex' : 'grid', 
-                    flexDirection: isMobile ? 'column' : undefined,
-                    gridTemplateColumns: isMobile ? undefined : '1fr 1fr', 
-                    gap: '1rem' 
-                  }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: errors.fullName ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
-                        }}
-                        placeholder="John Doe"
-                      />
-                      {errors.fullName && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.fullName}</p>}
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        Phone Number *
-                      </label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: errors.phone ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
-                        }}
-                        placeholder="+972-50-123-4567"
-                      />
-                      {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
-                    </div>
-                  </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: errors.email ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '0.875rem' : '0.9rem',
+                      boxSizing: 'border-box',
+                      background: 'white'
+                    }}
+                    placeholder="your@email.com"
+                  />
+                  {errors.email && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.email}</p>}
                 </div>
 
-                {/* Payment Information */}
-                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '2rem' }}>
-                  <h3 style={{ fontSize: isMobile ? '1rem' : '1.1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem' }}>
-                    Payment Information
-                  </h3>
-                  
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                      Card Number *
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <input
-                        type="text"
-                        value={formatCardNumber(cardData.cardNumber)}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\s/g, '');
-                          if (value.length <= 16) {
-                            setCardData({ ...cardData, cardNumber: value });
-                          }
-                        }}
-                        maxLength={19}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          paddingLeft: '3rem',
-                          border: errors.cardNumber ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
-                        }}
-                        placeholder="1234 5678 9012 3456"
-                      />
-                      <CreditCard size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#8B5E3C' }} />
-                    </div>
-                    {errors.cardNumber && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.cardNumber}</p>}
-                  </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.fullName}
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: errors.fullName ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '0.875rem' : '0.9rem',
+                      boxSizing: 'border-box',
+                      background: 'white'
+                    }}
+                    placeholder="John Doe"
+                  />
+                  {errors.fullName && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.fullName}</p>}
+                </div>
 
-                  <div style={{ 
-                    display: isMobile ? 'flex' : 'grid', 
-                    flexDirection: isMobile ? 'column' : undefined,
-                    gridTemplateColumns: isMobile ? undefined : '1fr 1fr', 
-                    gap: '1rem', 
-                    marginBottom: '1rem' 
-                  }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        Expiry Date *
-                      </label>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <input
-                          type="text"
-                          value={cardData.expiryMonth}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '');
-                            if (value.length <= 2) {
-                              setCardData({ ...cardData, expiryMonth: value });
-                            }
-                          }}
-                          maxLength={2}
-                          style={{
-                            width: '50%',
-                            padding: '0.75rem',
-                            border: errors.expiry ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                            borderRadius: '8px',
-                            fontSize: isMobile ? '0.875rem' : '0.9rem',
-                            boxSizing: 'border-box',
-                            background: 'white'
-                          }}
-                          placeholder="MM"
-                        />
-                        <input
-                          type="text"
-                          value={cardData.expiryYear}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '');
-                            if (value.length <= 2) {
-                              setCardData({ ...cardData, expiryYear: value });
-                            }
-                          }}
-                          maxLength={2}
-                          style={{
-                            width: '50%',
-                            padding: '0.75rem',
-                            border: errors.expiry ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                            borderRadius: '8px',
-                            fontSize: isMobile ? '0.875rem' : '0.9rem',
-                            boxSizing: 'border-box',
-                            background: 'white'
-                          }}
-                          placeholder="YY"
-                        />
-                      </div>
-                      {errors.expiry && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.expiry}</p>}
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        CVV *
-                      </label>
-                      <input
-                        type="text"
-                        value={cardData.cvv}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
-                          if (value.length <= 4) {
-                            setCardData({ ...cardData, cvv: value });
-                          }
-                        }}
-                        maxLength={4}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: errors.cvv ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
-                        }}
-                        placeholder="123"
-                      />
-                      {errors.cvv && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.cvv}</p>}
-                    </div>
-                  </div>
+                <div style={{ marginBottom: '2rem' }}>
+                  <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: errors.phone ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                      borderRadius: '8px',
+                      fontSize: isMobile ? '0.875rem' : '0.9rem',
+                      boxSizing: 'border-box',
+                      background: 'white'
+                    }}
+                    placeholder="+972-50-123-4567"
+                  />
+                  {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
+                </div>
 
-                  <div style={{ marginBottom: '2rem' }}>
-                    <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                      ID Number *
-                    </label>
-                    <input
-                      type="text"
-                      value={cardData.idNumber}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '');
-                        if (value.length <= 9) {
-                          setCardData({ ...cardData, idNumber: value });
-                        }
-                      }}
-                      maxLength={9}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: errors.idNumber ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                        borderRadius: '8px',
-                        fontSize: isMobile ? '0.875rem' : '0.9rem',
-                        boxSizing: 'border-box',
-                        background: 'white'
-                      }}
-                      placeholder="123456789"
-                    />
-                    {errors.idNumber && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.idNumber}</p>}
-                  </div>
+                {/* Notice about secure payment */}
+                <div style={{ 
+                  background: 'rgba(139, 94, 60, 0.1)', 
+                  borderRadius: '12px', 
+                  padding: isMobile ? '0.75rem' : '1rem', 
+                  border: '1px solid rgba(139, 94, 60, 0.2)',
+                  marginBottom: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem'
+                }}>
+                  <CreditCard size={20} style={{ color: '#8B5E3C', flexShrink: 0 }} />
+                  <p style={{ fontSize: isMobile ? '0.8rem' : '0.85rem', color: '#8B5E3C', margin: 0 }}>
+                    You'll be redirected to our secure payment page to complete your purchase
+                  </p>
                 </div>
 
                 <button
@@ -563,13 +341,26 @@ export default function CheckoutPage() {
                   }}
                 >
                   <Lock size={isMobile ? 18 : 20} />
-                  {isLoading ? 'Processing...' : 'Start Free Trial - $0.00'}
+                  {isLoading ? 'Processing...' : 'Continue to Secure Payment'}
                 </button>
 
                 <p style={{ fontSize: isMobile ? '0.75rem' : '0.8rem', color: '#8B5E3C', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
                   By continuing, you agree to our Terms of Service and Privacy Policy.
                   Your payment information is encrypted and secure.
                 </p>
+
+                {/* Payment methods accepted */}
+                <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #E5DDD5' }}>
+                  <p style={{ fontSize: isMobile ? '0.75rem' : '0.8rem', color: '#8B5E3C', textAlign: 'center', marginBottom: '0.75rem' }}>
+                    We accept all major payment methods
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', opacity: 0.6 }}>
+                    <span style={{ fontSize: isMobile ? '0.8rem' : '0.85rem' }}>💳 Visa</span>
+                    <span style={{ fontSize: isMobile ? '0.8rem' : '0.85rem' }}>💳 Mastercard</span>
+                    <span style={{ fontSize: isMobile ? '0.8rem' : '0.85rem' }}>💳 Amex</span>
+                    <span style={{ fontSize: isMobile ? '0.8rem' : '0.85rem' }}>🍎 Apple Pay</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
