@@ -466,7 +466,7 @@ export default function CheckoutPage() {
                       <div 
                         id="expiry" 
                         style={{
-                          width: '100%',
+                          width: '50%',
                           padding: '0.75rem',
                           border: errors.expiry ? '1px solid #ef4444' : '1px solid #E5DDD5',
                           borderRadius: '8px',
@@ -486,7 +486,7 @@ export default function CheckoutPage() {
                       <div 
                         id="cvv" 
                         style={{
-                          width: '100%',
+                          width: '50%',
                           padding: '0.75rem',
                           border: errors.cvv ? '1px solid #ef4444' : '1px solid #E5DDD5',
                           borderRadius: '8px',
