@@ -1,12 +1,36 @@
+// /app/api/create-payment/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
+
+// פונקציה ליצירת ה-authentication headers
+function createTranzilaHeaders() {
+  const appKey = process.env.TRANZILA_API_APP_KEY!;
+  const secretKey = process.env.TRANZILA_API_SECRET!;
+  const nonce = crypto.randomBytes(20).toString('hex'); // 40 characters
+  const timestamp = Date.now().toString();
+  
+  // יצירת ה-access token - HMAC-SHA256
+  const dataToSign = secretKey + timestamp + nonce;
+  const accessToken = crypto
+    .createHmac('sha256', appKey)
+    .update(dataToSign)
+    .digest('hex');
+  
+  return {
+    'X-tranzila-api-app-key': appKey,
+    'X-tranzila-api-nonce': nonce,
+    'X-tranzila-api-request-time': timestamp,
+    'X-tranzila-api-access-token': accessToken,
+    'Content-Type': 'application/json'
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // קבל את הנתונים מהבקשה
     const body = await request.json();
-    const { plan, billing, registrationCode, email } = body;
+    const { plan, billing, registrationCode, email, fullName } = body;
     
-    // בדיקת נתונים
+    // וידוא שדות חובה
     if (!plan || !billing || !registrationCode) {
       return NextResponse.json(
         { error: 'Missing required fields' },
@@ -16,104 +40,102 @@ export async function POST(request: NextRequest) {
     
     // הגדרת מחירים
     const prices = {
-      executive: { 
-        monthly: 5, 
-        yearly: 48  // 4$ לחודש * 12
-      },
-      ultimate: { 
-        monthly: 14, 
-        yearly: 156 // 13$ לחודש * 12
-      }
+      executive: { monthly: 5, yearly: 48 },
+      ultimate: { monthly: 14, yearly: 156 }
     };
     
-    // חישוב המחיר הסופי
     const amount = billing === 'yearly' 
       ? prices[plan as keyof typeof prices].yearly 
       : prices[plan as keyof typeof prices].monthly;
     
-    // הגדרות Tranzila
-    const terminal = process.env.TRANZILA_TERMINAL;
-    const password = process.env.TRANZILA_PASSWORD;
-    const domain = process.env.NEXT_PUBLIC_DOMAIN || 'https://yayagent.com';
-    
-    if (!terminal || !password) {
-      console.error('Missing Tranzila credentials');
-      return NextResponse.json(
-        { error: 'Payment system not configured' },
-        { status: 500 }
-      );
-    }
-    
-    // חישוב תאריך לתשלום דחוי (7 ימי trial)
-    const deferredDate = new Date();
-    deferredDate.setDate(deferredDate.getDate() + 7);
-    const deferredDateStr = deferredDate.toISOString().split('T')[0].replace(/-/g, '');
-    
-    // הכנת פרמטרים ל-Tranzila - כל הערכים חייבים להיות strings
-    const tranzilaParams: Record<string, string> = {
-      // חובה
-      terminal: terminal,
-      
-      // סכום
-      sum: amount.toString(),
-      currency: '1', // 1 = ILS, 2 = USD
-      
-      // סוג עסקה - תשלום דחוי (לאחר 7 ימי trial)
-      tranmode: 'VD', // V = Verify, D = Deferred
-      
-      // תאריך החיוב (בפורמט YYYYMMDD)
-      deferredpayment: deferredDateStr,
-      
-      // פרטי לקוח
-      email: email || '',
-      
-      // נתונים נוספים
-      remarks: `Yaya ${plan} - ${billing}`,
-      custom1: registrationCode,
-      custom2: plan,
-      custom3: billing,
-      
-      // URLs לחזרה
-      success_url: `${domain}/payment/success?code=${registrationCode}&plan=${plan}&billing=${billing}&price=${amount}`,
-      fail_url: `${domain}/payment/failed?code=${registrationCode}`,
-      notify_url: `https://n8n-TD2y.sliplane.app/webhook/tranzila-notify`,
-      
-      // שפה
-      lang: 'il', // עברית
-      
-      // אפשרויות נוספות
-      cred_type: '1', // רגיל
-      trBgColor: 'ffffff',
-      trTextColor: '000000',
-      trButtonColor: '8B5E3C'
+    // יצירת payment request
+    const paymentRequest = {
+      terminal_name: process.env.TRANZILA_TERMINAL!,
+      action_type: 1, // 1 = charge
+      request_date: null, // יחייב מיידית
+      request_language: "hebrew",
+      response_language: "hebrew",
+      request_currency: "ILS",
+      created_by_user: "system",
+      created_by_system: "YayaAgent",
+      created_via: "TRAPI",
+      payment_plans: [1], // 1 = regular payment
+      payment_methods: [1, 15], // 1 = credit card, 15 = Apple Pay
+      payments_number: 1,
+      client: {
+        name: fullName || "Yaya Customer",
+        contact_person: fullName || "Yaya Customer",
+        id: "", // תעודת זהות - אופציונלי
+        email: email || "",
+        phone_country_code: "972",
+        phone_area_code: "",
+        phone_number: ""
+      },
+      items: [{
+        name: `Yaya ${plan.charAt(0).toUpperCase() + plan.slice(1)} - ${billing === 'yearly' ? 'שנתי' : 'חודשי'}`,
+        unit_price: amount,
+        type: "I", // I = Item
+        units_number: 1,
+        unit_type: 1,
+        price_type: "G", // G = Gross (כולל מע"מ)
+        currency_code: "ILS"
+      }],
+      request_vat: 17, // מע"מ בישראל
+      user_defined_fields: [
+        { name: "registration_code", value: registrationCode },
+        { name: "plan", value: plan },
+        { name: "billing", value: billing },
+        { name: "trial_days", value: "7" },
+        { name: "DCdisable", value: `${registrationCode}-${Date.now()}` } // למניעת כפל חיובים
+      ]
     };
     
-    // הכן את ה-URL עם כל הפרמטרים
-    const baseUrl = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php';
-    const queryString = new URLSearchParams(tranzilaParams).toString();
-    const paymentUrl = `${baseUrl}?${queryString}`;
+    // אם רוצים לשלוח דרישת תשלום במייל
+    if (email) {
+      paymentRequest.send_email = {
+        sender_name: "Yaya Agent",
+        sender_email: "noreply@yayagent.com"
+      };
+    }
     
-    console.log('Tranzila payment URL created:', {
+    console.log('Creating payment request:', {
       plan,
+      billing,
       amount,
-      deferredDate: deferredDateStr,
       registrationCode
     });
     
-    return NextResponse.json({
-      success: true,
-      paymentUrl,
-      amount,
-      plan,
-      billing,
-      registrationCode,
-      trialEndDate: deferredDate.toISOString()
+    const headers = createTranzilaHeaders();
+    
+    const response = await fetch('https://api.tranzila.com/v1/pr/create', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(paymentRequest)
     });
     
+    const result = await response.json();
+    
+    console.log('Tranzila response:', result);
+    
+    if (result.error_code === 0) {
+      return NextResponse.json({
+        success: true,
+        paymentUrl: result.pr_link,
+        paymentRequestId: result.pr_id,
+        amount,
+        plan,
+        billing,
+        message: result.message
+      });
+    } else {
+      console.error('Tranzila error:', result);
+      throw new Error(result.message || 'Payment creation failed');
+    }
+    
   } catch (error) {
-    console.error('Error in create-payment:', error);
+    console.error('Error creating payment:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to create payment', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
