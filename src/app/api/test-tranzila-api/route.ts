@@ -8,22 +8,13 @@ function createTranzilaHeaders() {
   const nonce = crypto.randomBytes(20).toString('hex');
   const timestamp = Date.now().toString();
   
-  // לפי הדוקומנטציה: secret + timestamp + nonce
-  const dataToSign = secretKey + timestamp + nonce;
+  // נסה בלי ה-secret בהתחלה
+  const dataToSign = timestamp + nonce;
   
-  // HMAC עם ה-app key בתור המפתח!
   const accessToken = crypto
-    .createHmac('sha256', appKey)
+    .createHmac('sha256', secretKey) // secret key בתור ה-key של HMAC
     .update(dataToSign)
     .digest('hex');
-  
-  console.log('Creating headers with:', {
-    appKeyLength: appKey.length,
-    secretKeyLength: secretKey.length,
-    nonce: nonce,
-    timestamp: timestamp,
-    dataToSign: `${secretKey.substring(0,3)}...${timestamp}${nonce}`
-  });
   
   return {
     'X-tranzila-api-app-key': appKey,
