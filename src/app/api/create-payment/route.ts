@@ -62,6 +62,9 @@ export async function POST(request: NextRequest) {
       payment_plans: [1], // 1 = regular payment
       payment_methods: [1, 15], // 1 = credit card, 15 = Apple Pay
       payments_number: 1,
+      success_url: `https://yayagent.com/payment/success?code=${registrationCode}&plan=${plan}&billing=${billing}&price=${amount}`,
+      fail_url: `https://yayagent.com/payment/failed?code=${registrationCode}`,
+      notify_url: `https://yayagent.com/api/payment-webhook`,
       client: {
         name: fullName || "Yaya Customer",
         contact_person: fullName || "Yaya Customer",
@@ -86,7 +89,8 @@ export async function POST(request: NextRequest) {
         { name: "plan", value: plan },
         { name: "billing", value: billing },
         { name: "trial_days", value: "7" },
-        { name: "DCdisable", value: `${registrationCode}-${Date.now()}` } // למניעת כפל חיובים
+        { name: "DCdisable", value: `${registrationCode}-${Date.now()}` }, // למניעת כפל חיובים
+        { name: "notify_url", value: "https://yayagent.com/api/payment-webhook" }
       ]
     };
     
