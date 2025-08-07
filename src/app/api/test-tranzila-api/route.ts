@@ -37,31 +37,31 @@ export async function POST(request: NextRequest) {
     const paymentRequest = {
   terminal_name: process.env.TRANZILA_TERMINAL!,
   created_by_user: "system",
-  created_by_system: "YayaAgent",
+  created_by_system: "YayaAgent", 
   created_via: "TRAPI",
   action_type: 1,
+  request_language: "hebrew", // הוספנו
   response_language: "hebrew",
   request_currency: "ILS",
   payment_plans: [1],
-  payment_methods: [1, 15], // 1 = credit card, 15 = Apple Pay
+  payment_methods: [1], // רק כרטיס אשראי לבינתיים
+  payments_number: 1,
+  request_date: null, // הוספנו
   client: {
     name: "Test Customer",
-    contact_person: "Test Customer",
+    contact_person: "Test Customer", 
     email: "test@example.com",
-    id: "123456789",
-    phone_country_code: "972",
-    phone_area_code: "050",
-    phone_number: "1234567"
+    id: "123456789"
   },
   items: [{
     name: "Test Product",
     unit_price: 10,
     type: "I",
     units_number: 1,
+    unit_type: 1, // הוספנו
     price_type: "G",
     currency_code: "ILS"
   }],
-  payments_number: 1,
   send_email: {
     sender_name: "Yaya Agent",
     sender_email: "noreply@yayagent.com"
