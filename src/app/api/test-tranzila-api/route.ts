@@ -8,21 +8,11 @@ function createTranzilaHeaders() {
   const nonce = crypto.randomBytes(20).toString('hex');
   const timestamp = Date.now().toString();
   
-  // נסה עם הסדר המדויק מהדוגמה שלהם
   const message = appKey + timestamp + nonce;
   const accessToken = crypto
     .createHmac('sha256', secretKey)
     .update(message)
-    .digest('hex'); // חזרה ל-hex
-  
-  console.log('Auth details:', {
-    appKey,
-    secretKeyLength: secretKey.length,
-    nonce,
-    timestamp,
-    message,
-    accessToken
-  });
+    .digest('hex');
   
   return {
     'X-tranzila-api-app-key': appKey,
@@ -33,26 +23,48 @@ function createTranzilaHeaders() {
   };
 }
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
+    const paymentRequest = {
+      terminal_name: process.env.TRANZILA_TERMINAL!,
+      created_by_user: "system",
+      created_by_system: "YayaAgent",
+      created_via: "TRAPI",
+      action_type: 1,
+      response_language: "hebrew",
+      request_currency: "ILS",
+      payment_plans: [1],
+      payment_methods: [1],
+      client: {
+        name: "Test Customer",
+        contact_person: "Test Customer",
+        email: "test@example.com",
+        id: "123456789"
+      },
+      items: [{
+        name: "Test Product",
+        unit_price: 10,
+        type: "I",
+        units_number: 1,
+        price_type: "G",
+        currency_code: "ILS"
+      }],
+      payments_number: 1
+    };
+    
     const headers = createTranzilaHeaders();
     
-    // נסה קודם GET request פשוט
-    const response = await fetch('https://api.tranzila.com/v1/transaction/1234567', {
-      method: 'GET',
-      headers
+    const response = await fetch('https://api.tranzila.com/v1/pr/create', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(paymentRequest)
     });
     
-    const responseText = await response.text();
+    const result = await response.json();
     
     return NextResponse.json({
-      status: response.status,
-      headers: Object.fromEntries(response.headers.entries()),
-      body: responseText,
-      sentHeaders: {
-        ...headers,
-        'X-tranzila-api-access-token': '[HIDDEN]'
-      }
+      success: result.error_code === 0,
+      result
     });
     
   } catch (error) {
