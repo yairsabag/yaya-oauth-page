@@ -5,26 +5,25 @@ import { tranzilaHeaders } from "@/lib/tranzila";
 export async function POST(req: NextRequest) {
   try {
     const {
-      plan, amount, billing, email, fullName, phone,
+      amount = 0,                   // אימות 0 (או 1 אם יידרש ע"י הסולק)
+      currency = "ILS",             // ILS / USD / EUR
+      email, fullName, phone,
       cardNumber, expiryMonth, expiryYear, cvv, idNumber,
-      registrationCode,
-      currency = "USD",           // או "ILS"
-      use3ds = true               // שליטה אם להפעיל 3DS
+      plan, billing, registrationCode,
+      use3ds = true
     } = await req.json();
 
-    if (!amount || !cardNumber || !expiryMonth || !expiryYear || !cvv) {
-      return NextResponse.json({ error: "Missing card/amount fields" }, { status: 400 });
-    }
-
+    const terminal = process.env.TRANZILA_TERMINAL!;
     const headers = tranzilaHeaders();
 
-    // גוף הבקשה לפי הסכמות ששלחת (שמות שדות עשויים להשתנות קלות בין V1/V2)
+    // בקשת אימות + טוקניזציה
     const body: any = {
-      terminalName: process.env.TRANZILA_TERMINAL,
-      txnType: "debit",                 // ע"פ txnType: debit/credit/verify...
-      verifyMode: use3ds ? 2 : null,    // ע"פ verifyMode: 2/5 (שניהם בדוקנתמך במסוף)
-      txnCurrencyCode: currency,        // ILS / USD / EUR
+      terminalName: terminal,
+      txnType: "verify",                      // אימות (לא חיוב)
+      txnCurrencyCode: currency,
       amount: Number(amount),
+      tokenize: true,                         // בקשת Token
+      verifyMode: use3ds ? 2 : null,          // 2/5 (לפי המסוף שלך)
       transactionSource: "WEB",
       customer: {
         email, fullName, phone,
@@ -36,48 +35,52 @@ export async function POST(req: NextRequest) {
         expYear: String(expiryYear).length === 2 ? `20${expiryYear}` : String(expiryYear),
         cvv,
       },
-      metadata: {
-        registrationCode, plan, billing,
-      },
-      notifyUrl: process.env.N8N_WEBHOOK_URL, // אם משתמש
-      returnUrl: `${process.env.NEXT_PUBLIC_DOMAIN}/payment/3ds-return`,
+      metadata: { plan, billing, registrationCode },
+      returnUrl: `${process.env.NEXT_PUBLIC_DOMAIN}/payment/3ds-return`
     };
 
-    // שים לב: ייתכן שה־endpoint אצלך נקרא אחרת. שמתי "v2" כדיפולט.
     const url = use3ds
-      ? "https://api.tranzila.com/v2/3ds/create"                       // 3DS Create
-      : "https://api.tranzila.com/v2/transactions/credit-card/create"; // חיוב רגיל
+      ? "https://api.tranzila.com/v2/3ds/create"
+      : "https://api.tranzila.com/v2/transactions/credit-card/create";
 
     const resp = await fetch(url, { method: "POST", headers, body: JSON.stringify(body) });
     const data = await resp.json().catch(() => ({}));
 
-    // 3DS נדרש — נחזיר פרטי אתגר ל־FE
+    // נדרש 3DS → מחזירים URL/טופס ל-ACS
     if (use3ds && resp.ok && (data?.threeDS?.acsUrl || data?.acsUrl)) {
       return NextResponse.json({
         success: true,
         requires3ds: true,
         acsUrl: data.threeDS?.acsUrl || data.acsUrl,
-        payload: data.threeDS?.payload || data.payload, // pareq/creq וכו'
+        payload: data.threeDS?.payload || data.payload,     // pareq/creq וכו'
         transactionId: data.transactionId || data.id,
       });
     }
 
-    // חיוב הושלם בלי 3DS
-    if (resp.ok && (data?.status === "APPROVED" || data?.transaction_response?.success)) {
+    // הצלחה בלי 3DS – מחפשים token בתגובה
+    const token =
+      data?.transaction_response?.token ||
+      data?.token ||
+      data?.card?.token ||
+      null;
+
+    if (resp.ok && (data?.status === "APPROVED" || data?.transaction_response?.success) && token) {
       return NextResponse.json({
         success: true,
         requires3ds: false,
+        verifyApproved: true,
+        token,
         transactionId: data.transactionId || data?.transaction_response?.transaction_id,
         raw: data,
       });
     }
 
     return NextResponse.json(
-      { success: false, error: data?.message || data?.error || "Payment failed", raw: data },
+      { success: false, error: data?.message || data?.error || "Verify/Tokenize failed", raw: data },
       { status: 400 }
     );
-  } catch (err: any) {
-    console.error("pay route error", err);
+  } catch (err) {
+    console.error("pay (verify+token) error", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
