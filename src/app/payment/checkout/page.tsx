@@ -73,6 +73,22 @@ export default function CheckoutPage() {
     }
   }
 
+  // NEW: helper for 3DS redirect/auto-POST
+  function postToAcs(url: string, fields: Record<string, string>) {
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = url
+    Object.entries(fields || {}).forEach(([k, v]) => {
+      const input = document.createElement('input')
+      input.type = 'hidden'
+      input.name = k
+      input.value = v ?? ''
+      form.appendChild(input)
+    })
+    document.body.appendChild(form)
+    form.submit()
+  }
+
   const handleSubmit = async () => {
     setIsLoading(true)
     setErrors({})
@@ -105,7 +121,7 @@ export default function CheckoutPage() {
 
     try {
       // Process payment through our API
-      const response = await fetch('/api/process-payment', {
+      const response = await fetch('/api/pay', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -129,11 +145,21 @@ export default function CheckoutPage() {
           idNumber: cardData.idNumber,
           
           // Registration code
-          registrationCode: urlParams.code
+          registrationCode: urlParams.code,
+
+          // NEW: explicit API flags
+          currency: 'USD',      // שנה ל- 'ILS' אם צריך
+          use3ds: true
         })
       });
 
       const result = await response.json();
+
+      // NEW: handle 3DS flow
+      if (result?.success && result?.requires3ds) {
+        postToAcs(result.acsUrl, result.payload); // payload typically has pareq/creq + termUrl/md
+        return; // user will return to /payment/3ds-return after ACS
+      }
 
       if (result.success) {
         // Update user plan in the database
@@ -229,7 +255,7 @@ export default function CheckoutPage() {
                 Order Summary
               </h2>
               
-              <div style={{ background: '#F5F1EB', borderRadius: '20px', padding: isMobile ? '1.5rem' : '2rem', border: '1px solid #E5DDD5' }}>
+              <div style={{ background: '#F5F1EB', borderRadius: '20px', padding: isMobile ? '1.5rem' : '2rem', border: '1px solid '#E5DDD5' }}>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <h3 style={{ fontSize: isMobile ? '1.1rem' : '1.2rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
                     {getCurrentPlanName()}
@@ -393,9 +419,9 @@ export default function CheckoutPage() {
                         type="text"
                         value={formatCardNumber(cardData.cardNumber)}
                         onChange={(e) => {
-                          const value = e.target.value.replace(/\s/g, '');
+                          const value = e.target.value.replace(/\s/g, '')
                           if (value.length <= 16) {
-                            setCardData({ ...cardData, cardNumber: value });
+                            setCardData({ ...cardData, cardNumber: value })
                           }
                         }}
                         maxLength={19}
@@ -432,9 +458,9 @@ export default function CheckoutPage() {
                           type="text"
                           value={cardData.expiryMonth}
                           onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '');
+                            const value = e.target.value.replace(/\D/g, '')
                             if (value.length <= 2) {
-                              setCardData({ ...cardData, expiryMonth: value });
+                              setCardData({ ...cardData, expiryMonth: value })
                             }
                           }}
                           maxLength={2}
@@ -453,9 +479,9 @@ export default function CheckoutPage() {
                           type="text"
                           value={cardData.expiryYear}
                           onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '');
+                            const value = e.target.value.replace(/\D/g, '')
                             if (value.length <= 2) {
-                              setCardData({ ...cardData, expiryYear: value });
+                              setCardData({ ...cardData, expiryYear: value })
                             }
                           }}
                           maxLength={2}
@@ -482,9 +508,9 @@ export default function CheckoutPage() {
                         type="text"
                         value={cardData.cvv}
                         onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
+                          const value = e.target.value.replace(/\D/g, '')
                           if (value.length <= 4) {
-                            setCardData({ ...cardData, cvv: value });
+                            setCardData({ ...cardData, cvv: value })
                           }
                         }}
                         maxLength={4}
@@ -511,9 +537,9 @@ export default function CheckoutPage() {
                       type="text"
                       value={cardData.idNumber}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '');
+                        const value = e.target.value.replace(/\D/g, '')
                         if (value.length <= 9) {
-                          setCardData({ ...cardData, idNumber: value });
+                          setCardData({ ...cardData, idNumber: value })
                         }
                       }}
                       maxLength={9}
