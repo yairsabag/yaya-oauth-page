@@ -4,26 +4,23 @@ import crypto from "crypto";
 export function tranzilaHeaders() {
   const appKey = process.env.TRANZILA_API_APP_KEY!;
   const secret = process.env.TRANZILA_API_SECRET!;
-
   if (!appKey || !secret) {
-    throw new Error("Missing Tranzila API keys");
+    throw new Error("Missing TRANZILA_API_APP_KEY / TRANZILA_API_SECRET");
   }
 
-  // לפי הדוקו: time = milliseconds unix; nonce = 40 bytes -> 80 hex chars
-  const time = Date.now().toString();
-  const nonce = crypto.randomBytes(40).toString("hex"); // 80-char hex
+  const requestTime = Date.now().toString();          // מילי-שניות
+  const nonce = crypto.randomBytes(40).toString("hex"); // 80 תווים (40 בתים)
 
-  // access token: HMAC-SHA256 על ה-appKey עם מפתח = secret+time+nonce
-  const key = Buffer.from(secret + time + nonce, "utf8");
+  // access token = HMAC-SHA256(message=appKey, key=secret+time+nonce)
   const accessToken = crypto
-    .createHmac("sha256", key)
-    .update(appKey, "utf8")
+    .createHmac("sha256", `${secret}${requestTime}${nonce}`)
+    .update(appKey)
     .digest("hex");
 
   return {
     "Content-Type": "application/json",
     "X-tranzila-api-app-key": appKey,
-    "X-tranzila-api-request-time": time,
+    "X-tranzila-api-request-time": requestTime,
     "X-tranzila-api-nonce": nonce,
     "X-tranzila-api-access-token": accessToken,
   };
