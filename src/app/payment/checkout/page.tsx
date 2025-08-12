@@ -158,95 +158,132 @@ export default function CheckoutPage() {
     ultimate: 'Ultimate Plan'
   }
 
-  const handleSubmit = async () => {
-    if (!fieldsReady || !fieldsRef.current) {
-      alert('Payment fields are not ready. Please refresh the page.')
-      return
-    }
+  // עדכון handleSubmit בדף Checkout - גרסה סופית
+const handleSubmit = async () => {
+  if (!fieldsReady || !fieldsRef.current) {
+    alert('Payment fields are not ready. Please refresh the page.')
+    return
+  }
 
-    setIsLoading(true)
-    setErrors({})
+  setIsLoading(true)
+  setErrors({})
 
-    // Validate form
-    const newErrors: Record<string, string> = {}
-    if (!formData.email) newErrors.email = 'Email is required'
-    if (!formData.fullName) newErrors.fullName = 'Full name is required'
-    if (!formData.phone) newErrors.phone = 'Phone number is required'
-    if (!cardData.idNumber || cardData.idNumber.length < 9) {
-      newErrors.idNumber = 'ID number is required (9 digits)'
-    }
+  // Validate form
+  const newErrors: Record<string, string> = {}
+  if (!formData.email) newErrors.email = 'Email is required'
+  if (!formData.fullName) newErrors.fullName = 'Full name is required'
+  if (!formData.phone) newErrors.phone = 'Phone number is required'
+  if (!cardData.idNumber || cardData.idNumber.length < 9) {
+    newErrors.idNumber = 'ID number is required (9 digits)'
+  }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors)
+    setIsLoading(false)
+    return
+  }
+
+  // 🔥 שימוש ב-Hosted Fields עם Verify mode + Tokenization
+  fieldsRef.current.charge({
+    terminal_name: 'fxpyairsabag', // מסוף רגיל
+    amount: parseFloat(urlParams.price), // הסכום המלא
+    tran_mode: 'V', // 🔥 Verify - רק אישור כרטיס, ללא חיוב!
+    tokenize: true, // 🔥 יוצר טוקן לחיוב עתידי
+    currency: '2', // USD
+    
+    // פרטי לקוח
+    contact: formData.fullName,
+    email: formData.email,
+    phone: formData.phone,
+    credit_card_holder_id: cardData.idNumber,
+    
+    // מטה-דאטה
+    custom1: urlParams.code,
+    custom2: urlParams.plan,
+    custom3: urlParams.billing,
+    custom4: urlParams.price,
+    pdesc: `Yaya ${urlParams.plan} - 7 Day Trial Authorization`
+    
+  }, async (err: any, response: any) => {
+    if (err) {
+      console.error('Authorization error:', err)
+      handleErrors(err)
       setIsLoading(false)
       return
     }
-
-    // Use Tranzila Hosted Fields to charge
-    fieldsRef.current.charge({
-      terminal_name: process.env.NEXT_PUBLIC_TRANZILA_TERMINAL || 'fxpyairsabagtok',
-      amount: parseFloat(urlParams.price),
-      contact: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      credit_card_holder_id: cardData.idNumber,
-      // Additional fields
-      custom1: urlParams.code,
-      custom2: urlParams.plan,
-      custom3: urlParams.billing,
-      pdesc: `Yaya ${urlParams.plan} - ${urlParams.billing}`,
-      // 7 days trial
-      tranmode: 'VK', // Verify with token creation
-      currency: '2', // USD
-    }, async (err: any, response: any) => {
-      if (err) {
-        console.error('Payment error:', err)
-        handleErrors(err)
+    
+    if (response && response.transaction_response && response.transaction_response.success) {
+      const token = response.transaction_response.token
+      const transactionId = response.transaction_response.transaction_id
+      
+      if (!token) {
+        alert('Failed to create payment token. Please try again.')
         setIsLoading(false)
         return
       }
       
-      if (response && response.transaction_response) {
-        if (response.transaction_response.success) {
-          // Update user plan in the database
-          try {
-            await fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                registration_code: urlParams.code,
-                plan: urlParams.plan,
-                email: formData.email,
-                expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString(),
-                billing_type: urlParams.billing,
-                status: 'active',
-                transaction_id: response.transaction_response.transaction_id,
-                token: response.transaction_response.token
-              })
-            });
-          } catch (error) {
-            console.error('Failed to update plan:', error)
-          }
-          
-          // Redirect to success page
+      // 🔥 שלח את הטוקן לשרת לשמירה + הפעלת טריאל
+      try {
+        const trialResponse = await fetch('/api/start-trial', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            // פרטי משתמש
+            registration_code: urlParams.code,
+            email: formData.email,
+            full_name: formData.fullName,
+            phone: formData.phone,
+            id_number: cardData.idNumber,
+            
+            // פרטי תוכנית
+            plan: urlParams.plan,
+            billing: urlParams.billing,
+            price: parseFloat(urlParams.price),
+            
+            // טוקן + transaction ID
+            payment_token: token,
+            auth_transaction_id: transactionId,
+            
+            // תאריכים
+            trial_start: new Date().toISOString(),
+            trial_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            charge_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            
+            // מטה-דאטה
+            tranzila_response: response.transaction_response
+          })
+        })
+
+        const trialData = await trialResponse.json()
+        
+        if (trialData.success) {
+          // 🎉 הצלחה! הפנה לדף success
           const successUrl = new URL(window.location.origin + '/payment/success')
           successUrl.searchParams.set('plan', urlParams.plan)
           successUrl.searchParams.set('email', formData.email)
           successUrl.searchParams.set('price', urlParams.price)
           successUrl.searchParams.set('billing', urlParams.billing)
           successUrl.searchParams.set('code', urlParams.code)
-          successUrl.searchParams.set('transactionId', response.transaction_response.transaction_id)
+          successUrl.searchParams.set('trial', 'true')
+          successUrl.searchParams.set('transactionId', transactionId)
           
           window.location.href = successUrl.toString()
         } else {
-          alert(response.transaction_response.error || 'Payment failed. Please check your details and try again.')
-          setIsLoading(false)
+          throw new Error(trialData.error || 'Failed to start trial')
         }
+      } catch (apiError) {
+        console.error('Trial start error:', apiError)
+        alert('Failed to start trial. Please contact support.')
+        setIsLoading(false)
       }
-    })
-  }
+    } else {
+      alert('Failed to authorize payment method. Please check your details and try again.')
+      setIsLoading(false)
+    }
+  })
+}
 
   const handleErrors = (error: any) => {
     if (error.messages) {
