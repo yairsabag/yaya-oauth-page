@@ -1,656 +1,317 @@
-'use client'
+// /app/checkout/page.tsx
+'use client';
 
-import React, { useState, useEffect, useRef } from 'react'
-import { ArrowLeft, Shield, CreditCard, Lock } from 'lucide-react'
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
-declare global {
-  interface Window {
-    TzlaHostedFields: any;
-  }
+interface FormData {
+  // פרטי לקוח
+  fullName: string;
+  email: string;
+  phone: string;
+  
+  // פרטי תוכנית
+  plan: 'executive' | 'ultimate';
+  billing: 'monthly' | 'yearly';
 }
 
 export default function CheckoutPage() {
-  const [urlParams, setUrlParams] = useState({
-    plan: '',
-    price: '',
-    billing: '',
-    code: '',
-    planName: ''
-  })
-
-  const [formData, setFormData] = useState({
-    email: '',
+  const searchParams = useSearchParams();
+  const registrationCode = searchParams.get('code') || 'DEFAULT';
+  const defaultPlan = (searchParams.get('plan') || 'executive') as 'executive' | 'ultimate';
+  const defaultBilling = (searchParams.get('billing') || 'monthly') as 'monthly' | 'yearly';
+  
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const [formData, setFormData] = useState<FormData>({
     fullName: '',
-    phone: ''
-  })
+    email: '',
+    phone: '',
+    plan: defaultPlan,
+    billing: defaultBilling
+  });
   
-  const [cardData, setCardData] = useState({
-    idNumber: ''
-  })
+  const prices = {
+    executive: { monthly: 5, yearly: 48 },
+    ultimate: { monthly: 14, yearly: 156 }
+  };
   
-  const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [isMobile, setIsMobile] = useState(false)
-  const [fieldsReady, setFieldsReady] = useState(false)
+  const currentPrice = prices[formData.plan][formData.billing];
+  const monthlyPrice = formData.billing === 'yearly' 
+    ? Math.round(currentPrice / 12) 
+    : currentPrice;
   
-  const fieldsRef = useRef<any>(null)
-
-  // Detect mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768)
-    }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const extractedParams = {
-      plan: params.get('plan') || '',
-      price: params.get('price') || '',
-      billing: params.get('billing') || '',
-      code: params.get('code') || '',
-      planName: params.get('planName') || ''
-    }
-    setUrlParams(extractedParams)
-  }, [])
-
-  // Initialize Tranzila Hosted Fields
-  useEffect(() => {
-    // Add custom styles for hosted fields
-    const style = document.createElement('style');
-    style.textContent = `
-      #card-number, #expiry, #cvv {
-        padding: 12px !important;
-      }
-      #card-number iframe, #expiry iframe, #cvv iframe {
-        width: 100% !important;
-        height: 44px !important;
-        vertical-align: middle !important;
-      }
-      .hosted-field-focus {
-        border-color: #8B5E3C !important;
-        box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.1) !important;
-      }
-    `;
-    document.head.appendChild(style);
-
-    // Load Tranzila Hosted Fields script
-    const script = document.createElement('script')
-    script.src = 'https://hf.tranzila.com/assets/js/thostedf.js'
-    script.async = true
-    script.onload = () => {
-      if (window.TzlaHostedFields) {
-        fieldsRef.current = window.TzlaHostedFields.create({
-          sandbox: false,
-          fields: {
-            credit_card_number: {
-              selector: '#card-number',
-              placeholder: '4580 4580 4580 4580'
-            },
-            cvv: {
-              selector: '#cvv',
-              placeholder: '123'
-            },
-            expiry: {
-              selector: '#expiry',
-              placeholder: 'MM/YY',
-              version: '1'
-            }
-          },
-          styles: {
-            'input': {
-              'font-family': 'system-ui, -apple-system, sans-serif',
-              'font-size': '14px',
-              'color': '#000',
-              'line-height': '1.5',
-              'letter-spacing': '0.5px'
-            },
-            ':focus': {
-              'outline': 'none'
-            },
-            '.hosted-fields-invalid': {
-              'color': '#ef4444'
-            },
-            '.hosted-fields-valid': {
-              'color': '#10b981'
-            }
-          }
-        })
-        
-        // Listen for ready event
-        fieldsRef.current?.onEvent('ready', () => {
-          setFieldsReady(true)
-        })
-        
-        // Listen for focus events
-        fieldsRef.current?.onEvent('focus', (event: any) => {
-          const element = document.getElementById(event.field);
-          if (element) {
-            element.classList.add('hosted-field-focus');
-          }
-        })
-        
-        fieldsRef.current?.onEvent('blur', (event: any) => {
-          const element = document.getElementById(event.field);
-          if (element) {
-            element.classList.remove('hosted-field-focus');
-          }
-        })
-      }
-    }
-    document.body.appendChild(script)
-
-    return () => {
-      if (script.parentNode) {
-        script.parentNode.removeChild(script)
-      }
-      if (style.parentNode) {
-        style.parentNode.removeChild(style)
-      }
-    }
-  }, [])
-
-  const planNames = {
-    executive: 'Executive Plan',
-    ultimate: 'Ultimate Plan'
-  }
-
-  // עדכון handleSubmit בדף Checkout - גרסה סופית
-const handleSubmit = async () => {
-  if (!fieldsReady || !fieldsRef.current) {
-    alert('Payment fields are not ready. Please refresh the page.')
-    return
-  }
-
-  setIsLoading(true)
-  setErrors({})
-
-  // Validate form
-  const newErrors: Record<string, string> = {}
-  if (!formData.email) newErrors.email = 'Email is required'
-  if (!formData.fullName) newErrors.fullName = 'Full name is required'
-  if (!formData.phone) newErrors.phone = 'Phone number is required'
-  if (!cardData.idNumber || cardData.idNumber.length < 9) {
-    newErrors.idNumber = 'ID number is required (9 digits)'
-  }
-
-  if (Object.keys(newErrors).length > 0) {
-    setErrors(newErrors)
-    setIsLoading(false)
-    return
-  }
-
-  // 🔥 שימוש ב-Hosted Fields עם Verify mode + Tokenization
-  fieldsRef.current.charge({
-    terminal_name: 'fxpyairsabag', // מסוף רגיל
-    amount: parseFloat(urlParams.price), // הסכום המלא
-    tran_mode: 'V', // 🔥 Verify - רק אישור כרטיס, ללא חיוב!
-    tokenize: true, // 🔥 יוצר טוקן לחיוב עתידי
-    currency: '2', // USD
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
     
-    // פרטי לקוח
-    contact: formData.fullName,
-    email: formData.email,
-    phone: formData.phone,
-    credit_card_holder_id: cardData.idNumber,
-    
-    // מטה-דאטה
-    custom1: urlParams.code,
-    custom2: urlParams.plan,
-    custom3: urlParams.billing,
-    custom4: urlParams.price,
-    pdesc: `Yaya ${urlParams.plan} - 7 Day Trial Authorization`
-    
-  }, async (err: any, response: any) => {
-    if (err) {
-      console.error('Authorization error:', err)
-      handleErrors(err)
-      setIsLoading(false)
-      return
-    }
-    
-    if (response && response.transaction_response && response.transaction_response.success) {
-      const token = response.transaction_response.token
-      const transactionId = response.transaction_response.transaction_id
-      
-      if (!token) {
-        alert('Failed to create payment token. Please try again.')
-        setIsLoading(false)
-        return
+    try {
+      // בדיקת תקינות
+      if (!formData.fullName || !formData.email || !formData.phone) {
+        throw new Error('נא למלא את כל השדות');
       }
       
-      // 🔥 שלח את הטוקן לשרת לשמירה + הפעלת טריאל
-      try {
-        const trialResponse = await fetch('/api/start-trial', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            // פרטי משתמש
-            registration_code: urlParams.code,
-            email: formData.email,
-            full_name: formData.fullName,
-            phone: formData.phone,
-            id_number: cardData.idNumber,
-            
-            // פרטי תוכנית
-            plan: urlParams.plan,
-            billing: urlParams.billing,
-            price: parseFloat(urlParams.price),
-            
-            // טוקן + transaction ID
-            payment_token: token,
-            auth_transaction_id: transactionId,
-            
-            // תאריכים
-            trial_start: new Date().toISOString(),
-            trial_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            charge_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            
-            // מטה-דאטה
-            tranzila_response: response.transaction_response
-          })
-        })
-
-        const trialData = await trialResponse.json()
-        
-        if (trialData.success) {
-          // 🎉 הצלחה! הפנה לדף success
-          const successUrl = new URL(window.location.origin + '/payment/success')
-          successUrl.searchParams.set('plan', urlParams.plan)
-          successUrl.searchParams.set('email', formData.email)
-          successUrl.searchParams.set('price', urlParams.price)
-          successUrl.searchParams.set('billing', urlParams.billing)
-          successUrl.searchParams.set('code', urlParams.code)
-          successUrl.searchParams.set('trial', 'true')
-          successUrl.searchParams.set('transactionId', transactionId)
-          
-          window.location.href = successUrl.toString()
-        } else {
-          throw new Error(trialData.error || 'Failed to start trial')
-        }
-      } catch (apiError) {
-        console.error('Trial start error:', apiError)
-        alert('Failed to start trial. Please contact support.')
-        setIsLoading(false)
+      // בדיקת אימייל
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        throw new Error('כתובת אימייל לא תקינה');
       }
-    } else {
-      alert('Failed to authorize payment method. Please check your details and try again.')
-      setIsLoading(false)
+      
+      // שליחה ל-API
+      const response = await fetch('/api/create-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          registrationCode
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.paymentUrl) {
+        // שמור נתונים לפני המעבר
+        sessionStorage.setItem('checkoutData', JSON.stringify({
+          ...formData,
+          registrationCode,
+          paymentRequestId: data.paymentRequestId,
+          amount: currentPrice
+        }));
+        
+        // הפנה לדף התשלום של Tranzila
+        window.location.href = data.paymentUrl;
+      } else {
+        throw new Error(data.error || 'שגיאה ביצירת התשלום');
+      }
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'שגיאה לא ידועה');
+      setLoading(false);
     }
-  })
-}
-
-  const handleErrors = (error: any) => {
-    if (error.messages) {
-      error.messages.forEach((message: any) => {
-        if (message.param === 'number') {
-          setErrors(prev => ({ ...prev, cardNumber: message.message }))
-        } else if (message.param === 'cvv') {
-          setErrors(prev => ({ ...prev, cvv: message.message }))
-        } else if (message.param === 'expiry') {
-          setErrors(prev => ({ ...prev, expiry: message.message }))
-        }
-      })
-    } else {
-      alert('Payment error. Please try again.')
-    }
-  }
-
-  const getCurrentPlanName = () => {
-    return urlParams.planName || planNames[urlParams.plan as keyof typeof planNames] || 'Selected Plan'
-  }
-
+  };
+  
   return (
-    <div style={{ fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", minHeight: '100vh', background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)' }}>
-      {/* Header */}
-      <header style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '1rem 0' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '0 1rem' : '0 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
-            <img
-              src="/yaya-logo.png"
-              alt="Yaya Assistant Logo"
-              style={{ width: isMobile ? '60px' : '80px', height: isMobile ? '60px' : '80px', objectFit: 'contain' }}
-            />
-            <span style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
-          </a>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#4a5568' }}>
-            <Shield size={16} />
-            {!isMobile && <span style={{ fontSize: '0.9rem' }}>Secure Checkout</span>}
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+            <h1 className="text-3xl font-bold text-center">השלם הרשמה ל-Yaya</h1>
+            <p className="text-center mt-2 opacity-90">7 ימי ניסיון בחינם • ביטול בכל עת</p>
           </div>
-        </div>
-      </header>
-
-      <main style={{ padding: isMobile ? '1.5rem 0' : '2rem 0' }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '0 1rem' : '0 2rem' }}>
-          <a 
-            href={`/payment${urlParams.code ? `?code=${urlParams.code}` : ''}`}
-            style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '0.5rem', 
-              color: '#8B5E3C', 
-              textDecoration: 'none', 
-              marginBottom: isMobile ? '1.5rem' : '2rem',
-              fontSize: isMobile ? '0.875rem' : '0.9rem'
-            }}
-          >
-            <ArrowLeft size={16} />
-            Back to Plans
-          </a>
-
-          <div style={{ 
-            display: isMobile ? 'flex' : 'grid', 
-            flexDirection: isMobile ? 'column' : undefined,
-            gridTemplateColumns: isMobile ? undefined : '1fr 1fr', 
-            gap: isMobile ? '2rem' : '3rem' 
-          }}>
-            {/* Order Summary */}
-            <div style={{ order: isMobile ? 2 : 1 }}>
-              <h2 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '400', marginBottom: '1.5rem', color: '#8B5E3C', letterSpacing: '-0.02em' }}>
-                Order Summary
-              </h2>
-              
-              <div style={{ background: '#F5F1EB', borderRadius: '20px', padding: isMobile ? '1.5rem' : '2rem', border: '1px solid #E5DDD5' }}>
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <h3 style={{ fontSize: isMobile ? '1.1rem' : '1.2rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                    {getCurrentPlanName()}
-                  </h3>
-                  <p style={{ color: '#8B5E3C', fontSize: isMobile ? '0.875rem' : '0.9rem', opacity: 0.8 }}>
-                    {urlParams.billing === 'yearly' ? 'Annual' : 'Monthly'} subscription
-                  </p>
-                </div>
-
-                {urlParams.code && (
-                  <div style={{ 
-                    background: 'rgba(37, 211, 102, 0.1)', 
-                    borderRadius: '12px', 
-                    padding: isMobile ? '0.75rem' : '1rem', 
-                    border: '1px solid rgba(37, 211, 102, 0.3)',
-                    marginBottom: '1.5rem'
-                  }}>
-                    <p style={{ color: '#25d366', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', margin: 0 }}>
-                      ✅ Registration Code: {urlParams.code}
-                    </p>
-                  </div>
-                )}
-
-                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C', fontSize: isMobile ? '0.875rem' : '1rem' }}>
-                    <span>7-day free trial</span>
-                    <span style={{ color: '#25d366', fontWeight: '600' }}>$0.00</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C', fontSize: isMobile ? '0.875rem' : '1rem' }}>
-                    <span>Then {urlParams.billing === 'yearly' ? 'annually' : 'monthly'}</span>
-                    <span>${urlParams.price}/{urlParams.billing === 'yearly' ? 'year' : 'month'}</span>
-                  </div>
-                </div>
-
-                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '600', fontSize: isMobile ? '1rem' : '1.1rem', color: '#8B5E3C' }}>
-                    <span>Total today</span>
-                    <span style={{ color: '#25d366' }}>$0.00</span>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '1.5rem', padding: isMobile ? '0.75rem' : '1rem', background: 'rgba(37, 211, 102, 0.1)', borderRadius: '12px', border: '1px solid rgba(37, 211, 102, 0.2)' }}>
-                  <p style={{ fontSize: isMobile ? '0.8rem' : '0.85rem', color: '#8B5E3C', textAlign: 'center' }}>
-                    🎉 Free for 7 days, then ${urlParams.price}/{urlParams.billing === 'yearly' ? 'year' : 'month'}. Cancel anytime.
-                  </p>
+          
+          <form onSubmit={handleSubmit} className="p-8">
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* צד שמאל - פרטי לקוח */}
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold mb-4">פרטי לקוח</h2>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    שם מלא *
+                  </label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="ישראל ישראלי"
+                  />
                 </div>
                 
-                {/* Security badges */}
-                <div style={{ marginTop: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#8B5E3C', fontSize: isMobile ? '0.8rem' : '0.85rem' }}>
-                    <Lock size={14} />
-                    <span>SSL Secured</span>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    דוא"ל *
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="your@email.com"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    טלפון *
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="050-1234567"
+                  />
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600">
+                    <strong>קוד הרשמה:</strong> {registrationCode}
+                  </p>
+                </div>
+              </div>
+              
+              {/* צד ימין - בחירת תוכנית */}
+              <div className="space-y-6">
+                <h2 className="text-xl font-semibold mb-4">בחר תוכנית</h2>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    תוכנית
+                  </label>
+                  <select
+                    name="plan"
+                    value={formData.plan}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="executive">Executive - $5/חודש</option>
+                    <option value="ultimate">Ultimate - $14/חודש</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    תדירות תשלום
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, billing: 'monthly' }))}
+                      className={`py-3 px-4 rounded-lg font-medium transition-colors ${
+                        formData.billing === 'monthly'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      חודשי
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, billing: 'yearly' }))}
+                      className={`py-3 px-4 rounded-lg font-medium transition-colors ${
+                        formData.billing === 'yearly'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      שנתי (חסכון 20%)
+                    </button>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#8B5E3C', fontSize: isMobile ? '0.8rem' : '0.85rem' }}>
-                    <Shield size={14} />
-                    <span>PCI Compliant</span>
+                </div>
+                
+                {/* סיכום מחיר */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                  <h3 className="font-semibold text-lg mb-3">סיכום הזמנה</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>תוכנית {formData.plan === 'executive' ? 'Executive' : 'Ultimate'}</span>
+                      <span className="font-medium">
+                        ${currentPrice}/{formData.billing === 'yearly' ? 'שנה' : 'חודש'}
+                      </span>
+                    </div>
+                    {formData.billing === 'yearly' && (
+                      <div className="text-sm text-green-600">
+                        חסכון של 20% - ${monthlyPrice} לחודש
+                      </div>
+                    )}
+                    <div className="border-t pt-2 mt-2">
+                      <div className="flex justify-between font-semibold">
+                        <span>סה"כ היום:</span>
+                        <span className="text-green-600">$0.00</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        7 ימי ניסיון בחינם, לאחר מכן ${currentPrice}/{formData.billing === 'yearly' ? 'שנה' : 'חודש'}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Payment Form */}
-            <div style={{ order: isMobile ? 1 : 2 }}>
-              <h2 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '400', marginBottom: '1.5rem', color: '#8B5E3C', letterSpacing: '-0.02em' }}>
-                Payment Details
-              </h2>
-
-              <div style={{ background: '#F5F1EB', borderRadius: '20px', padding: isMobile ? '1.5rem' : '2rem', border: '1px solid #E5DDD5' }}>
-                {/* Contact Information */}
-                <div style={{ marginBottom: '2rem' }}>
-                  <h3 style={{ fontSize: isMobile ? '1rem' : '1.1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem' }}>
-                    Contact Information
-                  </h3>
-                  
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: errors.email ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                        borderRadius: '8px',
-                        fontSize: isMobile ? '0.875rem' : '0.9rem',
-                        boxSizing: 'border-box',
-                        background: 'white'
-                      }}
-                      placeholder="your@email.com"
-                    />
-                    {errors.email && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.email}</p>}
-                  </div>
-
-                  <div style={{ 
-                    display: isMobile ? 'flex' : 'grid', 
-                    flexDirection: isMobile ? 'column' : undefined,
-                    gridTemplateColumns: isMobile ? undefined : '1fr 1fr', 
-                    gap: '1rem' 
-                  }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: errors.fullName ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
-                        }}
-                        placeholder="John Doe"
-                      />
-                      {errors.fullName && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.fullName}</p>}
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        Phone Number *
-                      </label>
-                      <input
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: errors.phone ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
-                        }}
-                        placeholder="+972-50-123-4567"
-                      />
-                      {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
-                    </div>
-                  </div>
+            
+            {/* Error message */}
+            {error && (
+              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                {error}
+              </div>
+            )}
+            
+            {/* Submit button */}
+            <div className="mt-8">
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full py-4 px-6 rounded-lg font-semibold text-white transition-all ${
+                  loading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transform hover:scale-[1.02]'
+                }`}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    מעבד...
+                  </span>
+                ) : (
+                  'המשך לתשלום מאובטח'
+                )}
+              </button>
+              
+              <div className="mt-4 flex items-center justify-center space-x-6 text-sm text-gray-500">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  תשלום מאובטח
                 </div>
-
-                {/* Payment Information */}
-                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '2rem' }}>
-                  <h3 style={{ fontSize: isMobile ? '1rem' : '1.1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem' }}>
-                    Payment Information
-                  </h3>
-                  
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                      Card Number *
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <div 
-                        id="card-number" 
-                        style={{
-                          width: '100%',
-                          paddingLeft: '3rem',
-                          border: errors.cardNumber ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          background: 'white',
-                          minHeight: '44px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          position: 'relative'
-                        }}
-                      />
-                      <CreditCard size={20} style={{ position: 'absolute', left: '1rem', top: '12px', color: '#8B5E3C', pointerEvents: 'none' }} />
-                    </div>
-                    {errors.cardNumber && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.cardNumber}</p>}
-                  </div>
-
-                  <div style={{ 
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr', 
-                    gap: '1rem', 
-                    marginBottom: '1rem' 
-                  }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        Expiry Date *
-                      </label>
-                      <div 
-                        id="expiry" 
-                        style={{
-                          width: '100%',
-                          border: errors.expiry ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          background: 'white',
-                          minHeight: '44px',
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}
-                      />
-                      {errors.expiry && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.expiry}</p>}
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        CVV *
-                      </label>
-                      <div 
-                        id="cvv" 
-                        style={{
-                          width: '100%',
-                          border: errors.cvv ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          background: 'white',
-                          minHeight: '44px',
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}
-                      />
-                      {errors.cvv && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.cvv}</p>}
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '2rem' }}>
-                    <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                      ID Number *
-                    </label>
-                    <input
-                      type="text"
-                      value={cardData.idNumber}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '');
-                        if (value.length <= 9) {
-                          setCardData({ ...cardData, idNumber: value });
-                        }
-                      }}
-                      maxLength={9}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: errors.idNumber ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                        borderRadius: '8px',
-                        fontSize: isMobile ? '0.875rem' : '0.9rem',
-                        boxSizing: 'border-box',
-                        background: 'white'
-                      }}
-                      placeholder="123456789"
-                    />
-                    {errors.idNumber && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.idNumber}</p>}
-                  </div>
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.293l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.828V13a1 1 0 102 0V9.828l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                  </svg>
+                  ביטול בכל עת
                 </div>
-
-                <button
-                  onClick={handleSubmit}
-                  disabled={isLoading || !fieldsReady}
-                  style={{
-                    width: '100%',
-                    padding: isMobile ? '0.875rem' : '1rem',
-                    background: isLoading || !fieldsReady ? '#9ca3af' : '#8B5E3C',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: isMobile ? '0.95rem' : '1rem',
-                    fontWeight: '600',
-                    cursor: isLoading || !fieldsReady ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isLoading && fieldsReady && !isMobile) {
-                      (e.target as HTMLButtonElement).style.background = '#7c4a32'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isLoading && fieldsReady && !isMobile) {
-                      (e.target as HTMLButtonElement).style.background = '#8B5E3C'
-                    }
-                  }}
-                >
-                  <Lock size={isMobile ? 18 : 20} />
-                  {!fieldsReady ? 'Loading...' : isLoading ? 'Processing...' : 'Start Free Trial - $0.00'}
-                </button>
-
-                <p style={{ fontSize: isMobile ? '0.75rem' : '0.8rem', color: '#8B5E3C', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
-                  By continuing, you agree to our Terms of Service and Privacy Policy.
-                  Your payment information is encrypted and secure.
-                </p>
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  ללא התחייבות
+                </div>
               </div>
             </div>
+          </form>
+        </div>
+        
+        {/* Security badges */}
+        <div className="mt-8 text-center">
+          <p className="text-sm text-gray-600 mb-4">תומך בכל אמצעי התשלום המובילים</p>
+          <div className="flex justify-center items-center space-x-4">
+            <span className="text-gray-400">💳 Visa</span>
+            <span className="text-gray-400">💳 Mastercard</span>
+            <span className="text-gray-400">💳 Amex</span>
+            <span className="text-gray-400">🍎 Apple Pay</span>
           </div>
         </div>
-      </main>
+      </div>
     </div>
-  )
+  );
 }
