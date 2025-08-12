@@ -1,6 +1,5 @@
 // /app/api/cron/daily-check/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { MongoClient } from 'mongodb'
 
 export async function POST(request: NextRequest) {
   try {
