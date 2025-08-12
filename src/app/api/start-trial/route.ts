@@ -1,6 +1,6 @@
 // /app/api/start-trial/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { MongoClient } from 'mongodb'
+
 
 interface TrialRequest {
   registration_code: string
