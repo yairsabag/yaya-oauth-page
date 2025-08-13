@@ -76,7 +76,7 @@ export default function CheckoutPage() {
 
       try {
         // Initialize with your terminal
-        fieldsRef.current = new window.TzlaHostedFields({
+        fieldsRef.current = window.TzlaHostedFields.create({
           // Make sure this matches your Tranzilla environment
           sandbox: false, // Set to true if testing in sandbox
           terminal_name: 'fxpyairsabag', // Your terminal name
