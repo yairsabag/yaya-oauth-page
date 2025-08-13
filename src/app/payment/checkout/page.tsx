@@ -95,25 +95,26 @@ useEffect(() => {
         },
         styles: {
           input: {
-            'font-size': '16px',
-            'font-family': 'system-ui, -apple-system, sans-serif',
-            'color': '#2d5016',
-            'padding': '12px',
-            'line-height': '1.5',
-            'background-color': 'white'
-          },
-          ':focus': {
-            'outline': '2px solid #8B5E3C',
-            'outline-offset': '2px'
-          },
-          '.invalid': {
-            'color': '#ef4444',
-            'border-color': '#ef4444'
-          },
-          '.valid': {
-            'color': '#2d5016'
-          }
-        }
+           'font-size': '16px',
+           'font-family': 'system-ui, -apple-system, sans-serif',
+           'color': '#2d5016',
+           'padding': '12px',
+           'line-height': '1.5',
+           'background-color': 'white',
+           'height': '44px' // הוסף את זה
+            },
+           ':focus': {
+           'outline': '2px solid #8B5E3C',
+           'outline-offset': '2px'
+            },
+           '.invalid': {
+           'color': '#ef4444',
+           'border-color': '#ef4444'
+           },
+           '.valid': {
+           'color': '#2d5016'
+           }
+       }
       })
       
       console.log('Hosted Fields created successfully')
