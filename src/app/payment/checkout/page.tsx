@@ -5,7 +5,7 @@ import { ArrowLeft, Shield, CreditCard, Lock } from 'lucide-react'
 
 declare global {
   interface Window {
-    TranzillaHostedFields: any
+    TzlaHostedFields: any
   }
 }
 
@@ -68,15 +68,15 @@ export default function CheckoutPage() {
     const initializeFields = () => {
       console.log('Attempting to initialize Tranzilla Hosted Fields...')
       
-      if (!window.TranzillaHostedFields) {
-        console.error('TranzillaHostedFields not found on window')
+      if (!window.TzlaHostedFields) {
+        console.error('TzlaHostedFields not found on window')
         setFieldLoadError('Payment system not loaded. Please refresh the page.')
         return
       }
 
       try {
         // Initialize with your terminal
-        fieldsRef.current = new window.TranzillaHostedFields({
+        fieldsRef.current = new window.TzlaHostedFields({
           // Make sure this matches your Tranzilla environment
           sandbox: false, // Set to true if testing in sandbox
           terminal_name: 'fxpyairsabag', // Your terminal name
@@ -152,7 +152,7 @@ export default function CheckoutPage() {
 
     // Load script
     const script = document.createElement('script')
-    script.src = 'https://hf.tranzila.com/assets/js/trnzl_hf.js'
+    script.src = 'https://hf.tranzila.com/assets/js/thostedf.js'
     script.async = true
     
     script.onload = () => {
