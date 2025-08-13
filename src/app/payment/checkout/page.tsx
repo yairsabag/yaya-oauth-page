@@ -99,7 +99,7 @@ export default function CheckoutPage() {
       fail_url_address: `${window.location.origin}/payment/checkout?plan=${urlParams.plan}&price=${urlParams.price}&billing=${urlParams.billing}&code=${urlParams.code}&error=true`,
       
       // Notify URL for backend processing
-      notify_url_address: `${window.location.origin}/api/start-trial`
+      notify_url_address: 'https://n8n-TD2y.sliplane.app/webhook/update-user-plan'
     })
     
     return `${baseUrl}?${params.toString()}`
