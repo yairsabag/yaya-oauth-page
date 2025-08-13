@@ -156,11 +156,17 @@ export default function CheckoutPage() {
     script.async = true
     
     script.onload = () => {
-      console.log('Tranzilla script loaded')
-      scriptLoadedRef.current = true
-      // Give it a moment to initialize
-      setTimeout(initializeFields, 100)
-    }
+    console.log('Tranzilla script loaded')
+  
+     // הוסף את השורות האלה כדי לבדוק מה יש ב-window
+     console.log('TzlaHostedFields:', window.TzlaHostedFields);
+     console.log('Type:', typeof window.TzlaHostedFields);
+     console.log('Window keys:', Object.keys(window).filter(key => key.toLowerCase().includes('tzla')));
+  
+     scriptLoadedRef.current = true
+     // Give it a moment to initialize
+     setTimeout(initializeFields, 100)
+     }
     
     script.onerror = () => {
       console.error('Failed to load Tranzila Hosted Fields script')
