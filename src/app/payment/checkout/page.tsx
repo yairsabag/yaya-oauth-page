@@ -61,53 +61,26 @@ export default function CheckoutPage() {
   }, [])
 
   // Initialize Hosted Fields
-  useEffect(() => {
-    // Prevent multiple script loads
-    if (scriptLoadedRef.current) return
+useEffect(() => {
+  // Prevent multiple script loads
+  if (scriptLoadedRef.current) return
 
-    const initializeFields = () => {
-      console.log('Attempting to initialize Tranzilla Hosted Fields...')
-      
-      if (!window.TzlaHostedFields) {
-        console.error('TzlaHostedFields not found on window')
-        setFieldLoadError('Payment system not loaded. Please refresh the page.')
-        return
-      }
+  const initializeFields = () => {
+    console.log('Attempting to initialize Tranzilla Hosted Fields...')
+    
+    if (!window.TzlaHostedFields) {
+      console.error('TzlaHostedFields not found on window')
+      setFieldLoadError('Payment system not loaded. Please refresh the page.')
+      return
+    }
 
-      try {
-        // Initialize with your terminal
-        fieldsRef.current = window.TzlaHostedFields.create({
-          // Make sure this matches your Tranzilla environment
-          sandbox: false, // Set to true if testing in sandbox
-          terminal_name: 'fxpyairsabag', // Your terminal name
-          
-          // Updated styles
-          styles: {
-            input: {
-              'font-size': '16px',
-              'font-family': 'system-ui, -apple-system, sans-serif',
-              'color': '#2d5016',
-              'padding': '12px',
-              'line-height': '1.5',
-              'background-color': 'white'
-            },
-            ':focus': {
-              'outline': '2px solid #8B5E3C',
-              'outline-offset': '2px'
-            },
-            '.invalid': {
-              'color': '#ef4444',
-              'border-color': '#ef4444'
-            },
-            '.valid': {
-              'color': '#2d5016'
-            }
-          }
-        })
-        
-        // Render fields with callbacks
-        fieldsRef.current.render({
-          creditCard: {
+    try {
+      // Initialize with your terminal
+      fieldsRef.current = window.TzlaHostedFields.create({
+        sandbox: false,
+        terminal_name: 'fxpyairsabag',
+        fields: {
+          credit_card_number: {
             selector: '#card-field',
             placeholder: '1234 5678 9012 3456'
           },
@@ -119,82 +92,98 @@ export default function CheckoutPage() {
             selector: '#expiry-field',
             placeholder: 'MM/YY'
           }
-        }, (error: any) => {
-          if (error) {
-            console.error('Error rendering fields:', error)
-            setFieldLoadError('Failed to load payment fields. Please refresh the page.')
-            setFieldsReady(false)
-          } else {
-            console.log('Hosted Fields rendered successfully')
-            setFieldsReady(true)
-            setFieldLoadError('')
+        },
+        styles: {
+          input: {
+            'font-size': '16px',
+            'font-family': 'system-ui, -apple-system, sans-serif',
+            'color': '#2d5016',
+            'padding': '12px',
+            'line-height': '1.5',
+            'background-color': 'white'
+          },
+          ':focus': {
+            'outline': '2px solid #8B5E3C',
+            'outline-offset': '2px'
+          },
+          '.invalid': {
+            'color': '#ef4444',
+            'border-color': '#ef4444'
+          },
+          '.valid': {
+            'color': '#2d5016'
           }
-        })
-
-        // Add event listeners for better error handling
-        if (fieldsRef.current) {
-          fieldsRef.current.on('ready', () => {
-            console.log('Fields are ready')
-            setFieldsReady(true)
-          })
-
-          fieldsRef.current.on('error', (event: any) => {
-            console.error('Field error:', event)
-          })
         }
-
-      } catch (error) {
-        console.error('Failed to initialize Hosted Fields:', error)
-        setFieldLoadError('Failed to initialize payment system. Please refresh the page.')
-        setFieldsReady(false)
+      })
+      
+      console.log('Hosted Fields created successfully')
+      setFieldsReady(true)
+      setFieldLoadError('')
+      
+      // Add event listeners for better error handling
+      if (fieldsRef.current) {
+        fieldsRef.current.on('ready', () => {
+          console.log('Fields are ready')
+          setFieldsReady(true)
+        })
+        
+        fieldsRef.current.on('error', (event: any) => {
+          console.error('Field error:', event)
+        })
       }
-    }
-
-    // Load script
-    const script = document.createElement('script')
-    script.src = 'https://hf.tranzila.com/assets/js/thostedf.js'
-    script.async = true
-    
-    script.onload = () => {
-    console.log('Tranzilla script loaded')
-  
-     // הוסף את השורות האלה כדי לבדוק מה יש ב-window
-     console.log('TzlaHostedFields:', window.TzlaHostedFields);
-     console.log('Type:', typeof window.TzlaHostedFields);
-     console.log('Window keys:', Object.keys(window).filter(key => key.toLowerCase().includes('tzla')));
-  
-     scriptLoadedRef.current = true
-     // Give it a moment to initialize
-     setTimeout(initializeFields, 100)
-     }
-    
-    script.onerror = () => {
-      console.error('Failed to load Tranzila Hosted Fields script')
-      setFieldLoadError('Failed to load payment system. Please check your connection and refresh.')
+      
+    } catch (error) {
+      console.error('Failed to initialize Hosted Fields:', error)
+      setFieldLoadError('Failed to initialize payment system. Please refresh the page.')
       setFieldsReady(false)
     }
+  }
 
-    // Check if script already exists
-    const existingScript = document.querySelector('script[src="https://hf.tranzila.com/assets/js/trnzl_hf.js"]')
-    if (existingScript) {
-      console.log('Script already exists, initializing fields...')
-      scriptLoadedRef.current = true
-      setTimeout(initializeFields, 100)
-    } else {
-      document.body.appendChild(script)
-    }
+  // Load script
+  const script = document.createElement('script')
+  script.src = 'https://hf.tranzila.com/assets/js/thostedf.js'
+  script.async = true
+  
+  script.onload = () => {
+    console.log('Tranzilla script loaded')
     
-    return () => {
-      // Cleanup
-      if (fieldsRef.current && typeof fieldsRef.current.destroy === 'function') {
-        try {
-          fieldsRef.current.destroy()
-        } catch (e) {
-          console.error('Error destroying fields:', e)
-        }
+    // בדיקת מה נטען
+    console.log('TzlaHostedFields:', window.TzlaHostedFields)
+    console.log('Type:', typeof window.TzlaHostedFields)
+    console.log('Window keys:', Object.keys(window).filter(key => key.toLowerCase().includes('tzla')))
+    
+    scriptLoadedRef.current = true
+    // Give it a moment to initialize
+    setTimeout(initializeFields, 100)
+  }
+  
+  script.onerror = () => {
+    console.error('Failed to load Tranzilla Hosted Fields script')
+    setFieldLoadError('Failed to load payment system. Please check your connection and refresh.')
+    setFieldsReady(false)
+  }
+
+  // Check if script already exists
+  const existingScript = document.querySelector('script[src="https://hf.tranzila.com/assets/js/thostedf.js"]')
+  if (existingScript) {
+    console.log('Script already exists, initializing fields...')
+    scriptLoadedRef.current = true
+    setTimeout(initializeFields, 100)
+  } else {
+    document.body.appendChild(script)
+  }
+  
+  return () => {
+    // Cleanup
+    if (fieldsRef.current && typeof fieldsRef.current.destroy === 'function') {
+      try {
+        fieldsRef.current.destroy()
+      } catch (e) {
+        console.error('Error destroying fields:', e)
       }
     }
-  }, [])
+  }
+}, [])
 
   const planNames = {
     executive: 'Executive Plan',
