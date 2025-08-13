@@ -595,7 +595,7 @@ useEffect(() => {
                           border: '1px solid #E5DDD5',
                           borderRadius: '8px',
                           background: 'white',
-                          minHeight: '44px',
+                          height: '44px',
                           display: 'flex',
                           alignItems: 'center'
                         }}
@@ -614,7 +614,7 @@ useEffect(() => {
                           border: '1px solid #E5DDD5',
                           borderRadius: '8px',
                           background: 'white',
-                          minHeight: '44px',
+                          height: '44px',
                           display: 'flex',
                           alignItems: 'center'
                         }}
