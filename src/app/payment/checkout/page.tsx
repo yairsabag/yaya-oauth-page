@@ -120,18 +120,6 @@ useEffect(() => {
       console.log('Hosted Fields created successfully')
       
       
-      // Add event listeners for better error handling
-      if (fieldsRef.current) {
-        fieldsRef.current.on('ready', () => {
-          console.log('Fields are ready')
-          setFieldsReady(true)
-        })
-        
-        fieldsRef.current.on('error', (event: any) => {
-          console.error('Field error:', event)
-        })
-      }
-      
     } catch (error) {
       console.error('Failed to initialize Hosted Fields:', error)
       setFieldLoadError('Failed to initialize payment system. Please refresh the page.')
