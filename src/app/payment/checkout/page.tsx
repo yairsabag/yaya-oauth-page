@@ -560,18 +560,18 @@ useEffect(() => {
                     <div style={{ position: 'relative' }}>
                       <div 
                         id="card-field" 
-                        style={{
+                          style={{
                           width: '100%',
                           padding: '0.75rem',
                           paddingLeft: '3rem',
                           border: '1px solid #E5DDD5',
                           borderRadius: '8px',
                           background: 'white',
-                          minHeight: '44px',
+                          height: '44px', // שנה מ-minHeight
                           display: 'flex',
                           alignItems: 'center'
-                        }}
-                      />
+                          }}
+                           />
                       <CreditCard size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#8B5E3C' }} />
                     </div>
                   </div>
