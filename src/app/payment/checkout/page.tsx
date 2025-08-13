@@ -118,8 +118,7 @@ useEffect(() => {
       })
       
       console.log('Hosted Fields created successfully')
-      setFieldsReady(true)
-      setFieldLoadError('')
+      
       
       // Add event listeners for better error handling
       if (fieldsRef.current) {
