@@ -1,13 +1,8 @@
+// src/app/payment/checkout/page.tsx
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
-import { ArrowLeft, Shield, CreditCard, Lock } from 'lucide-react'
-
-declare global {
-  interface Window {
-    TzlaHostedFields: any
-  }
-}
+import React, { useState, useEffect } from 'react'
+import { Shield, Lock, CheckCircle } from 'lucide-react'
 
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState({
@@ -17,26 +12,9 @@ export default function CheckoutPage() {
     code: '',
     planName: ''
   })
-
-  const [formData, setFormData] = useState({
-    email: '',
-    fullName: '',
-    phone: ''
-  })
   
-  const [cardData, setCardData] = useState({
-    idNumber: ''
-  })
-  
-  const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isLoading, setIsLoading] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
-  
-  // Hosted Fields states
-  const [fieldsReady, setFieldsReady] = useState(false)
-  const [fieldLoadError, setFieldLoadError] = useState('')
-  const fieldsRef = useRef<any>(null)
-  const scriptLoadedRef = useRef(false)
 
   // Detect mobile
   useEffect(() => {
@@ -45,273 +23,86 @@ export default function CheckoutPage() {
     }
     checkMobile()
     window.addEventListener('resize', checkMobile)
+    
+    // Simulate loading
+    setTimeout(() => setIsLoading(false), 1000)
+    
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  // Get URL parameters
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const extractedParams = {
-      plan: params.get('plan') || '',
-      price: params.get('price') || '',
-      billing: params.get('billing') || '',
-      code: params.get('code') || '',
-      planName: params.get('planName') || ''
+      plan: params.get('plan') || 'executive',
+      price: params.get('price') || '5',
+      billing: params.get('billing') || 'monthly',
+      code: params.get('code') || 'F75CEJ',
+      planName: params.get('planName') || 'Executive Plan'
     }
     setUrlParams(extractedParams)
   }, [])
 
-  // Initialize Hosted Fields
-useEffect(() => {
-  // Prevent multiple script loads
-  if (scriptLoadedRef.current) return
-
-  const initializeFields = () => {
-    console.log('Attempting to initialize Tranzilla Hosted Fields...')
-    
-    if (!window.TzlaHostedFields) {
-      console.error('TzlaHostedFields not found on window')
-      setFieldLoadError('Payment system not loaded. Please refresh the page.')
-      return
+  const planDetails = {
+    executive: {
+      name: 'Executive Plan',
+      features: [
+        'Google Calendar integration',
+        'Expense tracking',
+        'Contact management',
+        'Recurring reminders'
+      ]
+    },
+    ultimate: {
+      name: 'Ultimate Plan',
+      features: [
+        'All Executive features',
+        'Food & calorie tracking',
+        'Advanced analytics',
+        'Priority support'
+      ]
     }
+  }
 
-    try {
-      // Initialize with your terminal
-      fieldsRef.current = window.TzlaHostedFields.create({
-        sandbox: false,
-        terminal_name: 'fxpyairsabag',
-        fields: {
-          credit_card_number: {
-            selector: '#card-field',
-            placeholder: '1234 5678 9012 3456'
-          },
-          cvv: {
-            selector: '#cvv-field',
-            placeholder: '123'
-          },
-          expiry: {
-            selector: '#expiry-field',
-            placeholder: 'MM/YY'
-          }
-        },
-        styles: {
-          input: {
-           'font-size': '16px',
-           'font-family': 'system-ui, -apple-system, sans-serif',
-           'color': '#2d5016',
-           'padding': '12px',
-           'line-height': '1.5',
-           'background-color': 'white',
-           'height': '44px' // הוסף את זה
-            },
-           ':focus': {
-           'outline': '2px solid #8B5E3C',
-           'outline-offset': '2px'
-            },
-           '.invalid': {
-           'color': '#ef4444',
-           'border-color': '#ef4444'
-           },
-           '.valid': {
-           'color': '#2d5016'
-           }
-       }
-      })
+  const currentPlan = planDetails[urlParams.plan as keyof typeof planDetails] || planDetails.executive
+
+  // Build iframe URL with all parameters
+  const buildIframeUrl = () => {
+    const baseUrl = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
+    const params = new URLSearchParams({
+      sum: '0', // $0 for token creation
+      currency: '2', // USD
+      tranmode: 'VK', // V for verify + K for tokenize
+      cred_type: '1',
+      nologo: '1', // Remove Tranzila logo
       
-      console.log('Hosted Fields created successfully')
+      // Custom fields
+      u1: urlParams.code,
+      u2: urlParams.plan,
+      u3: urlParams.billing,
+      u4: urlParams.price,
       
+      // Product description
+      pdesc: `Yaya ${urlParams.plan} - 7 Day Trial Authorization`,
       
-    } catch (error) {
-      console.error('Failed to initialize Hosted Fields:', error)
-      setFieldLoadError('Failed to initialize payment system. Please refresh the page.')
-      setFieldsReady(false)
-    }
-  }
-
-  // Load script
-  const script = document.createElement('script')
-  script.src = 'https://hf.tranzila.com/assets/js/thostedf.js'
-  script.async = true
-  
-  script.onload = () => {
-    console.log('Tranzilla script loaded')
+      // Colors and styling
+      trBgColor: 'FAF5F0', // Background color matching site
+      trTextColor: '2D5016', // Dark green text
+      trButtonColor: '8B5E3C', // Brown button
+      buttonLabel: 'Start Free Trial',
+      
+      // Language
+      lang: 'en',
+      
+      // Success/Fail URLs
+      success_url_address: `${window.location.origin}/payment/success?plan=${urlParams.plan}&price=${urlParams.price}&billing=${urlParams.billing}&code=${urlParams.code}&trial=true`,
+      fail_url_address: `${window.location.origin}/payment/checkout?plan=${urlParams.plan}&price=${urlParams.price}&billing=${urlParams.billing}&code=${urlParams.code}&error=true`,
+      
+      // Notify URL for backend processing
+      notify_url_address: `${window.location.origin}/api/start-trial`
+    })
     
-    // בדיקת מה נטען
-    console.log('TzlaHostedFields:', window.TzlaHostedFields)
-    console.log('Type:', typeof window.TzlaHostedFields)
-    console.log('Window keys:', Object.keys(window).filter(key => key.toLowerCase().includes('tzla')))
-    
-    scriptLoadedRef.current = true
-    // Give it a moment to initialize
-    setTimeout(initializeFields, 100)
-  }
-  
-  script.onerror = () => {
-    console.error('Failed to load Tranzilla Hosted Fields script')
-    setFieldLoadError('Failed to load payment system. Please check your connection and refresh.')
-    setFieldsReady(false)
-  }
-
-  // Check if script already exists
-  const existingScript = document.querySelector('script[src="https://hf.tranzila.com/assets/js/thostedf.js"]')
-  if (existingScript) {
-    console.log('Script already exists, initializing fields...')
-    scriptLoadedRef.current = true
-    setTimeout(initializeFields, 100)
-  } else {
-    document.body.appendChild(script)
-  }
-  
-  return () => {
-    // Cleanup
-    if (fieldsRef.current && typeof fieldsRef.current.destroy === 'function') {
-      try {
-        fieldsRef.current.destroy()
-      } catch (e) {
-        console.error('Error destroying fields:', e)
-      }
-    }
-  }
-}, [])
-
-  const planNames = {
-    executive: 'Executive Plan',
-    ultimate: 'Ultimate Plan'
-  }
-
-  const handleErrors = (err: any) => {
-    console.error('Payment error:', err)
-    if (err.message) {
-      alert(err.message)
-    } else {
-      alert('An error occurred during payment processing. Please try again.')
-    }
-  }
-
-  const handleSubmit = async () => {
-  if (!fieldsRef.current) {
-    alert('Payment system not initialized. Please refresh the page.')
-    return
-  }
-
-    setIsLoading(true)
-    setErrors({})
-
-    // Validate form
-    const newErrors: Record<string, string> = {}
-    if (!formData.email) newErrors.email = 'Email is required'
-    if (!formData.fullName) newErrors.fullName = 'Full name is required'
-    if (!formData.phone) newErrors.phone = 'Phone number is required'
-    if (!cardData.idNumber || cardData.idNumber.length < 9) {
-      newErrors.idNumber = 'ID number is required (9 digits)'
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      // Use Hosted Fields with Verify mode + Tokenization
-      fieldsRef.current.charge({
-        terminal_name: 'fxpyairsabag',
-        amount: parseFloat(urlParams.price),
-        tran_mode: 'V', // Verify - auth only, no charge
-        tokenize: true, // Create token for future charging
-        currency: '2', // USD
-        
-        // Customer details
-        contact: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        credit_card_holder_id: cardData.idNumber,
-        
-        // Metadata
-        custom1: urlParams.code,
-        custom2: urlParams.plan,
-        custom3: urlParams.billing,
-        custom4: urlParams.price,
-        pdesc: `Yaya ${urlParams.plan} - 7 Day Trial Authorization`
-        
-      }, async (err: any, response: any) => {
-        if (err) {
-          console.error('Authorization error:', err)
-          handleErrors(err)
-          setIsLoading(false)
-          return
-        }
-        
-        if (response && response.transaction_response && response.transaction_response.success) {
-          const token = response.transaction_response.token
-          const transactionId = response.transaction_response.transaction_id
-          
-          if (!token) {
-            alert('Failed to create payment token. Please try again.')
-            setIsLoading(false)
-            return
-          }
-          
-          // Send token to server to save and activate trial
-          try {
-            const trialResponse = await fetch('/api/start-trial', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                registration_code: urlParams.code,
-                email: formData.email,
-                full_name: formData.fullName,
-                phone: formData.phone,
-                id_number: cardData.idNumber,
-                plan: urlParams.plan,
-                billing: urlParams.billing,
-                price: parseFloat(urlParams.price),
-                payment_token: token,
-                auth_transaction_id: transactionId,
-                trial_start: new Date().toISOString(),
-                trial_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                charge_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                tranzila_response: response.transaction_response
-              })
-            })
-
-            const trialData = await trialResponse.json()
-            
-            if (trialData.success) {
-              // Success! Redirect to success page
-              const successUrl = new URL(window.location.origin + '/payment/success')
-              successUrl.searchParams.set('plan', urlParams.plan)
-              successUrl.searchParams.set('email', formData.email)
-              successUrl.searchParams.set('price', urlParams.price)
-              successUrl.searchParams.set('billing', urlParams.billing)
-              successUrl.searchParams.set('code', urlParams.code)
-              successUrl.searchParams.set('trial', 'true')
-              successUrl.searchParams.set('transactionId', transactionId)
-              
-              window.location.href = successUrl.toString()
-            } else {
-              throw new Error(trialData.error || 'Failed to start trial')
-            }
-          } catch (apiError) {
-            console.error('Trial start error:', apiError)
-            alert('Failed to start trial. Please contact support.')
-            setIsLoading(false)
-          }
-        } else {
-          alert('Failed to authorize payment method. Please check your details and try again.')
-          setIsLoading(false)
-        }
-      })
-    } catch (error) {
-      console.error('Charge error:', error)
-      alert('An unexpected error occurred. Please try again.')
-      setIsLoading(false)
-    }
-  }
-
-  const getCurrentPlanName = () => {
-    return urlParams.planName || planNames[urlParams.plan as keyof typeof planNames] || 'Selected Plan'
+    return `${baseUrl}?${params.toString()}`
   }
 
   return (
@@ -334,40 +125,44 @@ useEffect(() => {
         </div>
       </header>
 
-      <main style={{ padding: isMobile ? '1.5rem 0' : '2rem 0' }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto', padding: isMobile ? '0 1rem' : '0 2rem' }}>
-          <a 
-            href={`/payment${urlParams.code ? `?code=${urlParams.code}` : ''}`}
-            style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '0.5rem', 
-              color: '#8B5E3C', 
-              textDecoration: 'none', 
-              marginBottom: isMobile ? '1.5rem' : '2rem',
-              fontSize: isMobile ? '0.875rem' : '0.9rem'
-            }}
-          >
-            <ArrowLeft size={16} />
-            Back to Plans
-          </a>
+      <main style={{ padding: isMobile ? '1.5rem 0' : '3rem 0' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: isMobile ? '0 1rem' : '0 2rem' }}>
+          {/* Progress Bar */}
+          <div style={{ marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#8B5E3C', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: '600' }}>1</div>
+                <span style={{ fontSize: '0.875rem', color: '#8B5E3C', fontWeight: '500' }}>Plan Selection</span>
+              </div>
+              <div style={{ width: '50px', height: '2px', background: '#8B5E3C' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#8B5E3C', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: '600' }}>2</div>
+                <span style={{ fontSize: '0.875rem', color: '#8B5E3C', fontWeight: '500' }}>Payment</span>
+              </div>
+              <div style={{ width: '50px', height: '2px', background: '#E5DDD5' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#E5DDD5', color: '#8B5E3C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: '600' }}>3</div>
+                <span style={{ fontSize: '0.875rem', color: '#8B5E3C', opacity: 0.6 }}>Confirmation</span>
+              </div>
+            </div>
+          </div>
 
           <div style={{ 
             display: isMobile ? 'flex' : 'grid', 
             flexDirection: isMobile ? 'column' : undefined,
-            gridTemplateColumns: isMobile ? undefined : '1fr 1fr', 
+            gridTemplateColumns: isMobile ? undefined : '1fr 2fr', 
             gap: isMobile ? '2rem' : '3rem' 
           }}>
             {/* Order Summary */}
             <div style={{ order: isMobile ? 2 : 1 }}>
-              <h2 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '400', marginBottom: '1.5rem', color: '#8B5E3C', letterSpacing: '-0.02em' }}>
+              <h2 style={{ fontSize: isMobile ? '1.3rem' : '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#8B5E3C' }}>
                 Order Summary
               </h2>
               
-              <div style={{ background: '#F5F1EB', borderRadius: '20px', padding: isMobile ? '1.5rem' : '2rem', border: '1px solid #E5DDD5' }}>
+              <div style={{ background: 'white', borderRadius: '20px', padding: isMobile ? '1.5rem' : '2rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.05)' }}>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <h3 style={{ fontSize: isMobile ? '1.1rem' : '1.2rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                    {getCurrentPlanName()}
+                    {currentPlan.name}
                   </h3>
                   <p style={{ color: '#8B5E3C', fontSize: isMobile ? '0.875rem' : '0.9rem', opacity: 0.8 }}>
                     {urlParams.billing === 'yearly' ? 'Annual' : 'Monthly'} subscription
@@ -388,6 +183,20 @@ useEffect(() => {
                   </div>
                 )}
 
+                {/* Features */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <h4 style={{ fontSize: '0.9rem', color: '#8B5E3C', fontWeight: '600', marginBottom: '0.75rem', opacity: 0.8 }}>
+                    Included Features:
+                  </h4>
+                  <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                    {currentPlan.features.slice(0, 4).map((feature, index) => (
+                      <li key={index} style={{ fontSize: '0.85rem', color: '#8B5E3C', marginBottom: '0.5rem', opacity: 0.9 }}>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
                 <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem', marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#8B5E3C', fontSize: isMobile ? '0.875rem' : '1rem' }}>
                     <span>7-day free trial</span>
@@ -407,13 +216,13 @@ useEffect(() => {
                 </div>
 
                 <div style={{ marginTop: '1.5rem', padding: isMobile ? '0.75rem' : '1rem', background: 'rgba(37, 211, 102, 0.1)', borderRadius: '12px', border: '1px solid rgba(37, 211, 102, 0.2)' }}>
-                  <p style={{ fontSize: isMobile ? '0.8rem' : '0.85rem', color: '#8B5E3C', textAlign: 'center' }}>
-                    🎉 Free for 7 days, then ${urlParams.price}/{urlParams.billing === 'yearly' ? 'year' : 'month'}. Cancel anytime.
+                  <p style={{ fontSize: isMobile ? '0.8rem' : '0.85rem', color: '#8B5E3C', textAlign: 'center', margin: 0 }}>
+                    🎉 Cancel anytime during trial
                   </p>
                 </div>
                 
                 {/* Security badges */}
-                <div style={{ marginTop: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+                <div style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#8B5E3C', fontSize: isMobile ? '0.8rem' : '0.85rem' }}>
                     <Lock size={14} />
                     <span>SSL Secured</span>
@@ -426,261 +235,94 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Payment Form */}
+            {/* Payment Iframe */}
             <div style={{ order: isMobile ? 1 : 2 }}>
-              <h2 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: '400', marginBottom: '1.5rem', color: '#8B5E3C', letterSpacing: '-0.02em' }}>
-                Payment Details
+              <h2 style={{ fontSize: isMobile ? '1.3rem' : '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#8B5E3C' }}>
+                Complete Your Order
               </h2>
 
-              <div style={{ background: '#F5F1EB', borderRadius: '20px', padding: isMobile ? '1.5rem' : '2rem', border: '1px solid #E5DDD5' }}>
-                {/* Contact Information */}
-                <div style={{ marginBottom: '2rem' }}>
-                  <h3 style={{ fontSize: isMobile ? '1rem' : '1.1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem' }}>
-                    Contact Information
-                  </h3>
-                  
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                      Email Address *
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      autoComplete="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: errors.email ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                        borderRadius: '8px',
-                        fontSize: isMobile ? '0.875rem' : '0.9rem',
-                        boxSizing: 'border-box',
-                        background: 'white'
-                      }}
-                      placeholder="your@email.com"
-                    />
-                    {errors.email && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.email}</p>}
-                  </div>
-
+              <div style={{ 
+                background: 'white', 
+                borderRadius: '20px', 
+                padding: '0',
+                overflow: 'hidden',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.05)', 
+                border: '1px solid rgba(0,0,0,0.05)',
+                minHeight: isMobile ? '600px' : '650px'
+              }}>
+                {isLoading ? (
                   <div style={{ 
-                    display: isMobile ? 'flex' : 'grid', 
-                    flexDirection: isMobile ? 'column' : undefined,
-                    gridTemplateColumns: isMobile ? undefined : '1fr 1fr', 
-                    gap: '1rem' 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    minHeight: '600px',
+                    flexDirection: 'column',
+                    gap: '1rem'
                   }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        autoComplete="name"
-                        value={formData.fullName}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: errors.fullName ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
-                        }}
-                        placeholder="John Doe"
-                      />
-                      {errors.fullName && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.fullName}</p>}
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        Phone Number *
-                      </label>
-                      <input
-                        type="tel"
-                        name="tel"
-                        autoComplete="tel"
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: errors.phone ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
-                        }}
-                        placeholder="+972-50-123-4567"
-                      />
-                      {errors.phone && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.phone}</p>}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Payment Information */}
-                <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '2rem' }}>
-                  <h3 style={{ fontSize: isMobile ? '1rem' : '1.1rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '1rem' }}>
-                    Payment Information
-                  </h3>
-                  
-                  {/* Hosted Fields Loading State */}
-                  {!fieldsReady && (
                     <div style={{ 
-                      background: fieldLoadError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(139, 94, 60, 0.1)', 
-                      borderRadius: '8px', 
-                      padding: '1rem', 
-                      marginBottom: '1rem',
-                      textAlign: 'center',
-                      color: fieldLoadError ? '#ef4444' : '#8B5E3C',
-                      border: fieldLoadError ? '1px solid rgba(239, 68, 68, 0.3)' : 'none'
-                    }}>
-                      {fieldLoadError || 'Loading secure payment fields...'}
-                    </div>
-                  )}
-                  
-                  <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                      Card Number *
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <div 
-                        id="card-field" 
-                          style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          paddingLeft: '3rem',
-                          border: '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          background: 'white',
-                          height: '44px', // שנה מ-minHeight
-                          display: 'flex',
-                          alignItems: 'center'
-                          }}
-                           />
-                      <CreditCard size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#8B5E3C' }} />
-                    </div>
+                      width: '50px', 
+                      height: '50px', 
+                      border: '4px solid #E5DDD5', 
+                      borderTopColor: '#8B5E3C', 
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }} />
+                    <p style={{ color: '#8B5E3C', fontSize: '0.9rem' }}>Loading secure payment form...</p>
                   </div>
+                ) : (
+                  <iframe
+                    src={buildIframeUrl()}
+                    style={{ 
+                      width: '100%', 
+                      height: isMobile ? '650px' : '700px', 
+                      border: 'none',
+                      display: 'block'
+                    }}
+                    title="Secure Payment Form"
+                    allow="payment"
+                    sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+                  />
+                )}
+              </div>
 
-                  <div style={{ 
-                    display: isMobile ? 'flex' : 'grid', 
-                    flexDirection: isMobile ? 'column' : undefined,
-                    gridTemplateColumns: isMobile ? undefined : '1fr 1fr', 
-                    gap: '1rem', 
-                    marginBottom: '1rem' 
-                  }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        Expiry Date *
-                      </label>
-                      <div 
-                        id="expiry-field" 
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          background: 'white',
-                          height: '44px',
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}
-                      />
-                    </div>
-                    
-                    <div>
-                      <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                        CVV *
-                      </label>
-                      <div 
-                        id="cvv-field" 
-                        style={{
-                          width: '100%',
-                          padding: '0.75rem',
-                          border: '1px solid #E5DDD5',
-                          borderRadius: '8px',
-                          background: 'white',
-                          height: '44px',
-                          display: 'flex',
-                          alignItems: 'center'
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: '2rem' }}>
-                    <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
-                      ID Number *
-                    </label>
-                    <input
-                      type="text"
-                      value={cardData.idNumber}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '')
-                        if (value.length <= 9) {
-                          setCardData({ ...cardData, idNumber: value })
-                        }
-                      }}
-                      maxLength={9}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        border: errors.idNumber ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                        borderRadius: '8px',
-                        fontSize: isMobile ? '0.875rem' : '0.9rem',
-                        boxSizing: 'border-box',
-                        background: 'white'
-                      }}
-                      placeholder="123456789"
-                    />
-                    {errors.idNumber && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.idNumber}</p>}
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleSubmit}
-                  disabled={isLoading}
-                  style={{
-                    width: '100%',
-                    padding: isMobile ? '0.875rem' : '1rem',
-                    background: (isLoading || !fieldsReady) ? '#9ca3af' : '#8B5E3C',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: isMobile ? '0.95rem' : '1rem',
-                    fontWeight: '600',
-                    cursor: (isLoading || !fieldsReady) ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isLoading && fieldsReady && !isMobile) {
-                      (e.target as HTMLButtonElement).style.background = '#7c4a32'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isLoading && fieldsReady && !isMobile) {
-                      (e.target as HTMLButtonElement).style.background = '#8B5E3C'
-                    }
-                  }}
-                >
-                  <Lock size={isMobile ? 18 : 20} />
-                  {isLoading ? 'Processing...' : 'Start Free Trial - $0.00'}
-                </button>
-
-                <p style={{ fontSize: isMobile ? '0.75rem' : '0.8rem', color: '#8B5E3C', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
-                  By continuing, you agree to our Terms of Service and Privacy Policy.
-                  Your payment information is encrypted and secure.
+              {/* Trust Indicators */}
+              <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                <p style={{ fontSize: '0.85rem', color: '#718096', marginBottom: '1rem' }}>
+                  Your payment information is encrypted and secure. We never store your credit card details.
                 </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                  <img src="https://www.tranzila.com/images/logo-tranzila.png" alt="Tranzilla" style={{ height: '30px', opacity: 0.7 }} />
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa" style={{ height: '20px', opacity: 0.7 }} />
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" style={{ height: '30px', opacity: 0.7 }} />
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Additional Information */}
+          <div style={{ marginTop: '3rem', textAlign: 'center' }}>
+            <p style={{ fontSize: '0.9rem', color: '#718096', marginBottom: '0.5rem' }}>
+              Questions? Contact us at{' '}
+              <a href="mailto:info@textcoco.com" style={{ color: '#8B5E3C', textDecoration: 'underline' }}>
+                info@textcoco.com
+              </a>
+            </p>
+            <p style={{ fontSize: '0.85rem', color: '#718096' }}>
+              By proceeding, you agree to our{' '}
+              <a href="/terms" style={{ color: '#8B5E3C', textDecoration: 'underline' }}>Terms of Service</a>
+              {' '}and{' '}
+              <a href="/privacy" style={{ color: '#8B5E3C', textDecoration: 'underline' }}>Privacy Policy</a>
+            </p>
+          </div>
         </div>
       </main>
+
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }
