@@ -188,10 +188,10 @@ useEffect(() => {
   }
 
   const handleSubmit = async () => {
-    if (!fieldsReady || !fieldsRef.current) {
-      alert('Payment fields are not ready. Please refresh the page.')
-      return
-    }
+  if (!fieldsRef.current) {
+    alert('Payment system not initialized. Please refresh the page.')
+    return
+  }
 
     setIsLoading(true)
     setErrors({})
