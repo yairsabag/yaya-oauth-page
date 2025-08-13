@@ -32,14 +32,6 @@ export async function POST(request: NextRequest) {
         error: 'Missing required fields'
       }, { status: 400 })
     }
-
-    // התחבר ל-MongoDB
-    const client = new MongoClient(process.env.MONGODB_URI!)
-    await client.connect()
-    
-    const db = client.db('yaya-assistant')
-    const trialsCollection = db.collection('trials')
-    const usersCollection = db.collection('users')
     
     // צור רשומת טריאל
     const trialRecord = {
