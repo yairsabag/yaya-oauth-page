@@ -92,7 +92,7 @@ export default function CheckoutPage() {
       buttonLabel: 'Start Free Trial',
       
       // Language
-      lang: 'en',
+    
       
       // Success/Fail URLs
       success_url_address: `${window.location.origin}/payment/success?plan=${urlParams.plan}&price=${urlParams.price}&billing=${urlParams.billing}&code=${urlParams.code}&trial=true`,
