@@ -34,7 +34,9 @@ export default function CheckoutPage() {
   
   // Hosted Fields states
   const [fieldsReady, setFieldsReady] = useState(false)
+  const [fieldLoadError, setFieldLoadError] = useState('')
   const fieldsRef = useRef<any>(null)
+  const scriptLoadedRef = useRef(false)
 
   // Detect mobile
   useEffect(() => {
@@ -60,69 +62,130 @@ export default function CheckoutPage() {
 
   // Initialize Hosted Fields
   useEffect(() => {
-    // Load Tranzila Hosted Fields script
+    // Prevent multiple script loads
+    if (scriptLoadedRef.current) return
+
+    const initializeFields = () => {
+      console.log('Attempting to initialize Tranzilla Hosted Fields...')
+      
+      if (!window.TranzillaHostedFields) {
+        console.error('TranzillaHostedFields not found on window')
+        setFieldLoadError('Payment system not loaded. Please refresh the page.')
+        return
+      }
+
+      try {
+        // Initialize with your terminal
+        fieldsRef.current = new window.TranzillaHostedFields({
+          // Make sure this matches your Tranzilla environment
+          sandbox: false, // Set to true if testing in sandbox
+          terminal_name: 'fxpyairsabag', // Your terminal name
+          
+          // Updated styles
+          styles: {
+            input: {
+              'font-size': '16px',
+              'font-family': 'system-ui, -apple-system, sans-serif',
+              'color': '#2d5016',
+              'padding': '12px',
+              'line-height': '1.5',
+              'background-color': 'white'
+            },
+            ':focus': {
+              'outline': '2px solid #8B5E3C',
+              'outline-offset': '2px'
+            },
+            '.invalid': {
+              'color': '#ef4444',
+              'border-color': '#ef4444'
+            },
+            '.valid': {
+              'color': '#2d5016'
+            }
+          }
+        })
+        
+        // Render fields with callbacks
+        fieldsRef.current.render({
+          creditCard: {
+            selector: '#card-field',
+            placeholder: '1234 5678 9012 3456'
+          },
+          cvv: {
+            selector: '#cvv-field',
+            placeholder: '123'
+          },
+          expiry: {
+            selector: '#expiry-field',
+            placeholder: 'MM/YY'
+          }
+        }, (error: any) => {
+          if (error) {
+            console.error('Error rendering fields:', error)
+            setFieldLoadError('Failed to load payment fields. Please refresh the page.')
+            setFieldsReady(false)
+          } else {
+            console.log('Hosted Fields rendered successfully')
+            setFieldsReady(true)
+            setFieldLoadError('')
+          }
+        })
+
+        // Add event listeners for better error handling
+        if (fieldsRef.current) {
+          fieldsRef.current.on('ready', () => {
+            console.log('Fields are ready')
+            setFieldsReady(true)
+          })
+
+          fieldsRef.current.on('error', (event: any) => {
+            console.error('Field error:', event)
+          })
+        }
+
+      } catch (error) {
+        console.error('Failed to initialize Hosted Fields:', error)
+        setFieldLoadError('Failed to initialize payment system. Please refresh the page.')
+        setFieldsReady(false)
+      }
+    }
+
+    // Load script
     const script = document.createElement('script')
     script.src = 'https://hf.tranzila.com/assets/js/trnzl_hf.js'
     script.async = true
+    
     script.onload = () => {
-      // Initialize Hosted Fields
-      if (window.TranzillaHostedFields) {
-        try {
-          fieldsRef.current = new window.TranzillaHostedFields({
-            sandbox: false, // Set to true for testing
-            styles: {
-              input: {
-                'font-size': '16px',
-                'font-family': 'system-ui, -apple-system, sans-serif',
-                'color': '#2d5016',
-                'padding': '12px',
-                'line-height': '1.5'
-              },
-              ':focus': {
-                'outline': '2px solid #8B5E3C',
-                'outline-offset': '2px'
-              },
-              '.invalid': {
-                'color': '#ef4444'
-              }
-            }
-          })
-          
-          fieldsRef.current.render({
-            creditCard: {
-              selector: '#card-field',
-              placeholder: '1234 5678 9012 3456'
-            },
-            cvv: {
-              selector: '#cvv-field',
-              placeholder: '123'
-            },
-            expiry: {
-              selector: '#expiry-field',
-              placeholder: 'MM/YY'
-            }
-          }, () => {
-            console.log('Hosted Fields ready')
-            setFieldsReady(true)
-          })
-        } catch (error) {
-          console.error('Failed to initialize Hosted Fields:', error)
-        }
-      }
+      console.log('Tranzilla script loaded')
+      scriptLoadedRef.current = true
+      // Give it a moment to initialize
+      setTimeout(initializeFields, 100)
     }
+    
     script.onerror = () => {
       console.error('Failed to load Tranzila Hosted Fields script')
+      setFieldLoadError('Failed to load payment system. Please check your connection and refresh.')
+      setFieldsReady(false)
     }
-    document.body.appendChild(script)
+
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src="https://hf.tranzila.com/assets/js/trnzl_hf.js"]')
+    if (existingScript) {
+      console.log('Script already exists, initializing fields...')
+      scriptLoadedRef.current = true
+      setTimeout(initializeFields, 100)
+    } else {
+      document.body.appendChild(script)
+    }
     
     return () => {
       // Cleanup
       if (fieldsRef.current && typeof fieldsRef.current.destroy === 'function') {
-        fieldsRef.current.destroy()
-      }
-      // Remove script
-      if (script.parentNode) {
-        script.parentNode.removeChild(script)
+        try {
+          fieldsRef.current.destroy()
+        } catch (e) {
+          console.error('Error destroying fields:', e)
+        }
       }
     }
   }, [])
@@ -165,97 +228,103 @@ export default function CheckoutPage() {
       return
     }
 
-    // 🔥 שימוש ב-Hosted Fields עם Verify mode + Tokenization
-    fieldsRef.current.charge({
-      terminal_name: 'fxpyairsabag', // מסוף רגיל
-      amount: parseFloat(urlParams.price), // הסכום המלא
-      tran_mode: 'V', // 🔥 Verify - רק אישור כרטיס, ללא חיוב!
-      tokenize: true, // 🔥 יוצר טוקן לחיוב עתידי
-      currency: '2', // USD
-      
-      // פרטי לקוח
-      contact: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      credit_card_holder_id: cardData.idNumber,
-      
-      // מטה-דאטה
-      custom1: urlParams.code,
-      custom2: urlParams.plan,
-      custom3: urlParams.billing,
-      custom4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - 7 Day Trial Authorization`
-      
-    }, async (err: any, response: any) => {
-      if (err) {
-        console.error('Authorization error:', err)
-        handleErrors(err)
-        setIsLoading(false)
-        return
-      }
-      
-      if (response && response.transaction_response && response.transaction_response.success) {
-        const token = response.transaction_response.token
-        const transactionId = response.transaction_response.transaction_id
+    try {
+      // Use Hosted Fields with Verify mode + Tokenization
+      fieldsRef.current.charge({
+        terminal_name: 'fxpyairsabag',
+        amount: parseFloat(urlParams.price),
+        tran_mode: 'V', // Verify - auth only, no charge
+        tokenize: true, // Create token for future charging
+        currency: '2', // USD
         
-        if (!token) {
-          alert('Failed to create payment token. Please try again.')
+        // Customer details
+        contact: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        credit_card_holder_id: cardData.idNumber,
+        
+        // Metadata
+        custom1: urlParams.code,
+        custom2: urlParams.plan,
+        custom3: urlParams.billing,
+        custom4: urlParams.price,
+        pdesc: `Yaya ${urlParams.plan} - 7 Day Trial Authorization`
+        
+      }, async (err: any, response: any) => {
+        if (err) {
+          console.error('Authorization error:', err)
+          handleErrors(err)
           setIsLoading(false)
           return
         }
         
-        // 🔥 שלח את הטוקן לשרת לשמירה + הפעלת טריאל
-        try {
-          const trialResponse = await fetch('/api/start-trial', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              registration_code: urlParams.code,
-              email: formData.email,
-              full_name: formData.fullName,
-              phone: formData.phone,
-              id_number: cardData.idNumber,
-              plan: urlParams.plan,
-              billing: urlParams.billing,
-              price: parseFloat(urlParams.price),
-              payment_token: token,
-              auth_transaction_id: transactionId,
-              trial_start: new Date().toISOString(),
-              trial_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-              charge_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-              tranzila_response: response.transaction_response
-            })
-          })
-
-          const trialData = await trialResponse.json()
+        if (response && response.transaction_response && response.transaction_response.success) {
+          const token = response.transaction_response.token
+          const transactionId = response.transaction_response.transaction_id
           
-          if (trialData.success) {
-            // 🎉 הצלחה! הפנה לדף success
-            const successUrl = new URL(window.location.origin + '/payment/success')
-            successUrl.searchParams.set('plan', urlParams.plan)
-            successUrl.searchParams.set('email', formData.email)
-            successUrl.searchParams.set('price', urlParams.price)
-            successUrl.searchParams.set('billing', urlParams.billing)
-            successUrl.searchParams.set('code', urlParams.code)
-            successUrl.searchParams.set('trial', 'true')
-            successUrl.searchParams.set('transactionId', transactionId)
-            
-            window.location.href = successUrl.toString()
-          } else {
-            throw new Error(trialData.error || 'Failed to start trial')
+          if (!token) {
+            alert('Failed to create payment token. Please try again.')
+            setIsLoading(false)
+            return
           }
-        } catch (apiError) {
-          console.error('Trial start error:', apiError)
-          alert('Failed to start trial. Please contact support.')
+          
+          // Send token to server to save and activate trial
+          try {
+            const trialResponse = await fetch('/api/start-trial', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                registration_code: urlParams.code,
+                email: formData.email,
+                full_name: formData.fullName,
+                phone: formData.phone,
+                id_number: cardData.idNumber,
+                plan: urlParams.plan,
+                billing: urlParams.billing,
+                price: parseFloat(urlParams.price),
+                payment_token: token,
+                auth_transaction_id: transactionId,
+                trial_start: new Date().toISOString(),
+                trial_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                charge_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                tranzila_response: response.transaction_response
+              })
+            })
+
+            const trialData = await trialResponse.json()
+            
+            if (trialData.success) {
+              // Success! Redirect to success page
+              const successUrl = new URL(window.location.origin + '/payment/success')
+              successUrl.searchParams.set('plan', urlParams.plan)
+              successUrl.searchParams.set('email', formData.email)
+              successUrl.searchParams.set('price', urlParams.price)
+              successUrl.searchParams.set('billing', urlParams.billing)
+              successUrl.searchParams.set('code', urlParams.code)
+              successUrl.searchParams.set('trial', 'true')
+              successUrl.searchParams.set('transactionId', transactionId)
+              
+              window.location.href = successUrl.toString()
+            } else {
+              throw new Error(trialData.error || 'Failed to start trial')
+            }
+          } catch (apiError) {
+            console.error('Trial start error:', apiError)
+            alert('Failed to start trial. Please contact support.')
+            setIsLoading(false)
+          }
+        } else {
+          alert('Failed to authorize payment method. Please check your details and try again.')
           setIsLoading(false)
         }
-      } else {
-        alert('Failed to authorize payment method. Please check your details and try again.')
-        setIsLoading(false)
-      }
-    })
+      })
+    } catch (error) {
+      console.error('Charge error:', error)
+      alert('An unexpected error occurred. Please try again.')
+      setIsLoading(false)
+    }
   }
 
   const getCurrentPlanName = () => {
@@ -476,14 +545,15 @@ export default function CheckoutPage() {
                   {/* Hosted Fields Loading State */}
                   {!fieldsReady && (
                     <div style={{ 
-                      background: 'rgba(139, 94, 60, 0.1)', 
+                      background: fieldLoadError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(139, 94, 60, 0.1)', 
                       borderRadius: '8px', 
                       padding: '1rem', 
                       marginBottom: '1rem',
                       textAlign: 'center',
-                      color: '#8B5E3C'
+                      color: fieldLoadError ? '#ef4444' : '#8B5E3C',
+                      border: fieldLoadError ? '1px solid rgba(239, 68, 68, 0.3)' : 'none'
                     }}>
-                      Loading secure payment fields...
+                      {fieldLoadError || 'Loading secure payment fields...'}
                     </div>
                   )}
                   
@@ -501,7 +571,9 @@ export default function CheckoutPage() {
                           border: '1px solid #E5DDD5',
                           borderRadius: '8px',
                           background: 'white',
-                          minHeight: '44px'
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center'
                         }}
                       />
                       <CreditCard size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#8B5E3C' }} />
@@ -527,7 +599,9 @@ export default function CheckoutPage() {
                           border: '1px solid #E5DDD5',
                           borderRadius: '8px',
                           background: 'white',
-                          minHeight: '44px'
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center'
                         }}
                       />
                     </div>
@@ -544,7 +618,9 @@ export default function CheckoutPage() {
                           border: '1px solid #E5DDD5',
                           borderRadius: '8px',
                           background: 'white',
-                          minHeight: '44px'
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center'
                         }}
                       />
                     </div>
