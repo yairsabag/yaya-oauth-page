@@ -89,9 +89,18 @@ export default function CheckoutPage() {
           })
           
           fieldsRef.current.render({
-            creditCard: '#card-field',
-            cvv: '#cvv-field',
-            expiry: '#expiry-field'
+            creditCard: {
+              selector: '#card-field',
+              placeholder: '1234 5678 9012 3456'
+            },
+            cvv: {
+              selector: '#cvv-field',
+              placeholder: '123'
+            },
+            expiry: {
+              selector: '#expiry-field',
+              placeholder: 'MM/YY'
+            }
           }, () => {
             console.log('Hosted Fields ready')
             setFieldsReady(true)
@@ -384,6 +393,8 @@ export default function CheckoutPage() {
                     </label>
                     <input
                       type="email"
+                      name="email"
+                      autoComplete="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       style={{
@@ -412,6 +423,8 @@ export default function CheckoutPage() {
                       </label>
                       <input
                         type="text"
+                        name="name"
+                        autoComplete="name"
                         value={formData.fullName}
                         onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                         style={{
@@ -434,6 +447,8 @@ export default function CheckoutPage() {
                       </label>
                       <input
                         type="tel"
+                        name="tel"
+                        autoComplete="tel"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         style={{
