@@ -640,7 +640,7 @@ useEffect(() => {
 
                 <button
                   onClick={handleSubmit}
-                  disabled={isLoading || !fieldsReady}
+                  disabled={isLoading}
                   style={{
                     width: '100%',
                     padding: isMobile ? '0.875rem' : '1rem',
@@ -669,7 +669,7 @@ useEffect(() => {
                   }}
                 >
                   <Lock size={isMobile ? 18 : 20} />
-                  {isLoading ? 'Processing...' : !fieldsReady ? 'Loading...' : 'Start Free Trial - $0.00'}
+                  {isLoading ? 'Processing...' : 'Start Free Trial - $0.00'}
                 </button>
 
                 <p style={{ fontSize: isMobile ? '0.75rem' : '0.8rem', color: '#8B5E3C', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
