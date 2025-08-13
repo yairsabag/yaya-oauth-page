@@ -59,108 +59,121 @@ export default function PaymentSuccessPage() {
   }, [])
 
   const updateUserPlan = async (planData: UrlParams, isRetry = false) => {
+  try {
+    console.log('Updating user plan with:', planData)
+    
+    // קבל את הטוקן והתאריכים מה-URL
+    const params = new URLSearchParams(window.location.search)
+    const paymentToken = params.get('payment_token') || ''
+    const trialStart = params.get('trial_start') || new Date().toISOString()
+    const trialEnd = params.get('trial_end') || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+    
+    // Calculate expiration date (1 month or 1 year from now)
+    const expirationDate = new Date()
+    if (planData.billing === 'yearly') {
+      expirationDate.setFullYear(expirationDate.getFullYear() + 1)
+    } else {
+      expirationDate.setMonth(expirationDate.getMonth() + 1)
+    }
+
+    // Calculate trial end date (7 days from now) - כבר יש לנו מה-URL
+    const trialEndDate = new Date(trialEnd)
+
+    const requestBody = {
+      // פרטים בסיסיים
+      registration_code: planData.code,
+      plan: planData.plan.toLowerCase(), // Make sure plan is lowercase
+      email: planData.email,
+      expires_at: expirationDate.toISOString(),
+      billing_type: planData.billing,
+      status: 'active',
+      price: planData.price,
+      payment_date: new Date().toISOString(),
+      trial_end_date: trialEndDate.toISOString(),
+      
+      // פרטי טוקן וטריאל חדשים
+      payment_token: paymentToken,
+      trial_start: trialStart,
+      trial_end: trialEnd,
+      subscription_status: 'trial_active'
+    }
+
+    console.log('Request body with token:', requestBody)
+
+    const response = await fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Add API key if you have one:
+        // 'X-API-Key': process.env.NEXT_PUBLIC_N8N_API_KEY || ''
+      },
+      body: JSON.stringify(requestBody)
+    })
+
+    console.log('Response status:', response.status)
+    
+    const responseText = await response.text()
+    console.log('Response text:', responseText)
+    
+    // Try to parse as JSON if possible
+    let result: UpdateResponse
     try {
-      console.log('Updating user plan with:', planData)
-      
-      // Calculate expiration date (1 month or 1 year from now)
-      const expirationDate = new Date()
-      if (planData.billing === 'yearly') {
-        expirationDate.setFullYear(expirationDate.getFullYear() + 1)
+      result = JSON.parse(responseText)
+    } catch (e) {
+      // If response is empty or not JSON, treat as success if status is 200
+      if (response.ok) {
+        result = { success: true, message: 'Plan updated successfully' }
       } else {
-        expirationDate.setMonth(expirationDate.getMonth() + 1)
-      }
-
-      // Calculate trial end date (7 days from now)
-      const trialEndDate = new Date()
-      trialEndDate.setDate(trialEndDate.getDate() + 7)
-
-      const requestBody = {
-        registration_code: planData.code,
-        plan: planData.plan.toLowerCase(), // Make sure plan is lowercase
-        email: planData.email,
-        expires_at: expirationDate.toISOString(),
-        billing_type: planData.billing,
-        status: 'active',
-        price: planData.price,
-        payment_date: new Date().toISOString(),
-        trial_end_date: trialEndDate.toISOString()
-      }
-
-      console.log('Request body:', requestBody)
-
-      const response = await fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add API key if you have one:
-          // 'X-API-Key': process.env.NEXT_PUBLIC_N8N_API_KEY || ''
-        },
-        body: JSON.stringify(requestBody)
-      })
-
-      console.log('Response status:', response.status)
-      
-      const responseText = await response.text()
-      console.log('Response text:', responseText)
-      
-      // Try to parse as JSON if possible
-      let result: UpdateResponse
-      try {
-        result = JSON.parse(responseText)
-      } catch (e) {
-        // If response is empty or not JSON, treat as success if status is 200
-        if (response.ok) {
-          result = { success: true, message: 'Plan updated successfully' }
-        } else {
-          throw new Error('Invalid response from server')
-        }
-      }
-
-      if (response.ok && (result.success || response.status === 200)) {
-        setPlanUpdateStatus('success')
-        setUpdateMessage(result.message || 'Your plan has been activated successfully!')
-        
-        // Save to localStorage for future reference
-        localStorage.setItem('userPlan', planData.plan)
-        localStorage.setItem('planExpiresAt', expirationDate.toISOString())
-        localStorage.setItem('userEmail', planData.email)
-        
-        // Track successful conversion
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-          (window as any).gtag('event', 'purchase', {
-            value: parseFloat(planData.price),
-            currency: 'USD',
-            items: [{
-              item_name: planData.plan,
-              price: parseFloat(planData.price),
-              quantity: 1
-            }]
-          })
-        }
-      } else {
-        throw new Error(result.error || result.message || 'Failed to update plan')
-      }
-    } catch (error) {
-      console.error('Error updating user plan:', error)
-      setPlanUpdateStatus('error')
-      setUpdateMessage(error instanceof Error ? error.message : 'Failed to activate your plan. Please contact support.')
-      
-      // Save to localStorage for manual processing if needed
-      localStorage.setItem('pendingPlanUpdate', JSON.stringify({
-        ...planData,
-        attemptedAt: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }))
-
-      // Retry logic
-      if (!isRetry && retryCount < 3) {
-        setRetryCount(prev => prev + 1)
-        setTimeout(() => {
-          updateUserPlan(planData, true)
-        }, 2000) // Retry after 2 seconds
+        throw new Error('Invalid response from server')
       }
     }
+
+    if (response.ok && (result.success || response.status === 200)) {
+      setPlanUpdateStatus('success')
+      setUpdateMessage(result.message || 'Your plan has been activated successfully!')
+      
+      // Save to localStorage for future reference
+      localStorage.setItem('userPlan', planData.plan)
+      localStorage.setItem('planExpiresAt', expirationDate.toISOString())
+      localStorage.setItem('userEmail', planData.email)
+      localStorage.setItem('paymentToken', paymentToken) // שמור גם את הטוקן
+      
+      // Track successful conversion
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        (window as any).gtag('event', 'purchase', {
+          value: parseFloat(planData.price),
+          currency: 'USD',
+          items: [{
+            item_name: planData.plan,
+            price: parseFloat(planData.price),
+            quantity: 1
+          }]
+        })
+      }
+    } else {
+      throw new Error(result.error || result.message || 'Failed to update plan')
+    }
+  } catch (error) {
+    console.error('Error updating user plan:', error)
+    setPlanUpdateStatus('error')
+    setUpdateMessage(error instanceof Error ? error.message : 'Failed to activate your plan. Please contact support.')
+    
+    // Save to localStorage for manual processing if needed
+    localStorage.setItem('pendingPlanUpdate', JSON.stringify({
+      ...planData,
+      attemptedAt: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }))
+
+    // Retry logic
+    if (!isRetry && retryCount < 3) {
+      setRetryCount(prev => prev + 1)
+      setTimeout(() => {
+        updateUserPlan(planData, true)
+      }, 2000) // Retry after 2 seconds
+    }
   }
+}
 
   const planDetails = {
     executive: {
