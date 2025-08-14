@@ -227,8 +227,7 @@ export default function CheckoutPage() {
                       height: '50px', 
                       border: '4px solid #E5DDD5', 
                       borderTopColor: '#8B5E3C', 
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
+                      borderRadius: '50%'
                     }} />
                     <p style={{ color: '#8B5E3C', fontSize: '0.9rem' }}>Loading secure payment form...</p>
                   </div>
@@ -274,13 +273,6 @@ export default function CheckoutPage() {
           </div>
         </div>
       </main>
-
-      <style jsx>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }
