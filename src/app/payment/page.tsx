@@ -65,13 +65,14 @@ export default function CheckoutPage() {
 
   const currentPlan = planDetails[urlParams.plan as keyof typeof planDetails] || planDetails.executive
 
-  // Build iframe URL with minimal parameters
+  // Build iframe URL with all parameters
   const buildIframeUrl = () => {
     const baseUrl = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
     const params = new URLSearchParams({
-      sum: '1', // נסה עם 1 דולר לבדיקה
+      sum: '0', // $0 for token creation
       currency: '2', // USD
-      // לא מוסיפים tranmode בינתיים
+      tranmode: 'A',
+      nologo: '1', // Remove Tranzila logo
       
       // Custom fields
       u1: urlParams.code,
@@ -79,13 +80,27 @@ export default function CheckoutPage() {
       u3: urlParams.billing,
       u4: urlParams.price,
       
-      // URLs
-      success_url_address: `${window.location.origin}/payment/success`,
-      fail_url_address: `${window.location.origin}/payment/checkout`,
+      // Product description
+      pdesc: Yaya ${urlParams.plan} - 7 Day Trial Authorization,
+      
+      // Colors and styling
+      trBgColor: 'FAF5F0', // Background color matching site
+      trTextColor: '2D5016', // Dark green text
+      trButtonColor: '8B5E3C', // Brown button
+      buttonLabel: 'Start Free Trial',
+      
+      // Language
+    
+      
+      // Success/Fail URLs
+      success_url_address: ${window.location.origin}/payment/success?plan=${urlParams.plan}&price=${urlParams.price}&billing=${urlParams.billing}&code=${urlParams.code}&trial=true,
+      fail_url_address: ${window.location.origin}/payment/checkout?plan=${urlParams.plan}&price=${urlParams.price}&billing=${urlParams.billing}&code=${urlParams.code}&error=true,
+      
+      // Notify URL for backend processing
       notify_url_address: 'https://n8n-TD2y.sliplane.app/webhook/update-user-plan'
     })
     
-    return `${baseUrl}?${params.toString()}`
+    return ${baseUrl}?${params.toString()}
   }
 
   return (
@@ -110,6 +125,26 @@ export default function CheckoutPage() {
 
       <main style={{ padding: isMobile ? '1.5rem 0' : '3rem 0' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto', padding: isMobile ? '0 1rem' : '0 2rem' }}>
+          {/* Progress Bar */}
+          <div style={{ marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#8B5E3C', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: '600' }}>1</div>
+                <span style={{ fontSize: '0.875rem', color: '#8B5E3C', fontWeight: '500' }}>Plan Selection</span>
+              </div>
+              <div style={{ width: '50px', height: '2px', background: '#8B5E3C' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#8B5E3C', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: '600' }}>2</div>
+                <span style={{ fontSize: '0.875rem', color: '#8B5E3C', fontWeight: '500' }}>Payment</span>
+              </div>
+              <div style={{ width: '50px', height: '2px', background: '#E5DDD5' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#E5DDD5', color: '#8B5E3C', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: '600' }}>3</div>
+                <span style={{ fontSize: '0.875rem', color: '#8B5E3C', opacity: 0.6 }}>Confirmation</span>
+              </div>
+            </div>
+          </div>
+
           <div style={{ 
             display: isMobile ? 'flex' : 'grid', 
             flexDirection: isMobile ? 'column' : undefined,
@@ -117,7 +152,7 @@ export default function CheckoutPage() {
             gap: isMobile ? '2rem' : '3rem' 
           }}>
             {/* Order Summary */}
-            <div style={{ order: 1 }}>
+            <div style={{ order: 1 }}> 
               <h2 style={{ fontSize: isMobile ? '1.3rem' : '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#8B5E3C' }}>
                 Order Summary
               </h2>
@@ -199,7 +234,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Payment Iframe */}
-            <div style={{ order: 2 }}>
+            <div style={{ order: 2 }}> 
               <h2 style={{ fontSize: isMobile ? '1.3rem' : '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#8B5E3C' }}>
                 Complete Your Order
               </h2>
@@ -227,7 +262,8 @@ export default function CheckoutPage() {
                       height: '50px', 
                       border: '4px solid #E5DDD5', 
                       borderTopColor: '#8B5E3C', 
-                      borderRadius: '50%'
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
                     }} />
                     <p style={{ color: '#8B5E3C', fontSize: '0.9rem' }}>Loading secure payment form...</p>
                   </div>
@@ -252,6 +288,11 @@ export default function CheckoutPage() {
                 <p style={{ fontSize: '0.85rem', color: '#718096', marginBottom: '1rem' }}>
                   Your payment information is encrypted and secure. We never store your credit card details.
                 </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                  <img src="https://www.tranzila.com/images/logo-tranzila.png" alt="Tranzilla" style={{ height: '30px', opacity: 0.7 }} />
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/Visa.svg" alt="Visa" style={{ height: '20px', opacity: 0.7 }} />
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" style={{ height: '30px', opacity: 0.7 }} />
+                </div>
               </div>
             </div>
           </div>
@@ -273,6 +314,12 @@ export default function CheckoutPage() {
           </div>
         </div>
       </main>
+
+      <style jsx>{
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      }</style>
     </div>
   )
-}
