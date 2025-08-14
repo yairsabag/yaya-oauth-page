@@ -73,7 +73,6 @@ export default function CheckoutPage() {
       sum: '0', // $0 for token creation
       currency: '2', // USD
       tranmode: 'VK', // V for verify + K for tokenize
-      cred_type: '1',
       nologo: '1', // Remove Tranzila logo
       
       // Custom fields
@@ -154,7 +153,7 @@ export default function CheckoutPage() {
             gap: isMobile ? '2rem' : '3rem' 
           }}>
             {/* Order Summary */}
-            <div style={{ order: isMobile ? 2 : 1 }}>
+            <div style={{ order: 1 }}> // תמיד ראשון
               <h2 style={{ fontSize: isMobile ? '1.3rem' : '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#8B5E3C' }}>
                 Order Summary
               </h2>
@@ -236,7 +235,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Payment Iframe */}
-            <div style={{ order: isMobile ? 1 : 2 }}>
+            <div style={{ order: 2 }}> // תמיד שני
               <h2 style={{ fontSize: isMobile ? '1.3rem' : '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#8B5E3C' }}>
                 Complete Your Order
               </h2>
