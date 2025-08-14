@@ -72,7 +72,6 @@ export default function CheckoutPage() {
     const params = new URLSearchParams({
       sum: '0', // $0 for token creation
       currency: '2', // USD
-      tranmode: 'VK', // V for verify + K for tokenize
       nologo: '1', // Remove Tranzila logo
       
       // Custom fields
