@@ -153,7 +153,7 @@ export default function CheckoutPage() {
             gap: isMobile ? '2rem' : '3rem' 
           }}>
             {/* Order Summary */}
-            <div style={{ order: 1 }}> // תמיד ראשון
+            <div style={{ order: 1 }}> 
               <h2 style={{ fontSize: isMobile ? '1.3rem' : '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#8B5E3C' }}>
                 Order Summary
               </h2>
@@ -235,7 +235,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* Payment Iframe */}
-            <div style={{ order: 2 }}> // תמיד שני
+            <div style={{ order: 2 }}> 
               <h2 style={{ fontSize: isMobile ? '1.3rem' : '1.5rem', fontWeight: '600', marginBottom: '1.5rem', color: '#8B5E3C' }}>
                 Complete Your Order
               </h2>
