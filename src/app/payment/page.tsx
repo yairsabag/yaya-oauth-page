@@ -1,191 +1,132 @@
-// FILE: src/app/payment/success/page.tsx
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { CheckCircle, MessageCircle, Calendar, Bell, AlertCircle, Loader2 } from 'lucide-react'
+import { Check, MessageCircle } from 'lucide-react'
 
-interface UrlParams {
-  plan: string
-  email: string
-  price: string
-  code: string
-  billing: string
-}
+export default function PaymentPage() {
+  const [billingType, setBillingType] = useState<'monthly' | 'yearly'>('monthly')
+  const [registrationCode, setRegistrationCode] = useState<string | null>(null)
 
-interface UpdateResponse {
-  success: boolean
-  message?: string
-  error?: string
-  user?: {
-    wa_id: string
-    name: string
-    email: string
-    plan: string
-    expires_at: string
-  }
-}
-
-export default function PaymentSuccessPage() {
-  const [urlParams, setUrlParams] = useState<UrlParams>({
-    plan: '',
-    email: '',
-    price: '',
-    code: '',
-    billing: ''
-  })
-  const [planUpdateStatus, setPlanUpdateStatus] = useState<'loading' | 'success' | 'error'>('loading')
-  const [updateMessage, setUpdateMessage] = useState('')
-  const [retryCount, setRetryCount] = useState(0)
-
+  // Get registration code from URL when component mounts
   useEffect(() => {
-    // Get URL parameters from window.location (Tranzila redirect with GET)
     const params = new URLSearchParams(window.location.search)
-    const planData = {
-      plan: params.get('plan') || '',
-      email: params.get('email') || '',
-      price: params.get('price') || '',
-      code: params.get('code') || '',
-      billing: params.get('billing') || 'monthly'
-    }
-    setUrlParams(planData)
-
-    // Token + dates from URL (TranzilaTK/TranzilaToken/CCtoken)
-    const paymentToken =
-      params.get('payment_token') ||
-      params.get('TranzilaTK') ||
-      params.get('TranzilaToken') ||
-      params.get('CCtoken') ||
-      ''
-
-    const trialStart = params.get('trial_start') || new Date().toISOString()
-    const trialEnd = params.get('trial_end') || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-
-    // Update user plan in database after successful payment/token
-    if (planData.code && planData.plan) {
-      updateUserPlan(planData, { paymentToken, trialStart, trialEnd })
-    } else {
-      console.error('Missing required parameters:', planData)
-      setPlanUpdateStatus('error')
-      setUpdateMessage('Missing registration code or plan information')
+    const code = params.get('code')
+    console.log('URL params:', window.location.search) // Debug log
+    console.log('Code from URL:', code) // Debug log
+    if (code) {
+      setRegistrationCode(code)
+      console.log('Registration code set to:', code) // Debug log
     }
   }, [])
 
-  const updateUserPlan = async (
-    planData: UrlParams,
-    extra: { paymentToken: string; trialStart: string; trialEnd: string },
-    isRetry = false
-  ) => {
-    try {
-      const { paymentToken, trialStart, trialEnd } = extra
-
-      // Calculate expiration date (1 month or 1 year from now)
-      const expirationDate = new Date()
-      if (planData.billing === 'yearly') {
-        expirationDate.setFullYear(expirationDate.getFullYear() + 1)
-      } else {
-        expirationDate.setMonth(expirationDate.getMonth() + 1)
-      }
-
-      const requestBody = {
-        registration_code: planData.code,
-        plan: planData.plan.toLowerCase(),
-        email: planData.email,
-        expires_at: expirationDate.toISOString(),
-        billing_type: planData.billing,
-        status: 'active',
-        price: planData.price,
-        payment_date: new Date().toISOString(),
-        trial_end_date: new Date(trialEnd).toISOString(),
-
-        // Token & trial info
-        payment_token: paymentToken,
-        trial_start: trialStart,
-        trial_end: trialEnd,
-        subscription_status: 'trial_active'
-      }
-
-      const response = await fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
-      })
-
-      const text = await response.text()
-      let result: UpdateResponse
-      try {
-        result = JSON.parse(text)
-      } catch {
-        result = response.ok ? { success: true, message: 'Plan updated successfully' } : { success: false, error: 'Invalid response' }
-      }
-
-      if (response.ok && (result.success || response.status === 200)) {
-        setPlanUpdateStatus('success')
-        setUpdateMessage(result.message || 'Your plan has been activated successfully!')
-
-        // Store locally
-        localStorage.setItem('userPlan', planData.plan)
-        localStorage.setItem('planExpiresAt', expirationDate.toISOString())
-        localStorage.setItem('userEmail', planData.email)
-        localStorage.setItem('paymentToken', paymentToken)
-
-        // GA purchase event (optional)
-        if (typeof window !== 'undefined' && (window as any).gtag) {
-          (window as any).gtag('event', 'purchase', {
-            value: parseFloat(planData.price || '0'),
-            currency: 'USD',
-            items: [{ item_name: planData.plan, price: parseFloat(planData.price || '0'), quantity: 1 }]
-          })
-        }
-      } else {
-        throw new Error(result.error || result.message || 'Failed to update plan')
-      }
-    } catch (error) {
-      console.error('Error updating user plan:', error)
-      setPlanUpdateStatus('error')
-      setUpdateMessage(error instanceof Error ? error.message : 'Failed to activate your plan. Please contact support.')
-
-      localStorage.setItem('pendingPlanUpdate', JSON.stringify({
-        ...planData,
-        attemptedAt: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }))
-
-      if (!isRetry && retryCount < 3) {
-        setRetryCount(prev => prev + 1)
-        setTimeout(() => updateUserPlan(planData, extra, true), 2000)
-      }
-    }
-  }
-
-  const planDetails = {
-    executive: {
-      name: 'Executive Plan',
+  const plans = [
+    {
+      id: 'basic',
+      name: 'Basic Plan',
+      monthlyPrice: 0,
+      yearlyPrice: 0,
+      displayPrice: 'FREE',
+      popular: false,
       features: [
-        'Google Calendar integration',
-        'Expense tracking',
-        'Contact management',
-        'Recurring reminders',
-        'Web search',
-        '100 voice messages/month'
-      ]
+        'Unlimited messages',
+        'Unlimited one-time reminders',
+        '100+ languages supported',
+        'ChatGPT',
+        '5 Voice Notes / Month',
+        '5 Image Analysis / Month',
+        'Receive reminders from friends'
+      ],
+      buttonText: 'Start with WhatsApp',
+      buttonAction: 'whatsapp'
     },
-    ultimate: {
-      name: 'Ultimate Plan',
+    {
+      id: 'executive',
+      name: 'Executive Plan',
+      monthlyPrice: 5,
+      yearlyPrice: 4,
+      displayPrice: null,
+      popular: true,
       features: [
-        'All Executive features',
-        'Food & calorie tracking',
-        'Advanced analytics',
-        '500 voice messages/month',
-        '100 image analyses/month',
-        'Priority support'
-      ]
+        'Unlimited messages',
+        'Unlimited one-time reminders',
+        '100+ languages supported',
+        'ChatGPT',
+        'Repeat reminders',
+        'Google / Outlook Calendar',
+        '100 Voice Notes / Month',
+        '20 Image Analysis / Month',
+        '20 Internet Searches',
+        'Send/Receive reminders with friends',
+        'AI Memory of You',
+        'Create Lists'
+      ],
+      buttonText: 'Start Free Trial',
+      buttonAction: 'payment'
+    },
+    {
+      id: 'ultimate',
+      name: 'Ultimate Plan',
+      monthlyPrice: 14,
+      yearlyPrice: 13,
+      displayPrice: null,
+      popular: false,
+      features: [
+        'Unlimited messages',
+        'Unlimited one-time reminders',
+        '100+ languages supported',
+        'ChatGPT',
+        'Repeat reminders',
+        'Google / Outlook Calendar',
+        '500 Voice Notes / Month',
+        '100 Image Analysis / Month',
+        '100 Internet Searches',
+        'Send/Receive reminders with friends',
+        'AI Memory of You',
+        'Create Lists'
+      ],
+      buttonText: 'Start Free Trial',
+      buttonAction: 'payment'
+    }
+  ]
+
+  const handlePlanSelection = (planId: string) => {
+    const plan = plans.find(p => p.id === planId)
+    if (!plan) return
+
+    // קרא את הקוד ישירות מה-URL כדי להימנע מ-race condition
+    const params = new URLSearchParams(window.location.search)
+    const currentCode = params.get('code')
+    
+    console.log('Current registrationCode from state:', registrationCode) // Debug log
+    console.log('Current code from URL:', currentCode) // Debug log
+
+    if (planId === 'basic') {
+      const message = currentCode ? `My code: ${currentCode}` : ''
+      const whatsappUrl = `https://api.whatsapp.com/send/?phone=972559943649&text=${encodeURIComponent(message)}&type=phone_number&app_absent=0`
+      window.open(whatsappUrl, '_blank')
+    } else {
+      const price = billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
+      
+      // השתמש בקוד מה-URL תחילה, אחר כך מהstate, ואחרון צור חדש
+      let codeToUse = currentCode || registrationCode
+      if (!codeToUse) {
+        // רק אם באמת אין קוד, תיצור חדש
+        codeToUse = Math.random().toString(36).substring(2, 8).toUpperCase()
+      }
+
+      console.log('Code to use:', codeToUse) // Debug log
+
+      const url = new URL(window.location.origin + '/payment/checkout')
+      url.searchParams.set('plan', planId)
+      url.searchParams.set('price', price.toString())
+      url.searchParams.set('billing', billingType)
+      url.searchParams.set('code', codeToUse)
+      url.searchParams.set('planName', plan.name)
+
+      console.log('Final URL:', url.toString()) // Debug log
+      window.location.href = url.toString()
     }
   }
-
-  const currentPlan = planDetails[urlParams.plan as keyof typeof planDetails] || planDetails.executive
-
-  // Fixed Google OAuth URL with correct redirect to n8n
-  const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=314964896562-o93h71h2cpiqgcikaqeg2a34ht2ipl2j.apps.googleusercontent.com&redirect_uri=https://n8n-td2y.sliplane.app/webhook/google-oauth-callback&response_type=code&scope=openid%20email%20https://www.googleapis.com/auth/calendar&state=${urlParams.code}&access_type=offline&prompt=consent`
 
   return (
     <div style={{ fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", minHeight: '100vh', background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)' }}>
@@ -193,119 +134,207 @@ export default function PaymentSuccessPage() {
       <header style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '1rem 0' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
-            <img src="/yaya-logo.png" alt="Yaya Assistant Logo" style={{ width: '80px', height: '80px', objectFit: 'contain' }} />
+            <img
+              src="/yaya-logo.png"
+              alt="Yaya Assistant Logo"
+              style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+            />
             <span style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
+          </a>
+          <a href="/" style={{ color: '#4a5568', textDecoration: 'none', fontSize: '0.875rem', fontWeight: '500' }}>
+            ← Back to Home
           </a>
         </div>
       </header>
 
       <main style={{ padding: '4rem 0' }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 2rem', textAlign: 'center' }}>
-          {/* Success Animation */}
-          <div style={{ marginBottom: '2rem', position: 'relative' }}>
-            {planUpdateStatus === 'loading' ? (
-              <Loader2 size={80} style={{ color: '#8B5E3C', margin: '0 auto', animation: 'spin 1s linear infinite' }} />
-            ) : planUpdateStatus === 'success' ? (
-              <CheckCircle size={80} style={{ color: '#25d366', margin: '0 auto', animation: 'scale-in 0.5s ease-out' }} />
-            ) : (
-              <AlertCircle size={80} style={{ color: '#ef4444', margin: '0 auto' }} />
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <h1 style={{ fontSize: '3rem', fontWeight: '400', color: '#2d5016', marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>
+              Choose Your Plan
+            </h1>
+            <p style={{ fontSize: '1.2rem', color: '#718096', maxWidth: '600px', margin: '0 auto 2rem' }}>
+              Get started with Yaya Assistant. Start your 7-day free trial today.
+            </p>
+
+            {registrationCode && (
+              <div style={{ background: 'rgba(37, 211, 102, 0.1)', borderRadius: '12px', padding: '1rem', border: '1px solid rgba(37, 211, 102, 0.3)', display: 'inline-block', marginBottom: '2rem' }}>
+                <p style={{ color: '#25d366', fontSize: '1rem', fontWeight: '600', margin: 0 }}>
+                  ✅ Registration Code: {registrationCode}
+                </p>
+              </div>
             )}
+
+            {/* Billing Toggle */}
+            <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', marginBottom: '4rem', background: '#f7fafc', borderRadius: '8px', padding: '4px', width: 'fit-content', margin: '0 auto 4rem', cursor: 'pointer' }}>
+              <span onClick={() => setBillingType('yearly')} style={{
+                background: billingType === 'yearly' ? 'white' : 'transparent',
+                color: billingType === 'yearly' ? '#2d5016' : '#999',
+                padding: '8px 20px',
+                borderRadius: '6px',
+                fontSize: '1.1rem',
+                fontWeight: '500',
+                boxShadow: billingType === 'yearly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}>
+                Yearly Billing
+              </span>
+              <span onClick={() => setBillingType('monthly')} style={{
+                background: billingType === 'monthly' ? 'white' : 'transparent',
+                color: billingType === 'monthly' ? '#2d5016' : '#999',
+                padding: '8px 20px',
+                borderRadius: '6px',
+                fontSize: '1.1rem',
+                fontWeight: '500',
+                boxShadow: billingType === 'monthly' ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}>
+                Monthly Billing
+              </span>
+            </div>
           </div>
 
-          <h1 style={{ fontSize: '3rem', fontWeight: '400', color: '#8B5E3C', marginBottom: '1rem', letterSpacing: '-0.02em' }}>
-            {planUpdateStatus === 'loading' ? '⏳ Setting up your account...' : '🎉 Payment Successful!'}
-          </h1>
-
-          {/* Status Messages */}
-          {planUpdateStatus === 'loading' && (
-            <div style={{ background: 'rgba(255, 193, 7, 0.1)', border: '1px solid rgba(255, 193, 7, 0.3)', borderRadius: '8px', padding: '16px', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem' }}>
-              <p style={{ color: '#f59e0b', fontSize: '1rem', margin: 0 }}>
-                <Loader2 size={16} style={{ display: 'inline', marginRight: '8px', animation: 'spin 1s linear infinite' }} />
-                Activating your {currentPlan.name}... This may take a few seconds.
-              </p>
-            </div>
-          )}
-
-          {planUpdateStatus === 'success' && (
-            <div style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)', borderRadius: '8px', padding: '16px', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem' }}>
-              <p style={{ color: '#22c55e', fontSize: '1rem', margin: 0 }}>
-                ✅ {updateMessage}
-              </p>
-            </div>
-          )}
-
-          {planUpdateStatus === 'error' && (
-            <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '16px', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem' }}>
-              <p style={{ color: '#ef4444', fontSize: '1rem', margin: 0, marginBottom: '8px' }}>
-                ⚠️ {updateMessage}
-              </p>
-              <p style={{ color: '#ef4444', fontSize: '0.9rem', margin: 0, opacity: 0.8 }}>
-                Don't worry - your payment went through! Our team will activate your account shortly.
-              </p>
-            </div>
-          )}
-
-          <p style={{ fontSize: '1.2rem', color: '#718096', marginBottom: '2rem', maxWidth: '600px', margin: '0 auto 2rem' }}>
-            Your 7-day free trial has started! Connect your Google account to activate calendar integration:
-          </p>
-
-          {/* Google OAuth Button */}
-          <div style={{ marginBottom: '3rem' }}>
-            <a 
-              href={googleOAuthUrl}
-              style={{ 
-                background: '#4285f4', 
-                color: 'white', 
-                padding: '16px 32px', 
-                borderRadius: '8px', 
-                textDecoration: 'none', 
-                fontSize: '1.1rem',
-                fontWeight: '600',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '12px',
-                boxShadow: '0 4px 12px rgba(66, 133, 244, 0.3)',
-                transition: 'all 0.2s ease',
-                cursor: 'pointer'
+          {/* Pricing Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+            {plans.map((plan) => (
+              <div key={plan.id} onClick={() => handlePlanSelection(plan.id)} style={{
+                background: '#F5F1EB',
+                borderRadius: '20px',
+                padding: '2.5rem 2rem',
+                textAlign: 'left',
+                position: 'relative',
+                border: plan.popular ? '2px solid #2d5016' : '1px solid #c3d9c6',
+                transform: plan.popular ? 'scale(1.02)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+                opacity: plan.id === 'basic' ? 0.7 : 1
               }}
-              onMouseEnter={(e) => {
-                const el = e.target as HTMLElement
-                el.style.background = '#3367d6'
-                el.style.transform = 'translateY(-2px)'
-                el.style.boxShadow = '0 6px 16px rgba(66, 133, 244, 0.4)'
-              }}
-              onMouseLeave={(e) => {
-                const el = e.target as HTMLElement
-                el.style.background = '#4285f4'
-                el.style.transform = 'translateY(0)'
-                el.style.boxShadow = '0 4px 12px rgba(66, 133, 244, 0.3)'
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24">
-                <path fill="white" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="white" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="white" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93ל2.85-2.22.81-.62z"/>
-                <path fill="white" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              Connect Google Account
+                onMouseEnter={(e) => {
+                  if (plan.id !== 'basic') {
+                    e.currentTarget.style.transform = plan.popular ? 'scale(1.05)' : 'scale(1.02)'
+                    e.currentTarget.style.boxShadow = '0 20px 25px rgba(45, 80, 22, 0.15)'
+                    e.currentTarget.style.border = '2px solid #2d5016'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (plan.id !== 'basic') {
+                    e.currentTarget.style.transform = plan.popular ? 'scale(1.02)' : 'scale(1)'
+                    e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.05)'
+                    e.currentTarget.style.border = plan.popular ? '2px solid #2d5016' : '1px solid #c3d9c6'
+                  }
+                }}
+              >
+                {(plan.popular || (plan.id !== 'basic' && plan.monthlyPrice > 0)) && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '1rem',
+                    right: '1rem',
+                    background: '#2d5016',
+                    color: 'white',
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: '0.75rem',
+                    fontWeight: '500'
+                  }}>
+                    {plan.popular ? 'MOST POPULAR' : '7 DAY TRIAL'}
+                  </div>
+                )}
+
+                <div style={{
+                  fontSize: '0.9rem',
+                  color: '#2d5016',
+                  fontWeight: '500',
+                  marginBottom: '0.5rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}>
+                  {plan.name.toUpperCase()}
+                </div>
+
+                <div style={{
+                  fontSize: '4rem',
+                  fontWeight: '300',
+                  color: '#2d5016',
+                  marginBottom: plan.id === 'basic' ? '2rem' : '0.5rem',
+                  lineHeight: '1',
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: '8px'
+                }}>
+                  {plan.displayPrice ? plan.displayPrice : `$${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}`}
+                  {!plan.displayPrice && (
+                    <span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
+                  )}
+                </div>
+
+                <div style={{ marginBottom: '2rem' }}>
+                  {plan.features.map((feature, index) => (
+                    <div key={index} style={{
+                      color: '#2d5016',
+                      marginBottom: '0.75rem',
+                      fontSize: '0.95rem',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '8px'
+                    }}>
+                      <span style={{ color: '#2d5016', fontSize: '1rem' }}>•</span>
+                      {feature}
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{
+                  background: plan.id === 'basic' ? 'rgba(37, 211, 102, 0.1)' : '#2d5016',
+                  color: plan.id === 'basic' ? '#25d366' : 'white',
+                  padding: '12px 20px',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  border: plan.id === 'basic' ? '1px solid rgba(37, 211, 102, 0.2)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}>
+                  {plan.id === 'basic' ? '💬 Start with WhatsApp' : '🚀 Start Free Trial'}
+                </div>
+
+                {plan.id === 'basic' && (
+                  <div style={{
+                    textAlign: 'center',
+                    fontSize: '0.8rem',
+                    color: '#25d366',
+                    marginTop: '0.5rem',
+                    fontWeight: '500'
+                  }}>
+                    No Credit Card Required
+                  </div>
+                )}
+
+                {plan.id !== 'basic' && (
+                  <div style={{
+                    textAlign: 'center',
+                    fontSize: '0.8rem',
+                    color: '#2d5016',
+                    marginTop: '0.5rem',
+                    opacity: 0.8
+                  }}>
+                    No commitment • Cancel anytime
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontSize: '1.1rem', color: '#2d5016', marginTop: '3rem', textAlign: 'center' }}>
+            Need Yaya for your Team?{' '}
+            <a href="mailto:info@yayagent.com" style={{ color: '#2d5016', textDecoration: 'underline' }}>
+              Contact us
             </a>
           </div>
-
-          {/* …שאר ה־UI נשאר כמו אצלך … */}
-
-          <p style={{ fontSize: '0.8rem', color: '#718096', marginTop: '2rem' }}>
-            Need help? Contact us at <a href="mailto:info@textcoco.com" style={{ color: '#8B5E3C', textDecoration: 'underline' }}>info@textcoco.com</a>
-          </p>
         </div>
       </main>
-
-      <style jsx>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        @keyframes scale-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-      `}</style>
     </div>
   )
 }
-
-// למניעת "is not a module" ב-TS מחמיר
-export {}
