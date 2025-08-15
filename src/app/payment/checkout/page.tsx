@@ -50,34 +50,32 @@ export default function CheckoutPage() {
     const trialStart = new Date().toISOString()
     const trialEnd = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
-    const baseUrl = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
-    const params = new URLSearchParams({
-      // VK = אימות + יצירת טוקן (ברירת מחדל סכום אימות נקבע במסוף)
-      tranmode: 'VK',
-      hidesum: '1',
-      currency: '2',           // USD (יחייב ₪ אם מט"ח לא מאופשר במסוף)
-      nologo: '1',
+    const baseUrl = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php'
 
-      // שדות משלך – יחזרו ל-success ול-notify
-      u1: urlParams.code,
-      u2: urlParams.plan,
-      u3: urlParams.billing,
-      u4: urlParams.price,
-      trial_start: trialStart,
-      trial_end: trialEnd,
+const params = new URLSearchParams({
+  tranmode: 'VK',
+  hidesum: '1',
+  currency: '2', // אם הטרמינל לא עובד במט"ח, תראה חיוב ב-₪ בפועל
 
-      // תיאור + עיצוב
-      pdesc: `Yaya ${urlParams.plan} - 7 Day Trial Authorization`,
-      trBgColor: 'FAF5F0',
-      trTextColor: '2D5016',
-      trButtonColor: '8B5E3C',
-      buttonLabel: 'Start Free Trial',
+  // שדות מותאמים – חוזרים ב-success/notify
+  u1: urlParams.code,
+  u2: urlParams.plan,
+  u3: urlParams.billing,
+  u4: urlParams.price,
 
-      // כתובות חזרה דרך הגשרים (תמיד יעבוד GET/POST)
-      success_url_address: `${window.location.origin}/api/tranzila/success-bridge`,
-      fail_url_address: `${window.location.origin}/api/tranzila/fail-bridge`,
-      notify_url_address: 'https://n8n-TD2y.sliplane.app/webhook/update-user-plan'
-    })
+  trial_start: trialStart,
+  trial_end: trialEnd,
+
+  pdesc: `Yaya ${urlParams.plan} - 7 Day Trial Authorization`,
+  trBgColor: 'FAF5F0',
+  trTextColor: '2D5016',
+  trButtonColor: '8B5E3C',
+  buttonLabel: 'Start Free Trial',
+
+  success_url_address: `${window.location.origin}/api/tranzila/success-bridge`,
+  fail_url_address: `${window.location.origin}/api/tranzila/fail-bridge`,
+  notify_url_address: 'https://n8n-TD2y.sliplane.app/webhook/update-user-plan',
+})
 
     return `${baseUrl}?${params.toString()}`
   }, [urlParams])
