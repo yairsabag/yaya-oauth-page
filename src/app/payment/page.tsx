@@ -1,3 +1,4 @@
+// src/app/payment/checkout/page.tsx
 'use client'
 
 import React, { useState, useEffect } from 'react'
@@ -69,10 +70,14 @@ export default function CheckoutPage() {
   const buildIframeUrl = () => {
     const baseUrl = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
     const params = new URLSearchParams({
-      sum: '0', // $0 for token creation
+      // חייב להיות חיובי; נסתיר אותו עם hidesum ונדאג לטוקן
+      sum: '1',
       currency: '2', // USD
-      tranmode: 'A',
+      tranmode: 'VK', // Verification + Token (מאפשר hidesum)
       nologo: '1', // Remove Tranzila logo
+
+      // UI language
+      lang: 'il',
       
       // Custom fields
       u1: urlParams.code,
@@ -81,26 +86,24 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       
       // Product description
-      pdesc: Yaya ${urlParams.plan} - 7 Day Trial Authorization,
+      pdesc: `Yaya ${urlParams.plan} - 7 Day Trial Authorization`,
       
       // Colors and styling
       trBgColor: 'FAF5F0', // Background color matching site
       trTextColor: '2D5016', // Dark green text
       trButtonColor: '8B5E3C', // Brown button
       buttonLabel: 'Start Free Trial',
-      
-      // Language
-    
+      hidesum: '1', // מותר רק עם VK/K/NK
       
       // Success/Fail URLs
-      success_url_address: ${window.location.origin}/payment/success?plan=${urlParams.plan}&price=${urlParams.price}&billing=${urlParams.billing}&code=${urlParams.code}&trial=true,
-      fail_url_address: ${window.location.origin}/payment/checkout?plan=${urlParams.plan}&price=${urlParams.price}&billing=${urlParams.billing}&code=${urlParams.code}&error=true,
+      success_url_address: `${window.location.origin}/payment/success?plan=${urlParams.plan}&price=${urlParams.price}&billing=${urlParams.billing}&code=${urlParams.code}&trial=true`,
+      fail_url_address: `${window.location.origin}/payment/checkout?plan=${urlParams.plan}&price=${urlParams.price}&billing=${urlParams.billing}&code=${urlParams.code}&error=true`,
       
       // Notify URL for backend processing
       notify_url_address: 'https://n8n-TD2y.sliplane.app/webhook/update-user-plan'
     })
     
-    return ${baseUrl}?${params.toString()}
+    return `${baseUrl}?${params.toString()}`
   }
 
   return (
@@ -315,11 +318,12 @@ export default function CheckoutPage() {
         </div>
       </main>
 
-      <style jsx>{
+      <style jsx>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
-      }</style>
+      `}</style>
     </div>
   )
+}
