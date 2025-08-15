@@ -1,68 +1,58 @@
-// FILE: src/app/payment/success/page.tsx
-'use client'
-import React, { useEffect, useState } from 'react'
+'use client';
+
+import { useEffect, useState } from 'react';
 
 type Params = {
-  code: string
-  plan: string
-  billing: string
-  price: string
-  token: string
-  trial_start: string
-  trial_end: string
-}
+  code: string;
+  token: string;
+  trialStart?: string;
+  trialEnd?: string;
+};
 
 export default function PaymentSuccessPage() {
-  const [p, setP] = useState<Params | null>(null)
+  const [params, setParams] = useState<Params | null>(null);
 
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search)
+    // נוודא שאנחנו בצד לקוח
+    if (typeof window !== 'undefined') {
+      // לצאת מ-iframe אם צריך
+      const topWin: Window | null = window.top;
+      if (topWin && topWin !== window.self) {
+        try {
+          topWin.location.href = window.location.href;
+        } catch {
+          // במקרה של cross-domain נשתוק
+        }
+      }
 
-    // לצאת מה-iframe למסך מלא
-    if (window.top !== window.self) window.top.location.href = window.location.href
-
-    const data: Params = {
-      code: q.get('code') || q.get('u1') || '',
-      plan: q.get('plan') || q.get('u2') || 'executive',
-      billing: q.get('billing') || q.get('u3') || 'monthly',
-      price: q.get('price') || q.get('u4') || '5',
-      token: q.get('TranzilaTK') || q.get('TranzilaTK0') || '',
-      trial_start: q.get('trial_start') || new Date().toISOString(),
-      trial_end: q.get('trial_end') || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      const q = new URLSearchParams(window.location.search);
+      const data: Params = {
+        code: q.get('code') || q.get('u1') || '',
+        token: q.get('token') || '',
+        trialStart: q.get('trial_start') || '',
+        trialEnd: q.get('trial_end') || '',
+      };
+      setParams(data);
     }
-    setP(data)
-
-    // שלח ל-n8n אם תרצה לעדכון משתמש
-    fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        registration_code: data.code,
-        plan: data.plan,
-        billing_type: data.billing,
-        price: data.price,
-        payment_token: data.token,
-        trial_start: data.trial_start,
-        trial_end: data.trial_end,
-        payment_date: new Date().toISOString(),
-        status: 'trial_active',
-      }),
-    }).catch(() => {})
-  }, [])
-
-  if (!p) return <div style={{padding:24}}>Loading...</div>
+  }, []);
 
   return (
-    <div style={{ fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", minHeight: '100vh', background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)', padding:'3rem 1rem' }}>
-      <div style={{ maxWidth: 720, margin: '0 auto', background:'#fff', borderRadius:20, padding:'2rem', border:'1px solid rgba(0,0,0,0.05)' }}>
-        <h1 style={{ color:'#8B5E3C', marginTop:0 }}>🎉 Payment Successful</h1>
-        <p>Registration Code: <b style={{fontFamily:'monospace'}}>{p.code}</b></p>
-        <p>Plan: <b>{p.plan}</b> • Billing: <b>{p.billing}</b> • Price: <b>${p.price}</b></p>
-        <p>Trial: <b>{new Date(p.trial_start).toLocaleDateString()}</b> → <b>{new Date(p.trial_end).toLocaleDateString()}</b></p>
-        <p>Token: <b style={{fontFamily:'monospace'}}>{p.token || '(pending)'}</b></p>
-        <hr />
-        <a href="/" style={{color:'#8B5E3C', textDecoration:'underline'}}>Back to Home</a>
-      </div>
+    <div style={{ padding: '2rem', fontFamily: 'Arial, sans-serif' }}>
+      <h1>✅ Payment Successful</h1>
+      {params ? (
+        <div style={{ marginTop: '1rem' }}>
+          <p><strong>User Code:</strong> {params.code}</p>
+          <p><strong>Token:</strong> {params.token}</p>
+          {params.trialStart && (
+            <p><strong>Trial Start:</strong> {params.trialStart}</p>
+          )}
+          {params.trialEnd && (
+            <p><strong>Trial End:</strong> {params.trialEnd}</p>
+          )}
+        </div>
+      ) : (
+        <p>Loading payment details...</p>
+      )}
     </div>
-  )
+  );
 }
