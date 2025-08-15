@@ -1,7 +1,13 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { ArrowLeft, Shield, CreditCard, Lock } from 'lucide-react'
+
+declare global {
+  interface Window {
+    TzlaHostedFields: any;
+  }
+}
 
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState({
@@ -19,16 +25,15 @@ export default function CheckoutPage() {
   })
   
   const [cardData, setCardData] = useState({
-    cardNumber: '',
-    expiryMonth: '',
-    expiryYear: '',
-    cvv: '',
     idNumber: ''
   })
   
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isMobile, setIsMobile] = useState(false)
+  const [fieldsReady, setFieldsReady] = useState(false)
+  
+  const fieldsRef = useRef<any>(null)
 
   // Detect mobile
   useEffect(() => {
@@ -52,152 +57,247 @@ export default function CheckoutPage() {
     setUrlParams(extractedParams)
   }, [])
 
+  // Initialize Tranzila Hosted Fields
+  useEffect(() => {
+    // Add custom styles for hosted fields
+    const style = document.createElement('style');
+    style.textContent = `
+      #card-number, #expiry, #cvv {
+        padding: 12px !important;
+      }
+      #card-number iframe, #expiry iframe, #cvv iframe {
+        width: 100% !important;
+        height: 44px !important;
+        vertical-align: middle !important;
+      }
+      .hosted-field-focus {
+        border-color: #8B5E3C !important;
+        box-shadow: 0 0 0 3px rgba(139, 94, 60, 0.1) !important;
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Load Tranzila Hosted Fields script
+    const script = document.createElement('script')
+    script.src = 'https://hf.tranzila.com/assets/js/thostedf.js'
+    script.async = true
+    script.onload = () => {
+      if (window.TzlaHostedFields) {
+        fieldsRef.current = window.TzlaHostedFields.create({
+          sandbox: false,
+          fields: {
+            credit_card_number: {
+              selector: '#card-number',
+              placeholder: '4580 4580 4580 4580'
+            },
+            cvv: {
+              selector: '#cvv',
+              placeholder: '123'
+            },
+            expiry: {
+              selector: '#expiry',
+              placeholder: 'MM/YY',
+              version: '1'
+            }
+          },
+          styles: {
+            'input': {
+              'font-family': 'system-ui, -apple-system, sans-serif',
+              'font-size': '14px',
+              'color': '#000',
+              'line-height': '1.5',
+              'letter-spacing': '0.5px'
+            },
+            ':focus': {
+              'outline': 'none'
+            },
+            '.hosted-fields-invalid': {
+              'color': '#ef4444'
+            },
+            '.hosted-fields-valid': {
+              'color': '#10b981'
+            }
+          }
+        })
+        
+        // Listen for ready event
+        fieldsRef.current?.onEvent('ready', () => {
+          setFieldsReady(true)
+        })
+        
+        // Listen for focus events
+        fieldsRef.current?.onEvent('focus', (event: any) => {
+          const element = document.getElementById(event.field);
+          if (element) {
+            element.classList.add('hosted-field-focus');
+          }
+        })
+        
+        fieldsRef.current?.onEvent('blur', (event: any) => {
+          const element = document.getElementById(event.field);
+          if (element) {
+            element.classList.remove('hosted-field-focus');
+          }
+        })
+      }
+    }
+    document.body.appendChild(script)
+
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script)
+      }
+      if (style.parentNode) {
+        style.parentNode.removeChild(style)
+      }
+    }
+  }, [])
+
   const planNames = {
     executive: 'Executive Plan',
     ultimate: 'Ultimate Plan'
   }
-  
-  // Format card number with spaces
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '')
-    const matches = v.match(/\d{4,16}/g)
-    const match = (matches && matches[0]) || ''
-    const parts = []
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4))
-    }
-    if (parts.length) {
-      return parts.join(' ')
-    } else {
-      return value
-    }
+
+  // עדכון handleSubmit בדף Checkout - גרסה סופית
+const handleSubmit = async () => {
+  if (!fieldsReady || !fieldsRef.current) {
+    alert('Payment fields are not ready. Please refresh the page.')
+    return
   }
 
-  // NEW: helper for 3DS redirect/auto-POST
-  function postToAcs(url: string, fields: Record<string, string>) {
-    const form = document.createElement('form')
-    form.method = 'POST'
-    form.action = url
-    Object.entries(fields || {}).forEach(([k, v]) => {
-      const input = document.createElement('input')
-      input.type = 'hidden'
-      input.name = k
-      input.value = v ?? ''
-      form.appendChild(input)
-    })
-    document.body.appendChild(form)
-    form.submit()
+  setIsLoading(true)
+  setErrors({})
+
+  // Validate form
+  const newErrors: Record<string, string> = {}
+  if (!formData.email) newErrors.email = 'Email is required'
+  if (!formData.fullName) newErrors.fullName = 'Full name is required'
+  if (!formData.phone) newErrors.phone = 'Phone number is required'
+  if (!cardData.idNumber || cardData.idNumber.length < 9) {
+    newErrors.idNumber = 'ID number is required (9 digits)'
   }
 
-  const handleSubmit = async () => {
-    setIsLoading(true)
-    setErrors({})
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors)
+    setIsLoading(false)
+    return
+  }
 
-    // Validate form
-    const newErrors: Record<string, string> = {}
-    if (!formData.email) newErrors.email = 'Email is required'
-    if (!formData.fullName) newErrors.fullName = 'Full name is required'
-    if (!formData.phone) newErrors.phone = 'Phone number is required'
+  // 🔥 שימוש ב-Hosted Fields עם Verify mode + Tokenization
+  fieldsRef.current.charge({
+    terminal_name: 'fxpyairsabag', // מסוף רגיל
+    amount: parseFloat(urlParams.price), // הסכום המלא
+    tran_mode: 'V', // 🔥 Verify - רק אישור כרטיס, ללא חיוב!
+    tokenize: true, // 🔥 יוצר טוקן לחיוב עתידי
+    currency: '2', // USD
     
-    // Validate card
-    if (!cardData.cardNumber || cardData.cardNumber.replace(/\s/g, '').length < 16) {
-      newErrors.cardNumber = 'Valid card number is required'
-    }
-    if (!cardData.expiryMonth || !cardData.expiryYear) {
-      newErrors.expiry = 'Expiry date is required'
-    }
-    if (!cardData.cvv || cardData.cvv.length < 3) {
-      newErrors.cvv = 'CVV is required'
-    }
-    if (!cardData.idNumber || cardData.idNumber.length < 9) {
-      newErrors.idNumber = 'ID number is required'
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
+    // פרטי לקוח
+    contact: formData.fullName,
+    email: formData.email,
+    phone: formData.phone,
+    credit_card_holder_id: cardData.idNumber,
+    
+    // מטה-דאטה
+    custom1: urlParams.code,
+    custom2: urlParams.plan,
+    custom3: urlParams.billing,
+    custom4: urlParams.price,
+    pdesc: `Yaya ${urlParams.plan} - 7 Day Trial Authorization`
+    
+  }, async (err: any, response: any) => {
+    if (err) {
+      console.error('Authorization error:', err)
+      handleErrors(err)
       setIsLoading(false)
       return
     }
-
-    try {
-      // Process payment through our API
-      const response = await fetch('/api/pay', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          // Payment details
-          plan: urlParams.plan,
-          amount: urlParams.price,
-          billing: urlParams.billing,
-          
-          // Customer details
-          email: formData.email,
-          fullName: formData.fullName,
-          phone: formData.phone,
-          
-          // Card details
-          cardNumber: cardData.cardNumber.replace(/\s/g, ''),
-          expiryMonth: cardData.expiryMonth,
-          expiryYear: cardData.expiryYear,
-          cvv: cardData.cvv,
-          idNumber: cardData.idNumber,
-          
-          // Registration code
-          registrationCode: urlParams.code,
-
-          // NEW: explicit API flags
-          currency: 'USD',      // שנה ל- 'ILS' אם צריך
-          use3ds: true
-        })
-      });
-
-      const result = await response.json();
-
-      // NEW: handle 3DS flow
-      if (result?.success && result?.requires3ds) {
-        postToAcs(result.acsUrl, result.payload); // payload typically has pareq/creq + termUrl/md
-        return; // user will return to /payment/3ds-return after ACS
+    
+    if (response && response.transaction_response && response.transaction_response.success) {
+      const token = response.transaction_response.token
+      const transactionId = response.transaction_response.transaction_id
+      
+      if (!token) {
+        alert('Failed to create payment token. Please try again.')
+        setIsLoading(false)
+        return
       }
-
-      if (result.success) {
-        // Update user plan in the database
-        await fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
+      
+      // 🔥 שלח את הטוקן לשרת לשמירה + הפעלת טריאל
+      try {
+        const trialResponse = await fetch('/api/start-trial', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
+            // פרטי משתמש
             registration_code: urlParams.code,
-            plan: urlParams.plan,
             email: formData.email,
-            expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString(),
-            billing_type: urlParams.billing,
-            status: 'active',
-            transaction_id: result.transactionId
+            full_name: formData.fullName,
+            phone: formData.phone,
+            id_number: cardData.idNumber,
+            
+            // פרטי תוכנית
+            plan: urlParams.plan,
+            billing: urlParams.billing,
+            price: parseFloat(urlParams.price),
+            
+            // טוקן + transaction ID
+            payment_token: token,
+            auth_transaction_id: transactionId,
+            
+            // תאריכים
+            trial_start: new Date().toISOString(),
+            trial_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            charge_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            
+            // מטה-דאטה
+            tranzila_response: response.transaction_response
           })
-        });
+        })
+
+        const trialData = await trialResponse.json()
         
-        // Redirect to success page
-        const successUrl = new URL(window.location.origin + '/payment/success')
-        successUrl.searchParams.set('plan', urlParams.plan)
-        successUrl.searchParams.set('email', formData.email)
-        successUrl.searchParams.set('price', urlParams.price)
-        successUrl.searchParams.set('billing', urlParams.billing)
-        successUrl.searchParams.set('code', urlParams.code)
-        successUrl.searchParams.set('transactionId', result.transactionId)
-        
-        window.location.href = successUrl.toString()
-      } else {
-        // Show error
-        alert(result.error || 'Payment failed. Please check your card details and try again.')
+        if (trialData.success) {
+          // 🎉 הצלחה! הפנה לדף success
+          const successUrl = new URL(window.location.origin + '/payment/success')
+          successUrl.searchParams.set('plan', urlParams.plan)
+          successUrl.searchParams.set('email', formData.email)
+          successUrl.searchParams.set('price', urlParams.price)
+          successUrl.searchParams.set('billing', urlParams.billing)
+          successUrl.searchParams.set('code', urlParams.code)
+          successUrl.searchParams.set('trial', 'true')
+          successUrl.searchParams.set('transactionId', transactionId)
+          
+          window.location.href = successUrl.toString()
+        } else {
+          throw new Error(trialData.error || 'Failed to start trial')
+        }
+      } catch (apiError) {
+        console.error('Trial start error:', apiError)
+        alert('Failed to start trial. Please contact support.')
         setIsLoading(false)
       }
-    } catch (error) {
-      console.error('Payment error:', error)
-      alert('An error occurred while processing your payment. Please try again.')
+    } else {
+      alert('Failed to authorize payment method. Please check your details and try again.')
       setIsLoading(false)
+    }
+  })
+}
+
+  const handleErrors = (error: any) => {
+    if (error.messages) {
+      error.messages.forEach((message: any) => {
+        if (message.param === 'number') {
+          setErrors(prev => ({ ...prev, cardNumber: message.message }))
+        } else if (message.param === 'cvv') {
+          setErrors(prev => ({ ...prev, cvv: message.message }))
+        } else if (message.param === 'expiry') {
+          setErrors(prev => ({ ...prev, expiry: message.message }))
+        }
+      })
+    } else {
+      alert('Payment error. Please try again.')
     }
   }
 
@@ -415,37 +515,28 @@ export default function CheckoutPage() {
                       Card Number *
                     </label>
                     <div style={{ position: 'relative' }}>
-                      <input
-                        type="text"
-                        value={formatCardNumber(cardData.cardNumber)}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\s/g, '')
-                          if (value.length <= 16) {
-                            setCardData({ ...cardData, cardNumber: value })
-                          }
-                        }}
-                        maxLength={19}
+                      <div 
+                        id="card-number" 
                         style={{
                           width: '100%',
-                          padding: '0.75rem',
                           paddingLeft: '3rem',
                           border: errors.cardNumber ? '1px solid #ef4444' : '1px solid #E5DDD5',
                           borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
+                          background: 'white',
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          position: 'relative'
                         }}
-                        placeholder="1234 5678 9012 3456"
                       />
-                      <CreditCard size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#8B5E3C' }} />
+                      <CreditCard size={20} style={{ position: 'absolute', left: '1rem', top: '12px', color: '#8B5E3C', pointerEvents: 'none' }} />
                     </div>
                     {errors.cardNumber && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.cardNumber}</p>}
                   </div>
 
                   <div style={{ 
-                    display: isMobile ? 'flex' : 'grid', 
-                    flexDirection: isMobile ? 'column' : undefined,
-                    gridTemplateColumns: isMobile ? undefined : '1fr 1fr', 
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr', 
                     gap: '1rem', 
                     marginBottom: '1rem' 
                   }}>
@@ -453,50 +544,18 @@ export default function CheckoutPage() {
                       <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
                         Expiry Date *
                       </label>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <input
-                          type="text"
-                          value={cardData.expiryMonth}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '')
-                            if (value.length <= 2) {
-                              setCardData({ ...cardData, expiryMonth: value })
-                            }
-                          }}
-                          maxLength={2}
-                          style={{
-                            width: '50%',
-                            padding: '0.75rem',
-                            border: errors.expiry ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                            borderRadius: '8px',
-                            fontSize: isMobile ? '0.875rem' : '0.9rem',
-                            boxSizing: 'border-box',
-                            background: 'white'
-                          }}
-                          placeholder="MM"
-                        />
-                        <input
-                          type="text"
-                          value={cardData.expiryYear}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(/\D/g, '')
-                            if (value.length <= 2) {
-                              setCardData({ ...cardData, expiryYear: value })
-                            }
-                          }}
-                          maxLength={2}
-                          style={{
-                            width: '50%',
-                            padding: '0.75rem',
-                            border: errors.expiry ? '1px solid #ef4444' : '1px solid #E5DDD5',
-                            borderRadius: '8px',
-                            fontSize: isMobile ? '0.875rem' : '0.9rem',
-                            boxSizing: 'border-box',
-                            background: 'white'
-                          }}
-                          placeholder="YY"
-                        />
-                      </div>
+                      <div 
+                        id="expiry" 
+                        style={{
+                          width: '100%',
+                          border: errors.expiry ? '1px solid #ef4444' : '1px solid #E5DDD5',
+                          borderRadius: '8px',
+                          background: 'white',
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center'
+                        }}
+                      />
                       {errors.expiry && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.expiry}</p>}
                     </div>
                     
@@ -504,26 +563,17 @@ export default function CheckoutPage() {
                       <label style={{ display: 'block', fontSize: isMobile ? '0.875rem' : '0.9rem', fontWeight: '600', color: '#8B5E3C', marginBottom: '0.5rem' }}>
                         CVV *
                       </label>
-                      <input
-                        type="text"
-                        value={cardData.cvv}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '')
-                          if (value.length <= 4) {
-                            setCardData({ ...cardData, cvv: value })
-                          }
-                        }}
-                        maxLength={4}
+                      <div 
+                        id="cvv" 
                         style={{
                           width: '100%',
-                          padding: '0.75rem',
                           border: errors.cvv ? '1px solid #ef4444' : '1px solid #E5DDD5',
                           borderRadius: '8px',
-                          fontSize: isMobile ? '0.875rem' : '0.9rem',
-                          boxSizing: 'border-box',
-                          background: 'white'
+                          background: 'white',
+                          minHeight: '44px',
+                          display: 'flex',
+                          alignItems: 'center'
                         }}
-                        placeholder="123"
                       />
                       {errors.cvv && <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem' }}>{errors.cvv}</p>}
                     </div>
@@ -537,9 +587,9 @@ export default function CheckoutPage() {
                       type="text"
                       value={cardData.idNumber}
                       onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '')
+                        const value = e.target.value.replace(/\D/g, '');
                         if (value.length <= 9) {
-                          setCardData({ ...cardData, idNumber: value })
+                          setCardData({ ...cardData, idNumber: value });
                         }
                       }}
                       maxLength={9}
@@ -560,17 +610,17 @@ export default function CheckoutPage() {
 
                 <button
                   onClick={handleSubmit}
-                  disabled={isLoading}
+                  disabled={isLoading || !fieldsReady}
                   style={{
                     width: '100%',
                     padding: isMobile ? '0.875rem' : '1rem',
-                    background: isLoading ? '#9ca3af' : '#8B5E3C',
+                    background: isLoading || !fieldsReady ? '#9ca3af' : '#8B5E3C',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: isMobile ? '0.95rem' : '1rem',
                     fontWeight: '600',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    cursor: isLoading || !fieldsReady ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -578,18 +628,18 @@ export default function CheckoutPage() {
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    if (!isLoading && !isMobile) {
+                    if (!isLoading && fieldsReady && !isMobile) {
                       (e.target as HTMLButtonElement).style.background = '#7c4a32'
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!isLoading && !isMobile) {
+                    if (!isLoading && fieldsReady && !isMobile) {
                       (e.target as HTMLButtonElement).style.background = '#8B5E3C'
                     }
                   }}
                 >
                   <Lock size={isMobile ? 18 : 20} />
-                  {isLoading ? 'Processing...' : 'Start Free Trial - $0.00'}
+                  {!fieldsReady ? 'Loading...' : isLoading ? 'Processing...' : 'Start Free Trial - $0.00'}
                 </button>
 
                 <p style={{ fontSize: isMobile ? '0.75rem' : '0.8rem', color: '#8B5E3C', textAlign: 'center', marginTop: '1rem', opacity: 0.8 }}>
