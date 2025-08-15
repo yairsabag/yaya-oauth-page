@@ -88,14 +88,10 @@ export default function CheckoutPage() {
   const buildIframeUrl = () => {
     const baseUrl = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
     const params = new URLSearchParams({
-      // חייב להיות חיובי; נסתיר אותו עם hidesum ונדאג לטוקן
-      sum: '1',
+      sum: '0', // $0 for token creation
       currency: '2', // USD
-      tranmode: 'VK', // Verification + Token (מאפשר hidesum)
+      tranmode: 'A',
       nologo: '1', // Remove Tranzila logo
-
-      // UI language
-      lang: 'il',
       
       // Custom fields
       u1: urlParams.code,
@@ -111,7 +107,9 @@ export default function CheckoutPage() {
       trTextColor: '2D5016', // Dark green text
       trButtonColor: '8B5E3C', // Brown button
       buttonLabel: 'Start Free Trial',
-      hidesum: '1', // מותר רק עם VK/K/NK
+      
+      // Language
+      lang: 'il',
       
       // Success/Fail URLs
       success_url_address: `${window.location.origin}/payment/success?plan=${urlParams.plan}&price=${urlParams.price}&billing=${urlParams.billing}&code=${urlParams.code}&trial=true`,
