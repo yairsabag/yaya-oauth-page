@@ -2,63 +2,92 @@
 
 import React, { useMemo, useState } from 'react';
 
-type SearchParams = {
-  plan?: string;
-  planName?: string;
-  price?: string;
-  billing?: 'monthly' | 'yearly';
-  code?: string;
-};
+/**
+ * NOTE on typing:
+ * Next.js (App Router) injects `searchParams` dynamically. To avoid the
+ * “does not satisfy the constraint 'PageProps' / Promise<any>” error you saw,
+ * we intentionally keep the prop type loose and parse safely inside.
+ */
+export default function CheckoutPage(props: any) {
+  const sp: Record<string, string | undefined> = props?.searchParams ?? {};
 
-export default function CheckoutPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
-  // Basic info coming from the URL
-  const plan = (searchParams.plan ?? 'executive').toLowerCase();
-  const planName = searchParams.planName ?? 'Executive Plan';
-  const price = searchParams.price ?? '5';
-  const billing = (searchParams.billing ?? 'monthly') as 'monthly' | 'yearly';
-  const regCode = searchParams.code ?? '';
+  // URL params with safe defaults
+  const plan = (sp.plan ?? 'executive').toLowerCase();
+  const planName = sp.planName ?? 'Executive Plan';
+  const priceStr = sp.price ?? '5'; // monthly price in USD
+  const priceNum = Number.isFinite(Number(priceStr)) ? Number(priceStr) : 5;
+  const billing = (sp.billing ?? 'monthly') as 'monthly' | 'yearly';
+  const regCode = sp.code ?? '';
 
-  // Customer details form (shown left)
+  // Customer details (left form, optional metadata for Tranzila)
   const [firstName, setFirstName] = useState('John');
   const [lastName, setLastName] = useState('Doe');
   const [email, setEmail] = useState('you@example.com');
   const [phone, setPhone] = useState('+1 555 555 5555');
 
-  /** Build the Tranzila iframe URL.
-   * Terminal: fxpyairsabag (your approved USD terminal)
-   * IMPORTANT: lang=en to avoid "language unsupported"
-   * We keep params minimal; currency follows your terminal configuration (USD).
-   * sum=0 to start a free trial flow (no charge now).
+  // Base URL for your site (used for success/fail/notify). You can set it in env.
+  const siteBase =
+    process.env.NEXT_PUBLIC_BASE_URL ??
+    (typeof window !== 'undefined' ? window.location.origin : 'https://yayagent.com');
+
+  /**
+   * Build Tranzila NEW iframe URL:
+   *   https://direct.tranzila.com/<terminal>/iframenew.php
+   * Keys from the spec:
+   *  - lang=en  -> English UI (fixes “language unsupported”)
+   *  - currency=2 -> USD (your terminal is approved in USD)
+   *  - sum=0 + recur_* -> free trial now, recurring later
+   *  - recur_transaction=4_approved -> monthly (not customer choice)
+   *  - recur_start_date=YYYY-MM-DD -> start in 7 days
+   *  - success_url_address / fail_url_address / notify_url_address
+   *  - metadata (email, phone, contact, pdesc, etc.)
    */
   const tranzilaSrc = useMemo(() => {
-    const params = new URLSearchParams();
+    const sevenDays = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const recurStartDate = sevenDays.toISOString().slice(0, 10); // yyyy-mm-dd
 
-    // Amount 0 for free trial (actual recurring is configured on Tranzila side)
-    params.set('sum', '0');
+    const qp = new URLSearchParams();
 
-    // Force English UI on Tranzila form
-    params.set('lang', 'en');
+    // Display & currency
+    qp.set('lang', 'en');        // force English
+    qp.set('currency', '2');     // 2 = USD
 
-    // Helpful meta data to show on the Tranzila page and pass back to your success bridge
-    if (email) params.set('email', email);
-    if (firstName) params.set('fname', firstName);
-    if (lastName) params.set('lname', lastName);
-    if (phone) params.set('phone', phone);
-    if (regCode) params.set('uid', regCode); // your registration code as uid
-    params.set('description', `${planName} (${billing})`);
+    // Trial now, recurring later (monthly)
+    qp.set('sum', '0');                              // charge now: $0
+    qp.set('recur_sum', String(priceNum));           // recurring amount
+    qp.set('recur_transaction', '4_approved');       // monthly, not customer choice
+    qp.set('recur_start_date', recurStartDate);      // start in 7 days
 
-    // You can add more optional fields per Tranzila docs if needed
+    // Success / Fail / Notify endpoints (your bridges / webhook)
+    qp.set('success_url_address', `${siteBase}/api/tranzila/success-bridge`);
+    qp.set('fail_url_address', `${siteBase}/api/tranzila/fail-bridge`);
+    qp.set('notify_url_address', `${siteBase}/api/webhook/update-user-plan`);
 
-    return `https://direct.tranzila.com/fxpyairsabag/iframe.php?${params.toString()}`;
-  }, [firstName, lastName, email, phone, regCode, planName, billing]);
+    // Optional – enable Google Pay (supported on NEW iframe)
+    // If you don't want it, comment out:
+    qp.set('google_pay', '1');
+
+    // Helpful metadata that will return to you as well
+    if (email) qp.set('email', email);
+    if (phone) qp.set('phone', phone);
+    qp.set('contact', `${firstName} ${lastName}`.trim());
+    qp.set('company', 'Yaya Assistant');
+    qp.set('pdesc', `${planName} (${billing})`);
+    if (regCode) {
+      // Your internal registration code; you can also use Z_field if defined
+      qp.set('uid', regCode);
+    }
+
+    // Optional UI polish on Tranzila form
+    qp.set('buttonLabel', 'Start Free Trial');
+    // Example of removing Tranzila logo if enabled for your terminal:
+    // qp.set('nologo', '1');
+
+    return `https://direct.tranzila.com/fxpyairsabag/iframenew.php?${qp.toString()}`;
+  }, [billing, email, firstName, lastName, phone, planName, priceNum, regCode, siteBase]);
 
   const totalToday = 0; // trial
-  const recurringLabel =
-    billing === 'yearly' ? `$${price}/year` : `$${price}/month`;
+  const recurringLabel = billing === 'yearly' ? `$${priceStr}/year` : `$${priceStr}/month`;
 
   return (
     <div
@@ -100,7 +129,7 @@ export default function CheckoutPage({
             <img
               src="/yaya-logo.png"
               alt="Yaya Assistant Logo"
-              style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+              style={{ width: 48, height: 48, objectFit: 'contain' }}
             />
             <span style={{ fontSize: '1.25rem', fontWeight: 600, color: '#2d5016' }}>
               Yaya
@@ -130,7 +159,7 @@ export default function CheckoutPage({
         </div>
       </header>
 
-      {/* Main layout */}
+      {/* Main */}
       <main style={{ padding: '2.5rem 0' }}>
         <div
           style={{
@@ -142,7 +171,7 @@ export default function CheckoutPage({
             gap: '2rem',
           }}
         >
-          {/* Left column: Order summary + Customer details */}
+          {/* Left: Summary + Details */}
           <div>
             <div
               style={{
@@ -174,13 +203,7 @@ export default function CheckoutPage({
                 marginBottom: '1rem',
               }}
             >
-              <div
-                style={{
-                  fontWeight: 700,
-                  color: '#8B5E3C',
-                  marginBottom: 8,
-                }}
-              >
+              <div style={{ fontWeight: 700, color: '#8B5E3C', marginBottom: 8 }}>
                 {planName}
               </div>
               <div style={{ color: '#8B5E3C', opacity: 0.8, marginBottom: 12 }}>
@@ -220,7 +243,6 @@ export default function CheckoutPage({
                   gap: 6,
                   color: '#8B5E3C',
                   fontSize: 14,
-                  marginTop: 6,
                 }}
               >
                 <div>7-day free trial</div>
@@ -237,7 +259,7 @@ export default function CheckoutPage({
               </div>
             </div>
 
-            {/* Customer details – these values are passed to Tranzila as metadata */}
+            {/* Customer details (metadata only) */}
             <div
               style={{
                 background: 'white',
@@ -246,16 +268,8 @@ export default function CheckoutPage({
                 padding: '1.25rem',
               }}
             >
-              <LabeledInput
-                label="First name*"
-                value={firstName}
-                onChange={setFirstName}
-              />
-              <LabeledInput
-                label="Last name*"
-                value={lastName}
-                onChange={setLastName}
-              />
+              <LabeledInput label="First name*" value={firstName} onChange={setFirstName} />
+              <LabeledInput label="Last name*" value={lastName} onChange={setLastName} />
               <LabeledInput label="Email*" value={email} onChange={setEmail} />
               <LabeledInput
                 label="Phone (optional)"
@@ -271,13 +285,13 @@ export default function CheckoutPage({
                   lineHeight: 1.4,
                 }}
               >
-                Your payment information is encrypted and secure. We never store
-                your credit card details.
+                Your payment information is encrypted and secure. We never store your
+                credit card details.
               </p>
             </div>
           </div>
 
-          {/* Right column: Tranzila iframe */}
+          {/* Right: Tranzila iframe */}
           <div
             style={{
               background: 'white',
@@ -291,13 +305,9 @@ export default function CheckoutPage({
             <iframe
               title="Tranzila Checkout"
               src={tranzilaSrc}
-              // IMPORTANT: only standard attributes (to keep TS happy and builds green)
-              style={{
-                width: '100%',
-                height: '650px',
-                border: '0',
-                display: 'block',
-              }}
+              // per spec: enabling Web Payments inside iframe for Google Pay
+              allow="payment"
+              style={{ width: '100%', height: '680px', border: '0', display: 'block' }}
               sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
               referrerPolicy="no-referrer"
             />
@@ -308,7 +318,7 @@ export default function CheckoutPage({
   );
 }
 
-/** Small labeled input helper */
+/** Small labeled input component */
 function LabeledInput({
   label,
   value,
@@ -344,7 +354,6 @@ function LabeledInput({
           color: '#2d3748',
           background: '#fff',
         }}
-        placeholder=""
         autoComplete="on"
       />
     </div>
