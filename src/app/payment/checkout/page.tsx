@@ -115,12 +115,6 @@ export default function CheckoutPage() {
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
       
-      // תיקון שגיאת 418 - ניסוי וריאציות שונות
-      cvv: '1',                      // דרישת CVV
-      myid: '1',                     // דרישת ת"ז  
-      id: '1',                       // וריאציה נוספת לת"ז
-      ccv: '1',                      // וריאציה נוספת ל-CVV
-      
       // עיצוב נוסף (ללא שפה)
       trTextSize: '14',              // גודל טקסט
       trButtonTextColor: 'FFFFFF',   // צבע טקסט לבן בכפתור
