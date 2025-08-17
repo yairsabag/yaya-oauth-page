@@ -12,6 +12,7 @@ type UrlParams = {
 }
 
 export default function CheckoutPage() {
+  // -------- URL/query --------
   const [urlParams, setUrlParams] = useState<UrlParams>({
     plan: 'executive',
     price: '5',
@@ -20,17 +21,20 @@ export default function CheckoutPage() {
     planName: 'Executive Plan',
   })
 
+  // -------- Buyer details (for passing through to Tranzila & success page) --------
   const [firstName, setFirstName] = useState('')
-  const [lastName,  setLastName]  = useState('')
-  const [email,     setEmail]     = useState('')
-  const [phone,     setPhone]     = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
 
-  const [isMobile, setIsMobile]   = useState(false)
+  // -------- UI state --------
+  const [isMobile, setIsMobile] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
     const plan = (p.get('plan') || 'executive').toLowerCase()
+    const planName = p.get('planName') || (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan')
     const price = p.get('price') || (plan === 'ultimate' ? '14' : '5')
 
     setUrlParams({
@@ -38,16 +42,21 @@ export default function CheckoutPage() {
       price,
       billing: (p.get('billing') || 'monthly').toLowerCase(),
       code: p.get('code') || 'F75CEJ',
-      planName: p.get('planName') || (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan'),
+      planName,
     })
 
     const onResize = () => setIsMobile(window.innerWidth < 940)
     onResize()
     window.addEventListener('resize', onResize)
-    const t = setTimeout(() => setIsLoading(false), 300)
-    return () => { window.removeEventListener('resize', onResize); clearTimeout(t) }
+
+    const t = setTimeout(() => setIsLoading(false), 400)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      clearTimeout(t)
+    }
   }, [])
 
+  // -------- Plan features (for the left card) --------
   const planDetails = {
     executive: {
       name: 'Executive Plan',
@@ -68,60 +77,80 @@ export default function CheckoutPage() {
       ],
     },
   } as const
-
   const currentPlan =
     planDetails[(urlParams.plan as keyof typeof planDetails) || 'executive'] ||
     planDetails.executive
 
-  // התשלום החוזר מתחיל בעוד 7 ימים
+  // -------- Recurring start (YYYY-MM-DD, +7 days) --------
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
     return d.toISOString().slice(0, 10)
   }, [])
 
-  // קישור ל־Tranzila iframe — נסיון = $0 היום (trial) וחיוב חודשי החל בעוד 7 ימים
+  // -------- Tranzila IFRAME SRC --------
   const iframeSrc = useMemo(() => {
     const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
+
+    // Success/Fail bridge endpoints בשרת שלך (שוברי IFRAME ומעבירים להורה)
+    // הם צריכים להחזיר HTML עם window.top.location.href = '<final url>'
+    const successBridge = `/api/tranzila/success-bridge`
+    const failBridge = `/api/tranzila/fail-bridge`
+
     const params = new URLSearchParams({
-      // היום $0 (טוקניזציה/עסקה 0), ואז חיוב חודשי
-      sum: '0',
-      currency: '2',                 // USD
-      tranmode: 'AK',                // עסקה רגילה (עם טוקן), sum=0 מאושר ע"י טרנזילה
+      // עסקה רגילה (עובד אצלך): AK + cred_type=1
+      sum: urlParams.price,           // תשלום ראשון = המחיר (נמנע מ-418)
+      currency: '2',                  // USD
+      tranmode: 'AK',
       cred_type: '1',
 
-      recur_sum: urlParams.price,    // 5 או 14
+      // Recurring – החל בעוד 7 ימים
+      recur_sum: urlParams.price,
       recur_transaction: '4_approved',
       recur_start_date: recurStartDate,
-
-      // פרטי לקוח (יופיעו במסוף)
-      contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
-      email: email.trim(),
-      phone: phone.trim(),
 
       // UI
       nologo: '1',
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
       trButtonColor: '8B5E3C',
-      buttonLabel: 'Start Free Trial',
+      buttonLabel: 'Pay and Start',
       google_pay: '1',
 
-      // מזהים ותיאור
+      // מזהים ושדות משלך
       uid: urlParams.code,
       u1: urlParams.code,
       u2: urlParams.plan,
       u3: urlParams.billing,
       u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - 7 Day Free Trial (USD)`,
+      pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
 
-      // חזרה והודעה (אפשר להשאיר כפי שהיה)
-      success_url_address: `https://www.yayagent.com/payment/success?plan=${urlParams.plan}&email=${encodeURIComponent(email.trim())}&price=${urlParams.price}&code=${urlParams.code}&billing=${urlParams.billing}`,
-      fail_url_address: `https://www.yayagent.com/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
-      notify_url_address: `https://n8n-TD2y.sliplane.app/webhook/update-user-plan`,
+      // Bridge (ה־bridge שלך יעשה redirect אל /payment/success עם כל הפרמטרים)
+      success_url_address: `${successBridge}?plan=${encodeURIComponent(urlParams.plan)}&price=${encodeURIComponent(
+        urlParams.price
+      )}&billing=${encodeURIComponent(urlParams.billing)}&code=${encodeURIComponent(urlParams.code)}&email=${encodeURIComponent(
+        email.trim()
+      )}&firstName=${encodeURIComponent(firstName.trim())}&lastName=${encodeURIComponent(lastName.trim())}`,
+      fail_url_address: `${failBridge}?code=${encodeURIComponent(urlParams.code)}`,
     })
+
+    // פרטי לקוח – יוצגו במסוף ויכולים להגיע חזרה ב־notify שלך אם צריך
+    if (firstName || lastName) params.set('contact', `${firstName} ${lastName}`.trim())
+    if (email) params.set('email', email.trim())
+    if (phone) params.set('phone', phone.trim())
+
     return `${base}?${params.toString()}`
-  }, [urlParams.plan, urlParams.price, urlParams.billing, urlParams.code, firstName, lastName, email, phone, recurStartDate])
+  }, [
+    urlParams.plan,
+    urlParams.price,
+    urlParams.billing,
+    urlParams.code,
+    firstName,
+    lastName,
+    email,
+    phone,
+    recurStartDate,
+  ])
 
   return (
     <div
@@ -242,11 +271,10 @@ export default function CheckoutPage() {
                 ))}
               </ul>
 
-              {/* כאן מציגים $0 היום */}
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>7-day free trial (today)</span>
-                  <span style={{ color: '#16a34a' }}>$0.00</span>
+                  <span>First payment (today)</span>
+                  <span>${urlParams.price}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
@@ -263,7 +291,7 @@ export default function CheckoutPage() {
                   }}
                 >
                   <span>Total today</span>
-                  <span style={{ color: '#16a34a' }}>$0.00</span>
+                  <span style={{ color: '#8B5E3C' }}>${urlParams.price}</span>
                 </div>
               </div>
 
@@ -274,13 +302,13 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          {/* תשלום */}
+          {/* PAYMENT */}
           <section>
             <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>
               Complete Your Order
             </h2>
 
-            {/* טופס פרטי לקוח */}
+            {/* Customer form (optional, רק מעבירים לטרנזילה) */}
             <div
               style={{
                 marginTop: 12,
@@ -300,28 +328,49 @@ export default function CheckoutPage() {
               >
                 <div>
                   <label style={labelStyle}>First name</label>
-                  <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="John" style={inputStyle} />
+                  <input
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="John"
+                    style={inputStyle}
+                  />
                 </div>
                 <div>
                   <label style={labelStyle}>Last name</label>
-                  <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Doe" style={inputStyle} />
+                  <input
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Doe"
+                    style={inputStyle}
+                  />
                 </div>
                 <div>
                   <label style={labelStyle}>Email</label>
-                  <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="john@example.com" type="email" style={inputStyle} />
+                  <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="john@example.com"
+                    type="email"
+                    style={inputStyle}
+                  />
                 </div>
                 <div>
                   <label style={labelStyle}>Phone</label>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 555 123 4567" style={inputStyle} />
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+1 555 123 4567"
+                    style={inputStyle}
+                  />
                 </div>
               </div>
 
               <p style={{ marginTop: 8, color: '#7a6a5f', fontSize: '.9rem' }}>
-                The secure payment form is loaded below.
+                The secure payment form is already loaded below.
               </p>
             </div>
 
-            {/* IFRAME – מוצג מיידית */}
+            {/* IFRAME – נטען מיד */}
             <div
               style={{
                 marginTop: 12,
@@ -345,12 +394,17 @@ export default function CheckoutPage() {
                   key={iframeSrc}
                   src={iframeSrc}
                   title="Secure Payment Form"
+                  // אין כאן allowPaymentRequest כדי לא לקבל TypeScript error
                   allow="payment"
                   sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
                   style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
                 />
               )}
             </div>
+
+            <p style={{ marginTop: 12, color: '#6b7280', fontSize: '.9rem', textAlign: 'center' }}>
+              Your payment information is encrypted and secure. We never store your credit card details.
+            </p>
           </section>
         </div>
       </main>
@@ -362,12 +416,14 @@ export default function CheckoutPage() {
   )
 }
 
+// ----- styles -----
 const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: '.85rem',
   color: '#6b7280',
   marginBottom: 6,
 }
+
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px 12px',
@@ -376,6 +432,7 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
   fontSize: '.95rem',
 }
+
 const loaderWrap: React.CSSProperties = {
   minHeight: 650,
   display: 'flex',
@@ -384,6 +441,7 @@ const loaderWrap: React.CSSProperties = {
   flexDirection: 'column',
   gap: 10,
 }
+
 const spinner: React.CSSProperties = {
   width: 50,
   height: 50,
