@@ -16,14 +16,13 @@ export default function SuccessPage() {
   const [planUpdateStatus, setPlanUpdateStatus] =
     useState<'loading' | 'success' | 'error'>('loading')
 
-  // --- Bust out of iframe if embedded (important for Tranzila iframe) ---
+  // Break out of iframe if embedded (Tranzila)
   useEffect(() => {
     if (typeof window !== 'undefined' && window.top && window.top !== window.self) {
       try {
         window.top.location.href = window.location.href
         return
       } catch {
-        // אם הדפדפן חוסם, ננסה לפתוח חלון חדש כגיבוי
         window.open(window.location.href, '_top')
       }
     }
@@ -79,7 +78,7 @@ export default function SuccessPage() {
     }
   }
 
-  // Google OAuth URL (כולל state = registration code)
+  // Google OAuth URL (state = registration code)
   const googleOAuthUrl = useMemo(() => {
     const clientId =
       '314964896562-o93h71h2cpiqgcikaqeg2a34ht2ipl2j.apps.googleusercontent.com'
@@ -92,13 +91,19 @@ export default function SuccessPage() {
     )}&response_type=code&scope=${scope}&state=${state}&access_type=offline&prompt=consent`
   }, [urlParams.code])
 
-  const handleConnectGoogle = () => {
-    // תמיד ננווט את TOP – כדי להימנע מטעינה בתוך iframe
-    if (typeof window !== 'undefined' && window.top) {
-      window.top.location.href = googleOAuthUrl
-    } else {
-      window.location.href = googleOAuthUrl
-    }
+  const buttonStyle: React.CSSProperties = {
+    display: 'inline-block',
+    background: '#4285f4',
+    color: 'white',
+    padding: '16px 28px',
+    borderRadius: 12,
+    border: 'none',
+    fontSize: '1.1rem',
+    fontWeight: 700,
+    cursor: urlParams.code ? 'pointer' : 'not-allowed',
+    boxShadow: '0 6px 18px rgba(66,133,244,.35)',
+    textDecoration: 'none',
+    opacity: urlParams.code ? 1 : 0.6,
   }
 
   return (
@@ -173,22 +178,21 @@ export default function SuccessPage() {
             </div>
           )}
 
-          <button
-            onClick={handleConnectGoogle}
-            style={{
-              background: '#4285f4',
-              color: 'white',
-              padding: '16px 28px',
-              borderRadius: 12,
-              border: 'none',
-              fontSize: '1.1rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              boxShadow: '0 6px 18px rgba(66,133,244,.35)',
+          {/* כפתור כקישור אמיתי, נפתח בטופ-וינדו */}
+          <a
+            href={googleOAuthUrl || '#'}
+            target="_top"
+            rel="noopener noreferrer"
+            style={buttonStyle}
+            onClick={(e) => {
+              if (!urlParams.code) {
+                e.preventDefault()
+                alert('Missing registration code (state). Please contact support.')
+              }
             }}
           >
             Connect Google Account
-          </button>
+          </a>
 
           <p style={{ marginTop: 24, color: '#718096', fontSize: '.9rem' }}>
             Your data is encrypted and only used to help you manage your day via WhatsApp.
