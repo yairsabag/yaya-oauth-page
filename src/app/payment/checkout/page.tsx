@@ -14,7 +14,7 @@ type UrlParams = {
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState<UrlParams>({
     plan: 'executive',
-    price: '5',
+    price: '5',                 // או 14
     billing: 'monthly',
     code: 'F75CEJ',
     planName: 'Executive Plan',
@@ -25,12 +25,12 @@ export default function CheckoutPage() {
   const [email,     setEmail]     = useState('')
   const [phone,     setPhone]     = useState('')
 
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile]   = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
-    const plan = (p.get('plan') || 'executive').toLowerCase()
+    const plan  = (p.get('plan') || 'executive').toLowerCase()
     const price = p.get('price') || (plan === 'ultimate' ? '14' : '5')
 
     setUrlParams({
@@ -44,7 +44,7 @@ export default function CheckoutPage() {
     const onResize = () => setIsMobile(window.innerWidth < 940)
     onResize()
     window.addEventListener('resize', onResize)
-    const t = setTimeout(() => setIsLoading(false), 400)
+    const t = setTimeout(() => setIsLoading(false), 350)
     return () => {
       window.removeEventListener('resize', onResize)
       clearTimeout(t)
@@ -76,55 +76,55 @@ export default function CheckoutPage() {
     planDetails[(urlParams.plan as keyof typeof planDetails) || 'executive'] ||
     planDetails.executive
 
-  // תאריך התחלת המנוי בעוד 7 ימים (YYYY-MM-DD)
+  // התחלת המנוי בעוד 7 ימים
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
     return d.toISOString().slice(0, 10)
   }, [])
 
-  // שים לב: משתמשים בטרמינל ה-Token
-  const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php'
+  // בסיס ה־iframe: טרמינל רגיל (חיוב מיידי), כמו הלינק שעבד לך
+  const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // iframe: ניסיון $0 (VK) + מנוי אוטומטי בעוד 7 ימים
+  // iframe: חיוב מיידי (AK) + קביעת חיוב חודשי החל בעוד 7 ימים
   const iframeSrc = useMemo(() => {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
     const params = new URLSearchParams({
-      // ניסיון חינם כעת (ללא חיוב בפועל)
-      sum: '0',
-      currency: '2',           // USD
-      tranmode: 'VK',          // Verification + Token
+      // חיוב ראשון עכשיו (כמו הלינק שעובד לך)
+      sum: urlParams.price,        // 5 או 14 – מחייב מיידית
+      currency: '2',               // USD
+      tranmode: 'AK',              // עסקה רגילה + יצירת טוקן
       cred_type: '1',
 
-      // מנוי חודשי שיופעל בעוד 7 ימים
-      recur_sum: urlParams.price,          // 5 או 14
-      recur_transaction: '4_approved',     // חודשי (ללא בחירת לקוח)
-      recur_start_date: recurStartDate,
+      // מנוי חודשי מהתאריך העתידי
+      recur_sum: urlParams.price,              // $5/$14 כל חודש
+      recur_transaction: '4_approved',         // חודשי (ללא בחירת לקוח)
+      recur_start_date: recurStartDate,        // בעוד 7 ימים
 
-      // נתוני לקוח לנוחות במסוף
+      // פרטי לקוח שיופיעו במסוף
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // עיצוב
+      // עיצוב (לפי העמוד שלך)
       nologo: '1',
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
       trButtonColor: '8B5E3C',
-      buttonLabel: 'Start Free Trial',
+      buttonLabel: 'Pay Securely',
       google_pay: '1',
 
-      // מזהים ותיאור
+      // מזהים/תיאור
       uid: urlParams.code,
       u1: urlParams.code,
       u2: urlParams.plan,
       u3: urlParams.billing,
       u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - 7 Day Trial (USD)`,
+      pdesc: `Yaya ${urlParams.plan} - Monthly Plan (USD)`,
 
-      // חזרות/נוטיפיי
+      // חזרות/notify (תיקנתי ל-sliplane)
       success_url_address: `${origin}/payment/success?plan=${urlParams.plan}&price=${urlParams.price}&code=${urlParams.code}`,
       fail_url_address:    `${origin}/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
       notify_url_address:  `https://n8n-TD2y.sliplane.app/webhook/update-user-plan`,
@@ -198,7 +198,7 @@ export default function CheckoutPage() {
             alignItems: 'start',
           }}
         >
-          {/* ORDER SUMMARY */}
+          {/* SUMMARY */}
           <section
             style={{
               background: 'white',
@@ -254,25 +254,12 @@ export default function CheckoutPage() {
 
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>7-day free trial</span>
-                  <span style={{ color: '#16a34a' }}>$0.00</span>
+                  <span>First payment (today)</span>
+                  <span>${urlParams.price}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
                   <span>${urlParams.price}/month</span>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginTop: 10,
-                    paddingTop: 10,
-                    borderTop: '1px dashed #E5DDD5',
-                    fontWeight: 700,
-                  }}
-                >
-                  <span>Total today</span>
-                  <span style={{ color: '#16a34a' }}>$0.00</span>
                 </div>
               </div>
 
@@ -283,13 +270,13 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          {/* תשלום */}
+          {/* PAYMENT */}
           <section>
             <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>
               Complete Your Order
             </h2>
 
-            {/* טופס פרטי לקוח (לא חוסם את ה-iframe) */}
+            {/* לקוח (לא חוסם את ה-iframe) */}
             <div
               style={{
                 marginTop: 12,
@@ -309,45 +296,23 @@ export default function CheckoutPage() {
               >
                 <div>
                   <label style={labelStyle}>First name</label>
-                  <input
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="John"
-                    style={inputStyle}
-                  />
+                  <input value={firstName} onChange={(e)=>setFirstName(e.target.value)} placeholder="John" style={inputStyle}/>
                 </div>
                 <div>
                   <label style={labelStyle}>Last name</label>
-                  <input
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Doe"
-                    style={inputStyle}
-                  />
+                  <input value={lastName} onChange={(e)=>setLastName(e.target.value)} placeholder="Doe" style={inputStyle}/>
                 </div>
                 <div>
                   <label style={labelStyle}>Email</label>
-                  <input
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="john@example.com"
-                    type="email"
-                    style={inputStyle}
-                  />
+                  <input value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="john@example.com" type="email" style={inputStyle}/>
                 </div>
                 <div>
                   <label style={labelStyle}>Phone</label>
-                  <input
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+1 555 123 4567"
-                    style={inputStyle}
-                  />
+                  <input value={phone} onChange={(e)=>setPhone(e.target.value)} placeholder="+1 555 123 4567" style={inputStyle}/>
                 </div>
               </div>
-
               <p style={{ marginTop: 8, color: '#7a6a5f', fontSize: '.9rem' }}>
-                The secure payment form is already loaded below.
+                The secure payment form is loaded below.
               </p>
             </div>
 
