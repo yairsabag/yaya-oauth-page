@@ -21,25 +21,33 @@ export default function CheckoutPage() {
   })
 
   const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
+  const [lastName, setLastName]   = useState('')
+  const [email, setEmail]         = useState('')
+  const [phone, setPhone]         = useState('')
 
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile]   = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
+  // קריאת פרמטרים מה-URL, רספונסיביות, וסימול טען
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
+    const plan = (p.get('plan') || 'executive').toLowerCase()
+    const billing = (p.get('billing') || 'monthly').toLowerCase()
+    // אם הגיע plan=ultimate ואין price – נניח $14
+    const price = p.get('price') || (plan === 'ultimate' ? '14' : '5')
+
     setUrlParams({
-      plan: p.get('plan') || 'executive',
-      price: p.get('price') || '5',
-      billing: p.get('billing') || 'monthly',
+      plan,
+      price,
+      billing,
       code: p.get('code') || 'F75CEJ',
-      planName: p.get('planName') || 'Executive Plan',
+      planName: p.get('planName') || (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan'),
     })
+
     const onResize = () => setIsMobile(window.innerWidth < 940)
     onResize()
     window.addEventListener('resize', onResize)
+
     const t = setTimeout(() => setIsLoading(false), 400)
     return () => {
       window.removeEventListener('resize', onResize)
@@ -70,7 +78,7 @@ export default function CheckoutPage() {
   const currentPlan =
     planDetails[urlParams.plan as keyof typeof planDetails] || planDetails.executive
 
-  // start recurring in 7 days (YYYY-MM-DD)
+  // להתחיל חיוב חוזר בעוד 7 ימים (YYYY-MM-DD)
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
@@ -80,57 +88,58 @@ export default function CheckoutPage() {
     return `${y}-${m}-${day}`
   }, [])
 
-  const iframeSrc = useMemo(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
-    const params = new URLSearchParams({
-      // Base transaction parameters (from working Tranzila URL)
-      sum: '0',                    // $0 for free trial
-      cred_type: '1',             // 1 = Credit card
-      currency: '2',              // 2 = USD
-      tranmode: 'AK',             // AK = Standard transaction with token creation
+  // נטען iframe רק כשיש מינימום פרטים
+  const readyForIframe =
+    firstName.trim() && lastName.trim() && /\S+@\S+\.\S+/.test(email)
 
-      // Recurring payment parameters
-      recur_sum: urlParams.price,           // Amount to charge monthly after trial
-      recur_transaction: '4',               // 4 = monthly payment (customer choice)
-      recur_start_date: recurStartDate,     // Start charging in 7 days
-      
-      // Customer data
+  // *** הכי חשוב: בסיס ה-iframe המדויק – אל תשנה! ***
+  const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
+
+  // בניית ה-URL עם GET params (כמו הדוגמה שלהם), על אותו בסיס בדיוק
+  const iframeSrc = useMemo(() => {
+    const origin =
+      typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com'
+
+    const params = new URLSearchParams({
+      // ניסיון: לא מחייבים עכשיו
+      sum: '0',
+      currency: '2',          // USD
+      tranmode: 'VK',         // recurring/verification path
+
+      // חיוב חודשי החל בעוד 7 ימים
+      recur_sum: urlParams.price,            // '5' או '14'
+      recur_transaction: '4_approved',       // monthly (not customer choice)
+      recur_start_date: recurStartDate,      // yyyy-mm-dd
+
+      // פרטי לקוח (יופיעו במסוף)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
-      company: 'Yaya Assistant',
 
-      // Product description
-      pdesc: `Yaya ${urlParams.planName} - 7 Day Free Trial`,
-
-      // Return URLs
-      success_url_address: `${origin}/api/tranzila/success-bridge`,
-      fail_url_address: `${origin}/api/tranzila/fail-bridge`,
-      notify_url_address: 'https://n8n-TD2y.sliplane.app/webhook/update-user-plan',
-
-      // UI customization
-      buttonLabel: 'Start Free Trial',
+      // עיצוב ה-iframe
+      nologo: '1',
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
       trButtonColor: '8B5E3C',
-      nologo: '1',
+      buttonLabel: 'Start Free Trial',
+      google_pay: '1', // דרוש SSL בדף שלך
 
-      // Payment options
-      google_pay: '1',
+      // מזהים פנימיים ותיאור
+      uid: urlParams.code,
+      u1: urlParams.code,
+      u2: urlParams.plan,
+      u3: urlParams.billing,
+      u4: urlParams.price,
+      pdesc: `Yaya ${urlParams.plan} - 7 Day Trial (USD)`,
 
-      // Custom fields for your tracking
-      uid: urlParams.code,        // Registration code
-      remarks: `Plan: ${urlParams.plan}, Billing: ${urlParams.billing}`,
-
-      // Required parameter
-      u71: '1'
+      // כתובות החזרה/notify – עדכן לנתיבים אצלך
+      success_url_address: `${origin}/api/tranzila/success-bridge`,
+      fail_url_address: `${origin}/api/tranzila/fail-bridge`,
+      notify_url_address: `${origin}/api/webhook/update-user-plan`,
     })
 
-    return `${base}?${params.toString()}`
-  }, [urlParams, recurStartDate, firstName, lastName, email, phone])
-
-  const readyForIframe = firstName.trim() && lastName.trim() && /\S+@\S+\.\S+/.test(email)
+    return `${TRZ_BASE}?${params.toString()}`
+  }, [TRZ_BASE, urlParams.plan, urlParams.price, urlParams.billing, urlParams.code, firstName, lastName, email, phone, recurStartDate])
 
   return (
     <div
@@ -141,19 +150,6 @@ export default function CheckoutPage() {
         background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)',
       }}
     >
-      {/* CSS Animation */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @keyframes spin { 
-            from { transform: rotate(0deg) } 
-            to { transform: rotate(360deg) } 
-          }
-          .spin-animation {
-            animation: spin 1s linear infinite;
-          }
-        `
-      }} />
-
       {/* Header */}
       <header
         style={{
@@ -210,7 +206,7 @@ export default function CheckoutPage() {
             alignItems: 'start',
           }}
         >
-          {/* ORDER SUMMARY (שמאל) */}
+          {/* ORDER SUMMARY */}
           <section
             style={{
               background: 'white',
@@ -295,13 +291,13 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          {/* תשלום (ימין) */}
+          {/* תשלום */}
           <section>
             <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>
               Complete Your Order
             </h2>
 
-            {/* טופס פרטי לקוח */}
+            {/* פרטי לקוח */}
             <div
               style={{
                 marginTop: 12,
@@ -379,19 +375,24 @@ export default function CheckoutPage() {
             >
               {isLoading || !readyForIframe ? (
                 <div style={loaderWrap}>
-                  <div style={spinnerStyle} className="spin-animation" />
+                  <div style={spinner} />
                   <p style={{ color: '#8B5E3C', fontSize: '.95rem', marginTop: 8 }}>
                     {isLoading ? 'Loading secure payment form...' : 'Waiting for your details...'}
                   </p>
                 </div>
               ) : (
                 <iframe
-                  key={iframeSrc /* שירנדר מחדש כשיש פרטים */}
+                  key={iframeSrc}
                   src={iframeSrc}
-                  style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
                   title="Secure Payment Form"
                   allow="payment"
+                  // תאימות ל-Google Pay:
+                  // חלק מהדפדפנים בודקים גם את המאפיין הבא כבוליאני
+                  // (זה לא מזיק אם הדפדפן מתעלם ממנו)
+                  // @ts-ignore - React לא מכיר את המאפיין הזה כספציפי
+                  allowpaymentrequest="true"
                   sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+                  style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
                 />
               )}
             </div>
@@ -402,6 +403,10 @@ export default function CheckoutPage() {
           </section>
         </div>
       </main>
+
+      <style jsx>{`
+        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+      `}</style>
     </div>
   )
 }
@@ -431,10 +436,11 @@ const loaderWrap: React.CSSProperties = {
   gap: 10,
 }
 
-const spinnerStyle: React.CSSProperties = {
+const spinner: React.CSSProperties = {
   width: 50,
   height: 50,
   border: '4px solid #E5DDD5',
   borderTopColor: '#8B5E3C',
   borderRadius: '50%',
+  animation: 'spin 1s linear infinite',
 }
