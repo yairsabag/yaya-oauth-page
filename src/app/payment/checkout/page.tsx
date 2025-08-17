@@ -1,3 +1,4 @@
+// /src/app/payment/checkout/page.tsx
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -5,13 +6,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 export default function CheckoutPage(props: any) {
   const sp: Record<string, string | undefined> = props?.searchParams ?? {};
 
-  const plan      = (sp.plan ?? 'executive').toLowerCase();   // 'executive' | 'ultimate'
+  const plan      = (sp.plan ?? 'executive').toLowerCase(); // 'executive' | 'ultimate'
   const planName  = sp.planName ?? (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan');
   const billing   = (sp.billing ?? 'monthly') as 'monthly' | 'yearly';
   const regCode   = sp.code ?? ''; // registration code from URL
 
   // $/month by plan
-  const priceNum  = plan === 'ultimate' ? 14 : 5;              // 5$ or 14$
+  const priceNum  = plan === 'ultimate' ? 14 : 5;
   const priceStr  = String(priceNum);
 
   // Customer (metadata only – NOT card fields)
@@ -30,11 +31,9 @@ export default function CheckoutPage(props: any) {
     return d.toISOString().slice(0, 10); // yyyy-mm-dd
   }, []);
 
-  // form ref to auto-submit into iframe
+  // auto-submit POST into iframe
   const formRef = useRef<HTMLFormElement>(null);
-
   useEffect(() => {
-    // Auto submit once the component mounts or when key inputs change
     formRef.current?.submit();
   }, [planName, billing, priceNum, recurStartDate, email, phone, firstName, lastName, regCode, siteBase]);
 
@@ -250,7 +249,7 @@ export default function CheckoutPage(props: any) {
               overflow: 'hidden',
             }}
           >
-            {/* Auto-submitted hidden form posting into the iframe */}
+            {/* Hidden form posting into the iframe */}
             <form
               ref={formRef}
               action="https://direct.tranzila.com/fxpyairsabag/iframenew.php"
@@ -268,9 +267,7 @@ export default function CheckoutPage(props: any) {
               <input type="hidden" name="recur_sum" value={priceStr} />
               <input type="hidden" name="recur_transaction" value="4_approved" />
               <input type="hidden" name="recur_start_date" value={recurStartDate} />
-
-              {/* Optional: total number of recurring payments – אם לא שולחים זה ללא הגבלה */}
-              {/* <input type="hidden" name="recur_payments" value="9999" /> */}
+              {/* אם רוצים ללא הגבלה, לא לשים recur_payments. */}
 
               {/* Returns/webhooks */}
               <input
@@ -292,7 +289,6 @@ export default function CheckoutPage(props: any) {
               {/* UI / payment options */}
               <input type="hidden" name="buttonLabel" value="Start Free Trial" />
               <input type="hidden" name="google_pay" value="1" />
-              {/* אפשר להסיר את הלוגו */}
               {/* <input type="hidden" name="nologo" value="1" /> */}
 
               {/* Metadata to appear in Tranzila */}
@@ -301,21 +297,17 @@ export default function CheckoutPage(props: any) {
               <input type="hidden" name="contact" value={`${firstName} ${lastName}`.trim()} />
               <input type="hidden" name="company" value="Yaya Assistant" />
               <input type="hidden" name="pdesc" value={`${planName} (${billing})`} />
-              {/* מזהה פנימי שלך – אפשר להשתמש גם ב-DCdisable (ראו מסמך) */}
               <input type="hidden" name="uid" value={regCode} />
 
-              {/* אם 3DS V2 שלכם מוגדר ידנית – ניתן להכריח */}
+              {/* 3DS V2 בכפייה רק אם צריך: */}
               {/* <input type="hidden" name="newprocess" value="1" /> */}
             </form>
 
             <iframe
               name="tranzila_iframe"
               title="Tranzila Checkout"
-              // גם וגם: חלק מהדפדפנים מגיבים ל-allow, חלק ל-allowpaymentrequest
               allow="payment"
-              allowPaymentRequest
-              style={{ width: '100%', height: '680px', border: '0', display: 'block' }}
-              // אל תסיר allow-same-origin, אחרת עמוד Tranzila לא יוכל לקרוא חלק מה-APIs שלו
+              style={{ width: '100%', height: '680px', border: 0, display: 'block' }}
               sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
               referrerPolicy="no-referrer"
             />
