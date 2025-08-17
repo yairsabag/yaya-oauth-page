@@ -88,13 +88,13 @@ export default function CheckoutPage() {
   // בסיס ה-iframe (לא לשנות)
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // iframe GET params — trial $0 עכשיו, $5 אחרי 7 ימים + עיצוב מותאם
+  // iframe GET params — trial $0 עכשיו עם AK (לא VK)
   const iframeSrc = useMemo(() => {
     const params = new URLSearchParams({
       // trial - ניסיון חינם
       sum: '0',                       // $0 עכשיו
       currency: '2',                  // USD
-      tranmode: 'VK',                 // אימות בלבד (לא חיוב)
+      tranmode: 'AK',                 // עסקה רגילה עם טוקן (לא אימות VK)
       cred_type: '1',                 // אשראי רגיל
 
       // חיוב חודשי החל בעוד 7 ימים
@@ -115,7 +115,7 @@ export default function CheckoutPage() {
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
       
-      // עיצוב נוסף (ללא שפה)
+      // עיצוב נוסף (ללא שפה וללא דרישת CVV/ת"ז)
       trTextSize: '14',              // גודל טקסט
       trButtonTextColor: 'FFFFFF',   // צבע טקסט לבן בכפתור
 
