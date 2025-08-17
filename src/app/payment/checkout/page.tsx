@@ -91,10 +91,10 @@ export default function CheckoutPage() {
   // iframe GET params — trial $0 עכשיו עם AK (לא VK)
   const iframeSrc = useMemo(() => {
     const params = new URLSearchParams({
-      // עסקת trial - $0 עכשיו
-      sum: '0',                       // ← השינוי העיקרי: 0 במקום urlParams.price
+      // trial - ניסיון חינם
+      sum: '0',                       // $0 עכשיו
       currency: '2',                  // USD
-      tranmode: 'AK',                 // עסקה רגילה עם טוקן (כמו בלינק העובד שלך)
+      tranmode: 'AK',                 // עסקה רגילה עם טוקן (לא אימות VK)
       cred_type: '1',                 // אשראי רגיל
 
       // חיוב חודשי החל בעוד 7 ימים
@@ -107,13 +107,21 @@ export default function CheckoutPage() {
       email: email.trim(),
       phone: phone.trim(),
 
-      // עיצוב
-      nologo: '1',
-      trBgColor: 'FAF5F0',
-      trTextColor: '2D5016',
-      trButtonColor: '8B5E3C',
+      // עיצוב דומה לעיצוב שלך (ללא שפה)
+      nologo: '1',                    // הסרת הלוגו של טרנזילה
+      trBgColor: 'FAF5F0',           // רקע זהוב כמו שלך
+      trTextColor: '2D5016',         // צבע טקסט ירוק כהה
+      trButtonColor: '8B5E3C',       // כפתור חום
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
+      
+      // תיקון שגיאת 418 - דרישת CVV ות"ז
+      cvv: '1',                      // דרישת CVV
+      myid: '1',                     // דרישת ת"ז
+      
+      // עיצוב נוסף (ללא שפה)
+      trTextSize: '14',              // גודל טקסט
+      trButtonTextColor: 'FFFFFF',   // צבע טקסט לבן בכפתור
 
       // מזהים ותיאור
       uid: urlParams.code,
@@ -123,7 +131,7 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - 7 Day Free Trial (USD)`,
 
-      // כתובות חזרה/notify מעודכנות
+      // כתובות חזרה/notify עם פרמטרים דינמיים
       success_url_address: `https://www.yayagent.com/payment/success?plan=${urlParams.plan}&email=${encodeURIComponent(email.trim())}&price=${urlParams.price}&code=${urlParams.code}&firstName=${encodeURIComponent(firstName.trim())}&lastName=${encodeURIComponent(lastName.trim())}`,
       fail_url_address: `https://www.yayagent.com/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
       notify_url_address: `https://n8n-TD2y.silplane.app/webhook/update-user-plan`,
@@ -375,7 +383,6 @@ export default function CheckoutPage() {
                   src={iframeSrc}
                   title="Secure Payment Form"
                   allow="payment"
-                  sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
                   style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
                 />
               )}
