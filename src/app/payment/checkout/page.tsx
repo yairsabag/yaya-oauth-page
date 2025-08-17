@@ -14,13 +14,12 @@ type UrlParams = {
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState<UrlParams>({
     plan: 'executive',
-    price: '5',            // אפשר להחליף ל־'14' דרך ה־URL
+    price: '5',              // משנה ל- "14" אם Ultimate דרך ה-URL
     billing: 'monthly',
     code: 'F75CEJ',
     planName: 'Executive Plan',
   })
 
-  // נתוני לקוח שיועברו למסוף (לא חוסם את טעינת ה־iframe)
   const [firstName, setFirstName] = useState('')
   const [lastName,  setLastName]  = useState('')
   const [email,     setEmail]     = useState('')
@@ -46,7 +45,7 @@ export default function CheckoutPage() {
     onResize()
     window.addEventListener('resize', onResize)
 
-    const t = setTimeout(() => setIsLoading(false), 350)
+    const t = setTimeout(() => setIsLoading(false), 400)
     return () => {
       window.removeEventListener('resize', onResize)
       clearTimeout(t)
@@ -75,30 +74,30 @@ export default function CheckoutPage() {
   } as const
 
   const currentPlan =
-    planDetails[(urlParams.plan as keyof typeof planDetails) || 'executive'] || planDetails.executive
+    planDetails[(urlParams.plan as keyof typeof planDetails) || 'executive'] ||
+    planDetails.executive
 
-  // תאריך התחלת חיוב חוזר בעוד 7 ימים (YYYY-MM-DD)
+  // התחלת חיוב חוזר בעוד 7 ימים (YYYY-MM-DD)
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
     return d.toISOString().slice(0, 10)
   }, [])
 
-  // בסיס IFRAME של טרנזילה
+  // בסיס ה-iframe של טרנזילה
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // יצירת קישורים מוחלטים ל־bridge כדי לצאת מה־IFRAME בהצלחה
-  const siteOrigin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
-
-  // לינק ה־iframe (עסקה רגילה AK – זה היה הסט ש"עבד")
+  // iframe GET params — עסקה רגילה (AK) + חיוב חוזר
   const iframeSrc = useMemo(() => {
+    const origin =
+      typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
+
     const params = new URLSearchParams({
-      // חיוב ראשוני (זה הסט שתקין אצלך; אם תרצה Trial $0 החלף ל־sum: '0' וייתכן שתידרש התאמה במסוף)
+      // תשלום ראשון עכשיו (עבד לך כך; אם תרצה Trial 0$ החלף ל-sum=0 ועבר ל-VK בהתאם להגדרות אצל טרנזילה)
       sum: urlParams.price,
-      currency: '2',             // USD
-      tranmode: 'AK',            // עסקה רגילה + Token
-      cred_type: '1',            // אשראי רגיל
+      currency: '2',                  // USD
+      tranmode: 'AK',                 // עסקה רגילה עם טוקן
+      cred_type: '1',                 // אשראי רגיל
 
       // חיוב חודשי החל בעוד 7 ימים
       recur_sum: urlParams.price,
@@ -110,7 +109,7 @@ export default function CheckoutPage() {
       email: email.trim(),
       phone: phone.trim(),
 
-      // עיצוב טופס טרנזילה
+      // UI
       nologo: '1',
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
@@ -126,20 +125,14 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
 
-      // כתובות Bridge – מוחלטות! (יוצא מה־IFRAME אל /payment/success)
-      success_url_address: `${siteOrigin}/api/tranzila/success-bridge?plan=${encodeURIComponent(
-        urlParams.plan
-      )}&price=${encodeURIComponent(urlParams.price)}&billing=${encodeURIComponent(
-        urlParams.billing
-      )}&code=${encodeURIComponent(urlParams.code)}&email=${encodeURIComponent(
+      // כתובות חזרה / notify
+      success_url_address: `https://www.yayagent.com/payment/success?plan=${urlParams.plan}&email=${encodeURIComponent(
         email.trim()
-      )}&firstName=${encodeURIComponent(firstName.trim())}&lastName=${encodeURIComponent(
-        lastName.trim()
-      )}`,
-      fail_url_address: `${siteOrigin}/api/tranzila/fail-bridge?code=${encodeURIComponent(urlParams.code)}`,
-
-      // אופציונלי – webhook עדכון מערכת
-      notify_url_address: 'https://n8n-TD2y.sliplane.app/webhook/update-user-plan',
+      )}&price=${urlParams.price}&code=${urlParams.code}&billing=${urlParams.billing}&firstName=${encodeURIComponent(
+        firstName.trim()
+      )}&lastName=${encodeURIComponent(lastName.trim())}`,
+      fail_url_address: `${origin}/api/tranzila/fail-bridge`,
+      notify_url_address: `https://n8n-td2y.sliplane.app/webhook/update-user-plan`,
     })
 
     return `${TRZ_BASE}?${params.toString()}`
@@ -153,7 +146,6 @@ export default function CheckoutPage() {
     email,
     phone,
     recurStartDate,
-    siteOrigin,
   ])
 
   return (
@@ -312,7 +304,7 @@ export default function CheckoutPage() {
               Complete Your Order
             </h2>
 
-            {/* פרטי לקוח (לא חובה לצורך טעינת ה-iframe) */}
+            {/* טופס פרטי לקוח (לא חוסם את ה-iframe) */}
             <div
               style={{
                 marginTop: 12,
@@ -374,7 +366,7 @@ export default function CheckoutPage() {
               </p>
             </div>
 
-            {/* IFRAME – מוצג מיידית */}
+            {/* IFRAME – עם הרשאות sandbox שמאפשרות ניווט לטופ־וינדו (Google OAuth) */}
             <div
               style={{
                 marginTop: 12,
@@ -398,9 +390,18 @@ export default function CheckoutPage() {
                   key={iframeSrc}
                   src={iframeSrc}
                   title="Secure Payment Form"
-                  allow="payment"
-                  sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
                   style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
+                  allow="payment"
+                  // *** זה התיקון הקריטי: מוסיף הרשאות ניווט לטופ וינדו ויציאה מה-sandbox בפופאפים ***
+                  sandbox="
+                    allow-scripts
+                    allow-forms
+                    allow-same-origin
+                    allow-popups
+                    allow-top-navigation
+                    allow-top-navigation-by-user-activation
+                    allow-popups-to-escape-sandbox
+                  "
                 />
               )}
             </div>
@@ -418,8 +419,6 @@ export default function CheckoutPage() {
     </div>
   )
 }
-
-/* ===== styles ===== */
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
