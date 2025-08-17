@@ -115,6 +115,10 @@ export default function CheckoutPage() {
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
       
+      // דרישת CVV ות"ז (נדרש לטרמינל)
+      cvv: '1',                      // דרישת CVV
+      myid: '1',                     // דרישת ת"ז
+      
       // עיצוב נוסף (ללא שפה)
       trTextSize: '14',              // גודל טקסט
       trButtonTextColor: 'FFFFFF',   // צבע טקסט לבן בכפתור
