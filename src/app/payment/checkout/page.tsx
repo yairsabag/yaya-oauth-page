@@ -88,13 +88,13 @@ export default function CheckoutPage() {
   // בסיס ה-iframe (לא לשנות)
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // iframe GET params — trial $0 עכשיו עם AK (לא VK)
+  // iframe GET params — trial $0 עכשיו עם AK
   const iframeSrc = useMemo(() => {
     const params = new URLSearchParams({
       // trial - ניסיון חינם
-      sum: '0',                       // $0 עכשיו
+      sum: '0',                       // $0 עכשיו (לא urlParams.price)
       currency: '2',                  // USD
-      tranmode: 'AK',                 // עסקה רגילה עם טוקן (לא אימות VK)
+      tranmode: 'AK',                 // עסקה רגילה עם טוקן
       cred_type: '1',                 // אשראי רגיל
 
       // חיוב חודשי החל בעוד 7 ימים
@@ -107,17 +107,13 @@ export default function CheckoutPage() {
       email: email.trim(),
       phone: phone.trim(),
 
-      // עיצוב דומה לעיצוב שלך (ללא שפה)
-      nologo: '1',                    // הסרת הלוגו של טרנזילה
-      trBgColor: 'FAF5F0',           // רקע זהוב כמו שלך
-      trTextColor: '2D5016',         // צבע טקסט ירוק כהה
-      trButtonColor: '8B5E3C',       // כפתור חום
+      // עיצוב
+      nologo: '1',
+      trBgColor: 'FAF5F0',
+      trTextColor: '2D5016',
+      trButtonColor: '8B5E3C',
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
-      
-      // עיצוב נוסף (ללא שפה וללא דרישת CVV/ת"ז)
-      trTextSize: '14',              // גודל טקסט
-      trButtonTextColor: 'FFFFFF',   // צבע טקסט לבן בכפתור
 
       // מזהים ותיאור
       uid: urlParams.code,
@@ -135,15 +131,6 @@ export default function CheckoutPage() {
 
     return `${TRZ_BASE}?${params.toString()}`
   }, [urlParams.plan, urlParams.price, urlParams.billing, urlParams.code, firstName, lastName, email, phone, recurStartDate])
-
-  // פונקציה למעבר לסליקה
-  const handlePaymentRedirect = () => {
-    if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      alert('Please fill in all required fields (Name and Email)')
-      return
-    }
-    window.location.href = iframeSrc
-  }
 
   return (
     <div
@@ -363,96 +350,34 @@ export default function CheckoutPage() {
               </p>
             </div>
 
-            {/* כפתור תשלום במקום IFRAME */}
+            {/* IFRAME – מוצג מיידית */}
             <div
               style={{
                 marginTop: 12,
                 background: 'white',
                 borderRadius: 20,
-                padding: '2rem',
+                overflow: 'hidden',
                 border: '1px solid rgba(0,0,0,0.06)',
                 boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
-                textAlign: 'center',
+                minHeight: 650,
               }}
             >
-              <div style={{ marginBottom: 24 }}>
-                <Shield size={48} style={{ color: '#8B5E3C', marginBottom: 16 }} />
-                <h3 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.3rem' }}>
-                  Ready to Complete Your Payment
-                </h3>
-                <p style={{ margin: '8px 0 0', color: '#7a6a5f', fontSize: '1rem' }}>
-                  You'll be redirected to our secure payment processor
-                </p>
-              </div>
-
-              <div style={{ 
-                background: '#FBFAF8', 
-                border: '1px solid #E5DDD5', 
-                borderRadius: 12, 
-                padding: 16, 
-                marginBottom: 24,
-                textAlign: 'left'
-              }}>
-                <h4 style={{ margin: '0 0 12px 0', color: '#8B5E3C', fontSize: '1rem' }}>
-                  Payment Summary:
-                </h4>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ color: '#6b7280' }}>Plan:</span>
-                  <span style={{ fontWeight: 600, color: '#2d5016' }}>{currentPlan.name}</span>
+              {isLoading ? (
+                <div style={loaderWrap}>
+                  <div style={spinner} />
+                  <p style={{ color: '#8B5E3C', fontSize: '.95rem', marginTop: 8 }}>
+                    Loading secure payment form...
+                  </p>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ color: '#6b7280' }}>Free Trial:</span>
-                  <span style={{ fontWeight: 600, color: '#16a34a' }}>$0.00 (7 days)</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ color: '#6b7280' }}>Then Monthly:</span>
-                  <span style={{ fontWeight: 600, color: '#2d5016' }}>${urlParams.price}/month</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid #E5DDD5' }}>
-                  <span style={{ color: '#6b7280' }}>Email:</span>
-                  <span style={{ fontWeight: 600, color: '#2d5016' }}>{email || 'Please enter email'}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={handlePaymentRedirect}
-                disabled={!firstName.trim() || !lastName.trim() || !email.trim()}
-                style={{
-                  width: '100%',
-                  padding: '16px 24px',
-                  background: (!firstName.trim() || !lastName.trim() || !email.trim()) ? '#cccccc' : 'linear-gradient(135deg, #8B5E3C 0%, #A0673F 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 12,
-                  fontSize: '1.1rem',
-                  fontWeight: 700,
-                  cursor: (!firstName.trim() || !lastName.trim() || !email.trim()) ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 12px rgba(139, 94, 60, 0.3)',
-                }}
-                onMouseOver={(e) => {
-                  if (firstName.trim() && lastName.trim() && email.trim()) {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(139, 94, 60, 0.4)'
-                  }
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0px)'
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 94, 60, 0.3)'
-                }}
-              >
-                {(!firstName.trim() || !lastName.trim() || !email.trim()) 
-                  ? 'Please fill required fields' 
-                  : `Proceed to Secure Payment - ${urlParams.price}`
-                }
-              </button>
-
-              <div style={{ marginTop: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#7a6a5f' }}>
-                <Shield size={16} />
-                <span style={{ fontSize: '.9rem' }}>
-                  256-bit SSL encryption • PCI DSS compliant • Powered by Tranzila
-                </span>
-              </div>
+              ) : (
+                <iframe
+                  key={iframeSrc}
+                  src={iframeSrc}
+                  title="Secure Payment Form"
+                  allow="payment"
+                  style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
+                />
+              )}
             </div>
 
             <p style={{ marginTop: 12, color: '#6b7280', fontSize: '.9rem', textAlign: 'center' }}>
