@@ -1,16 +1,28 @@
-// FILE: src/app/api/tranzila/success-bridge/route.ts
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-export async function GET(req: NextRequest) {
+export async function GET(req: Request) {
   const url = new URL(req.url)
-  return NextResponse.redirect(new URL(`/payment/success?${url.searchParams.toString()}`, url.origin))
-}
+  const params = url.searchParams
 
-export async function POST(req: NextRequest) {
-  // טרנזילה שולחת בד"כ x-www-form-urlencoded; formData יתפוס גם את זה
-  const form = await req.formData()
-  const qs = new URLSearchParams()
-  for (const [k, v] of form.entries()) qs.append(k, String(v))
-  const url = new URL(req.url)
-  return NextResponse.redirect(new URL(`/payment/success?${qs.toString()}`, url.origin))
+  // יעד הניווט מחוץ ל-iframe (דף ה-success שלך)
+  const target = new URL('/payment/success', url.origin)
+  params.forEach((v, k) => target.searchParams.set(k, v))
+
+  // HTML קטן שרץ בתוך ה-iframe ומנווט את החלון הראשי
+  const html = `<!doctype html>
+<html><head><meta charset="utf-8"><title>Redirecting…</title></head>
+<body>
+<script>
+  try {
+    window.top.location.href = ${JSON.stringify(target.toString())};
+  } catch(e) {
+    window.open(${JSON.stringify(target.toString())}, '_top');
+  }
+</script>
+<p style="font-family: system-ui, -apple-system, Segoe UI, sans-serif">
+  Redirecting to success page…
+</p>
+</body></html>`
+
+  return new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
 }
