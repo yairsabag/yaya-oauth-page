@@ -92,7 +92,7 @@ export default function CheckoutPage() {
   const iframeSrc = useMemo(() => {
     const params = new URLSearchParams({
       // trial - ניסיון חינם
-      sum: '0',                       // $0 עכשיו
+      sum: '0',                       // $0 עכשיו (trial חינם)
       currency: '2',                  // USD
       tranmode: 'AK',                 // עסקה רגילה עם טוקן (לא אימות VK)
       cred_type: '1',                 // אשראי רגיל
@@ -114,10 +114,6 @@ export default function CheckoutPage() {
       trButtonColor: '8B5E3C',       // כפתור חום
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
-      
-      // דרישת CVV ות"ז (נדרש לטרמינל)
-      cvv: '1',                      // דרישת CVV
-      myid: '1',                     // דרישת ת"ז
       
       // עיצוב נוסף (ללא שפה)
       trTextSize: '14',              // גודל טקסט
