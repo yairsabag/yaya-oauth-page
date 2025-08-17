@@ -3,10 +3,7 @@
 import React, { useMemo, useState } from 'react';
 
 /**
- * NOTE on typing:
- * Next.js (App Router) injects `searchParams` dynamically. To avoid the
- * “does not satisfy the constraint 'PageProps' / Promise<any>” error you saw,
- * we intentionally keep the prop type loose and parse safely inside.
+ * Keep props typing loose to avoid Next 15 PageProps/Promise typing errors.
  */
 export default function CheckoutPage(props: any) {
   const sp: Record<string, string | undefined> = props?.searchParams ?? {};
@@ -19,13 +16,13 @@ export default function CheckoutPage(props: any) {
   const billing = (sp.billing ?? 'monthly') as 'monthly' | 'yearly';
   const regCode = sp.code ?? '';
 
-  // Customer details (left form, optional metadata for Tranzila)
+  // Customer-side metadata (not required by Tranzila, but sent as extra fields)
   const [firstName, setFirstName] = useState('John');
   const [lastName, setLastName] = useState('Doe');
   const [email, setEmail] = useState('you@example.com');
   const [phone, setPhone] = useState('+1 555 555 5555');
 
-  // Base URL for your site (used for success/fail/notify). You can set it in env.
+  // Base URL for your site (success/fail/notify bridges)
   const siteBase =
     process.env.NEXT_PUBLIC_BASE_URL ??
     (typeof window !== 'undefined' ? window.location.origin : 'https://yayagent.com');
@@ -33,14 +30,16 @@ export default function CheckoutPage(props: any) {
   /**
    * Build Tranzila NEW iframe URL:
    *   https://direct.tranzila.com/<terminal>/iframenew.php
-   * Keys from the spec:
-   *  - lang=en  -> English UI (fixes “language unsupported”)
-   *  - currency=2 -> USD (your terminal is approved in USD)
-   *  - sum=0 + recur_* -> free trial now, recurring later
+   *
+   * Important:
+   *  - DO NOT send lang=en (Tranzila doesn't support it). Omit `lang` for English.
+   *  - currency=2 -> USD
+   *  - sum=0 -> free trial now
+   *  - recur_sum -> recurring amount
    *  - recur_transaction=4_approved -> monthly (not customer choice)
-   *  - recur_start_date=YYYY-MM-DD -> start in 7 days
-   *  - success_url_address / fail_url_address / notify_url_address
-   *  - metadata (email, phone, contact, pdesc, etc.)
+   *  - recur_start_date -> 7 days from now
+   *  - success_url_address / fail_url_address / notify_url_address -> your endpoints
+   *  - Optional: google_pay=1 (works on NEW iframe)
    */
   const tranzilaSrc = useMemo(() => {
     const sevenDays = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
@@ -48,40 +47,34 @@ export default function CheckoutPage(props: any) {
 
     const qp = new URLSearchParams();
 
-    // Display & currency
-    qp.set('lang', 'en');        // force English
-    qp.set('currency', '2');     // 2 = USD
+    // Currency & amounts
+    qp.set('currency', '2');           // 2 = USD
+    qp.set('sum', '0');                // charge now: $0 (trial)
+    qp.set('recur_sum', String(priceNum));
+    qp.set('recur_transaction', '4_approved'); // monthly auto
+    qp.set('recur_start_date', recurStartDate); // start in 7 days
 
-    // Trial now, recurring later (monthly)
-    qp.set('sum', '0');                              // charge now: $0
-    qp.set('recur_sum', String(priceNum));           // recurring amount
-    qp.set('recur_transaction', '4_approved');       // monthly, not customer choice
-    qp.set('recur_start_date', recurStartDate);      // start in 7 days
-
-    // Success / Fail / Notify endpoints (your bridges / webhook)
+    // Return URLs (bridges on your site)
     qp.set('success_url_address', `${siteBase}/api/tranzila/success-bridge`);
     qp.set('fail_url_address', `${siteBase}/api/tranzila/fail-bridge`);
     qp.set('notify_url_address', `${siteBase}/api/webhook/update-user-plan`);
 
-    // Optional – enable Google Pay (supported on NEW iframe)
-    // If you don't want it, comment out:
-    qp.set('google_pay', '1');
+    // Payment options (optional)
+    qp.set('google_pay', '1'); // remove if you don't want it
 
-    // Helpful metadata that will return to you as well
+    // Nice-to-have metadata
     if (email) qp.set('email', email);
     if (phone) qp.set('phone', phone);
     qp.set('contact', `${firstName} ${lastName}`.trim());
     qp.set('company', 'Yaya Assistant');
     qp.set('pdesc', `${planName} (${billing})`);
-    if (regCode) {
-      // Your internal registration code; you can also use Z_field if defined
-      qp.set('uid', regCode);
-    }
+    if (regCode) qp.set('uid', regCode); // your internal registration code
 
-    // Optional UI polish on Tranzila form
+    // UI label on Tranzila button
     qp.set('buttonLabel', 'Start Free Trial');
-    // Example of removing Tranzila logo if enabled for your terminal:
-    // qp.set('nologo', '1');
+
+    // IMPORTANT: we DO NOT set `lang` (no 'en' exists) to avoid "language unsupported".
+    // Tranzila will show English by default.
 
     return `https://direct.tranzila.com/fxpyairsabag/iframenew.php?${qp.toString()}`;
   }, [billing, email, firstName, lastName, phone, planName, priceNum, regCode, siteBase]);
@@ -305,7 +298,7 @@ export default function CheckoutPage(props: any) {
             <iframe
               title="Tranzila Checkout"
               src={tranzilaSrc}
-              // per spec: enabling Web Payments inside iframe for Google Pay
+              // allow Web Payments API for Google Pay inside the iframe
               allow="payment"
               style={{ width: '100%', height: '680px', border: '0', display: 'block' }}
               sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
@@ -318,7 +311,6 @@ export default function CheckoutPage(props: any) {
   );
 }
 
-/** Small labeled input component */
 function LabeledInput({
   label,
   value,
