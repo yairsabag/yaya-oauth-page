@@ -88,18 +88,17 @@ export default function CheckoutPage() {
   // בסיס ה-iframe (לא לשנות)
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // iframe GET params — ניסיון $0 עכשיו (VK), חיוב מנוי בעוד 7 ימים
-  // תיקון הפרמטרים לדרישת CVV ות"ז
+  // iframe GET params — חיוב רגיל עם חיוב חוזר
   const iframeSrc = useMemo(() => {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com'
 
     const params = new URLSearchParams({
-      // ניסיון/אימות ללא חיוב
-      sum: '0',
-      currency: '2',          // USD
-      tranmode: 'VK',         // אימות/Verification ל-sum=0
-      cred_type: '1',         // אשראי רגיל
+      // עסקה רגילה (לא אימות בלבד)
+      sum: urlParams.price,           // החיוב הראשון
+      currency: '2',                  // USD
+      tranmode: 'AK',                 // עסקה רגילה עם טוקן (כמו בלינק העובד שלך)
+      cred_type: '1',                 // אשראי רגיל
 
       // חיוב חודשי החל בעוד 7 ימים
       recur_sum: urlParams.price,            // 5 או 14
@@ -119,17 +118,13 @@ export default function CheckoutPage() {
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
 
-      // דרישת שדות חובה בטופס - התיקון העיקרי
-      ccv: '1',               // דרישת CVV (שם נכון)
-      myid: '1',              // דרישת ת"ז (שם נכון)
-
       // מזהים ותיאור
       uid: urlParams.code,
       u1: urlParams.code,
       u2: urlParams.plan,
       u3: urlParams.billing,
       u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - 7 Day Trial (USD)`,
+      pdesc: `Yaya ${urlParams.plan} - Monthly Plan (USD)`,
 
       // כתובות חזרה/notify – עדכן לפרודקשן שלך
       success_url_address: `${origin}/api/tranzila/success-bridge`,
@@ -261,11 +256,11 @@ export default function CheckoutPage() {
 
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>7-day free trial</span>
-                  <span style={{ color: '#16a34a' }}>$0.00</span>
+                  <span>First payment</span>
+                  <span>${urlParams.price}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>Then monthly</span>
+                  <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
                   <span>${urlParams.price}/month</span>
                 </div>
                 <div
@@ -279,7 +274,7 @@ export default function CheckoutPage() {
                   }}
                 >
                   <span>Total today</span>
-                  <span style={{ color: '#16a34a' }}>$0.00</span>
+                  <span style={{ color: '#8B5E3C' }}>${urlParams.price}</span>
                 </div>
               </div>
 
