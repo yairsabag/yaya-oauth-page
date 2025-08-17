@@ -14,26 +14,24 @@ type UrlParams = {
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState<UrlParams>({
     plan: 'executive',
-    price: '5',               // '5' או '14'
+    price: '5',
     billing: 'monthly',
     code: 'F75CEJ',
     planName: 'Executive Plan',
   })
 
-  // פרטי לקוח שיועברו למסוף (לא חובה להצגה ראשונית של iframe)
   const [firstName, setFirstName] = useState('')
-  const [lastName,  setLastName]  = useState('')
-  const [email,     setEmail]     = useState('')
-  const [phone,     setPhone]     = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
 
-  const [isMobile, setIsMobile]   = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
     const plan = (p.get('plan') || 'executive').toLowerCase()
     const price = p.get('price') || (plan === 'ultimate' ? '14' : '5')
-
     setUrlParams({
       plan,
       price,
@@ -41,11 +39,9 @@ export default function CheckoutPage() {
       code: p.get('code') || 'F75CEJ',
       planName: p.get('planName') || (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan'),
     })
-
     const onResize = () => setIsMobile(window.innerWidth < 940)
     onResize()
     window.addEventListener('resize', onResize)
-
     const t = setTimeout(() => setIsLoading(false), 400)
     return () => {
       window.removeEventListener('resize', onResize)
@@ -76,42 +72,39 @@ export default function CheckoutPage() {
   const currentPlan =
     planDetails[urlParams.plan as keyof typeof planDetails] || planDetails.executive
 
-  // להתחלת מנוי בעוד 7 ימים (yyyy-mm-dd)
+  // התחלת חיוב חוזר בעוד 7 ימים (YYYY-MM-DD)
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
-    const y = d.getFullYear()
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${y}-${m}-${day}`
+    return d.toISOString().slice(0, 10)
   }, [])
 
-  // בסיס ה־iframe (אל תשנה)
+  // בסיס ה־iframe (חשוב שלא ישתנה)
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // URL בסגנון הדוגמה של טרנזילה (GET), כולל cred_type + tranmode למניעת 418
+  // iframe GET params — ניסוי $0 עכשיו (VK), ואח"כ חיוב חודשי
   const iframeSrc = useMemo(() => {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com'
 
     const params = new URLSearchParams({
-      // ניסיון: לא מחייבים עכשיו
+      // ניסיון/אימות: לא מחייבים עכשיו
       sum: '0',
       currency: '2',          // USD
-      cred_type: '1',         // אשראי רגיל (חובה לפי הדוגמה שעבדה)
-      tranmode: 'AK',         // תואם לדוגמה שלהם; עובד גם עם recurring
+      tranmode: 'VK',         // חשוב: אימות/verification לשילוב עם sum=0
+      cred_type: '1',         // חלק מהטרמינלים דורשים
 
       // חיוב חודשי החל בעוד 7 ימים
-      recur_sum: urlParams.price,            // '5' או '14'
-      recur_transaction: '4_approved',       // חיוב חודשי אוטומטי
-      recur_start_date: recurStartDate,      // yyyy-mm-dd
+      recur_sum: urlParams.price,            // 5 או 14
+      recur_transaction: '4_approved',       // חודשי – ללא בחירת לקוח
+      recur_start_date: recurStartDate,
 
-      // פרטי לקוח (יעודכנו אוטומטית כשממלאים בטופס)
+      // פרטי לקוח שיופיעו במסוף (יתעדכנו כשממלאים למעלה)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // עיצוב ה־iframe
+      // עיצוב
       nologo: '1',
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
@@ -119,7 +112,7 @@ export default function CheckoutPage() {
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
 
-      // מזהים פנימיים ותיאור
+      // מזהים ותיאור
       uid: urlParams.code,
       u1: urlParams.code,
       u2: urlParams.plan,
@@ -127,7 +120,7 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - 7 Day Trial (USD)`,
 
-      // כתובות חזרה/notify – עדכן לנתיבים אצלך
+      // החזרות/notify – עדכן לנתיבים שלך
       success_url_address: `${origin}/api/tranzila/success-bridge`,
       fail_url_address: `${origin}/api/tranzila/fail-bridge`,
       notify_url_address: `${origin}/api/webhook/update-user-plan`,
@@ -135,6 +128,8 @@ export default function CheckoutPage() {
 
     return `${TRZ_BASE}?${params.toString()}`
   }, [urlParams.plan, urlParams.price, urlParams.billing, urlParams.code, firstName, lastName, email, phone, recurStartDate])
+
+  const readyForIframe = true // מוצג מיידית
 
   return (
     <div
@@ -201,7 +196,7 @@ export default function CheckoutPage() {
             alignItems: 'start',
           }}
         >
-          {/* ORDER SUMMARY (שמאל) */}
+          {/* ORDER SUMMARY */}
           <section
             style={{
               background: 'white',
@@ -286,13 +281,13 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          {/* תשלום (ימין) */}
+          {/* תשלום */}
           <section>
             <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>
               Complete Your Order
             </h2>
 
-            {/* טופס פרטי לקוח */}
+            {/* טופס פרטי לקוח (לא חוסם את ה-iframe) */}
             <div
               style={{
                 marginTop: 12,
@@ -350,7 +345,7 @@ export default function CheckoutPage() {
               </div>
 
               <p style={{ marginTop: 8, color: '#7a6a5f', fontSize: '.9rem' }}>
-                The secure payment form is already loaded below. Filling your details will personalize the checkout.
+                The secure payment form is already loaded below.
               </p>
             </div>
 
