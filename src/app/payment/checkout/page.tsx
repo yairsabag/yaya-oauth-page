@@ -14,7 +14,7 @@ type UrlParams = {
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState<UrlParams>({
     plan: 'executive',
-    price: '5',                 // או 14
+    price: '5',               // או '14'
     billing: 'monthly',
     code: 'F75CEJ',
     planName: 'Executive Plan',
@@ -44,7 +44,7 @@ export default function CheckoutPage() {
     const onResize = () => setIsMobile(window.innerWidth < 940)
     onResize()
     window.addEventListener('resize', onResize)
-    const t = setTimeout(() => setIsLoading(false), 350)
+    const t = setTimeout(() => setIsLoading(false), 400)
     return () => {
       window.removeEventListener('resize', onResize)
       clearTimeout(t)
@@ -76,23 +76,23 @@ export default function CheckoutPage() {
     planDetails[(urlParams.plan as keyof typeof planDetails) || 'executive'] ||
     planDetails.executive
 
-  // התחלת המנוי בעוד 7 ימים
+  // תאריך התחלת המנוי בעוד 7 ימים (YYYY-MM-DD)
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
     return d.toISOString().slice(0, 10)
   }, [])
 
-  // בסיס ה־iframe: טרמינל רגיל (חיוב מיידי), כמו הלינק שעבד לך
+  // בסיס טרנזילה: טרמינל רגיל (חיוב מיידי — כמו ה-URL שעבד לך)
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // iframe: חיוב מיידי (AK) + קביעת חיוב חודשי החל בעוד 7 ימים
+  // iframe: חיוב עכשיו (AK) + קביעת חיוב חודשי החל בעוד 7 ימים
   const iframeSrc = useMemo(() => {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
     const params = new URLSearchParams({
-      // חיוב ראשון עכשיו (כמו הלינק שעובד לך)
+      // חיוב ראשון עכשיו (עובד אצלך)
       sum: urlParams.price,        // 5 או 14 – מחייב מיידית
       currency: '2',               // USD
       tranmode: 'AK',              // עסקה רגילה + יצירת טוקן
@@ -103,7 +103,7 @@ export default function CheckoutPage() {
       recur_transaction: '4_approved',         // חודשי (ללא בחירת לקוח)
       recur_start_date: recurStartDate,        // בעוד 7 ימים
 
-      // פרטי לקוח שיופיעו במסוף
+      // פרטי לקוח שיופיעו במסוף (לא חובה)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
@@ -124,9 +124,9 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - Monthly Plan (USD)`,
 
-      // חזרות/notify (תיקנתי ל-sliplane)
-      success_url_address: `${origin}/payment/success?plan=${urlParams.plan}&price=${urlParams.price}&code=${urlParams.code}`,
-      fail_url_address:    `${origin}/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
+      // שימו לב: success_url פונה ל-bridge קטן אצלך ששובר את ה-iframe
+      success_url_address: `${origin}/api/tranzila/success-bridge?plan=${urlParams.plan}&price=${urlParams.price}&code=${urlParams.code}&firstName=${encodeURIComponent(firstName.trim())}&lastName=${encodeURIComponent(lastName.trim())}&email=${encodeURIComponent(email.trim())}`,
+      fail_url_address:    `${origin}/api/tranzila/fail-bridge?plan=${urlParams.plan}&code=${urlParams.code}`,
       notify_url_address:  `https://n8n-TD2y.sliplane.app/webhook/update-user-plan`,
     })
 
@@ -198,7 +198,7 @@ export default function CheckoutPage() {
             alignItems: 'start',
           }}
         >
-          {/* SUMMARY */}
+          {/* ORDER SUMMARY (שמאל) */}
           <section
             style={{
               background: 'white',
@@ -270,13 +270,13 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          {/* PAYMENT */}
+          {/* תשלום (ימין) */}
           <section>
             <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>
               Complete Your Order
             </h2>
 
-            {/* לקוח (לא חוסם את ה-iframe) */}
+            {/* טופס פרטי לקוח */}
             <div
               style={{
                 marginTop: 12,
@@ -311,6 +311,7 @@ export default function CheckoutPage() {
                   <input value={phone} onChange={(e)=>setPhone(e.target.value)} placeholder="+1 555 123 4567" style={inputStyle}/>
                 </div>
               </div>
+
               <p style={{ marginTop: 8, color: '#7a6a5f', fontSize: '.9rem' }}>
                 The secure payment form is loaded below.
               </p>
@@ -341,7 +342,8 @@ export default function CheckoutPage() {
                   src={iframeSrc}
                   title="Secure Payment Form"
                   allow="payment"
-                  sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+                  // הוספנו allow-top-navigation כדי לאפשר ל-bridge לשנות את ה-URL הראשי
+                  sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-top-navigation"
                   style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
                 />
               )}
