@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle, Shield } from 'lucide-react'
 
 type UrlParams = {
@@ -70,7 +70,7 @@ export default function CheckoutPage() {
   const currentPlan =
     planDetails[urlParams.plan as keyof typeof planDetails] || planDetails.executive
 
-  // start recurring in 7 days (YYYY-MM-DD)
+  // Recurring start in 7 days (YYYY-MM-DD)
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
@@ -80,51 +80,27 @@ export default function CheckoutPage() {
     return `${y}-${m}-${day}`
   }, [])
 
-  const iframeSrc = useMemo(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
-    const params = new URLSearchParams({
-      // ניסיון + טוקן (אין חיוב עכשיו)
-      sum: '0',
-      tranmode: 'VK',
-      currency: '2', // USD
-
-      // Recurring: חודשי, החל בעוד 7 ימים
-      recur_sum: urlParams.price,
-      recur_transaction: '4_approved',
-      recur_start_date: recurStartDate,
-
-      // פרטי לקוח (מועברים למסוף)
-      contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
-      email: email.trim(),
-      phone: phone.trim(),
-
-      // UI
-      nologo: '1',
-      trBgColor: 'FAF5F0',
-      trTextColor: '2D5016',
-      trButtonColor: '8B5E3C',
-      buttonLabel: 'Start Free Trial',
-
-      // שדות משלך
-      u1: urlParams.code,
-      u2: urlParams.plan,
-      u3: urlParams.billing,
-      u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - 7 Day Trial (USD)`,
-
-      // החזרות
-      success_url_address: `${origin}/api/tranzila/success-bridge`,
-      fail_url_address: `${origin}/api/tranzila/fail-bridge`,
-
-      // notify (אופציונלי – אם אתה מעדיף ב־settings במסוף, אפשר להסיר מכאן)
-      notify_url_address: 'https://n8n-TD2y.sliplane.app/webhook/update-user-plan',
-    })
-
-    return `${base}?${params.toString()}`
-  }, [urlParams, recurStartDate, firstName, lastName, email, phone])
-
+  // תנאי להצגת הטופס של טרנזילה
   const readyForIframe = firstName.trim() && lastName.trim() && /\S+@\S+\.\S+/.test(email)
+
+  // POST hidden form → iframe (מונע System Error)
+  const formRef = useRef<HTMLFormElement>(null)
+  const iframeKey = useMemo(
+    () =>
+      // נכפה רינדור מחדש כשהשדות משתנים
+      `${urlParams.plan}-${urlParams.price}-${urlParams.billing}-${urlParams.code}-${firstName}-${lastName}-${email}-${phone}-${recurStartDate}`,
+    [urlParams, firstName, lastName, email, phone, recurStartDate]
+  )
+
+  useEffect(() => {
+    if (readyForIframe) {
+      // submit אחרי טיק כדי שה-iframe יהיה בדום
+      const id = setTimeout(() => formRef.current?.submit(), 0)
+      return () => clearTimeout(id)
+    }
+  }, [iframeKey, readyForIframe])
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
 
   return (
     <div
@@ -346,7 +322,7 @@ export default function CheckoutPage() {
               )}
             </div>
 
-            {/* IFRAME */}
+            {/* IFRAME + hidden POST form */}
             <div
               style={{
                 marginTop: 12,
@@ -366,14 +342,84 @@ export default function CheckoutPage() {
                   </p>
                 </div>
               ) : (
-                <iframe
-                  key={iframeSrc /* שירנדר מחדש כשיש פרטים */}
-                  src={iframeSrc}
-                  style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
-                  title="Secure Payment Form"
-                  allow="payment"
-                  sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
-                />
+                <>
+                  {/* POST לתוך ה-iframe: אין tranmode, אין querystring → נעלם ה-System Error */}
+                  <form
+                    ref={formRef}
+                    action="https://direct.tranzila.com/fxpyairsabag/iframenew.php"
+                    method="POST"
+                    target="tranzila_iframe"
+                    style={{ display: 'none' }}
+                    noValidate
+                    autoComplete="off"
+                  >
+                    {/* סכום עכשיו: $0 (trial) + USD */}
+                    <input type="hidden" name="currency" value="2" />
+                    <input type="hidden" name="sum" value="0" />
+
+                    {/* Recurring: חודשי, מתחיל בעוד 7 ימים */}
+                    <input type="hidden" name="recur_sum" value={urlParams.price} />
+                    <input type="hidden" name="recur_transaction" value="4_approved" />
+                    <input type="hidden" name="recur_start_date" value={recurStartDate} />
+                    {/* אם לא רוצים הגבלה במס׳ חיובים – לא שולחים recur_payments */}
+
+                    {/* חזרות/נוטיפיי */}
+                    <input
+                      type="hidden"
+                      name="success_url_address"
+                      value={`${origin}/api/tranzila/success-bridge`}
+                    />
+                    <input
+                      type="hidden"
+                      name="fail_url_address"
+                      value={`${origin}/api/tranzila/fail-bridge`}
+                    />
+                    <input
+                      type="hidden"
+                      name="notify_url_address"
+                      value="https://n8n-TD2y.sliplane.app/webhook/update-user-plan"
+                    />
+
+                    {/* UI / עיצוב דף תשלום */}
+                    <input type="hidden" name="nologo" value="1" />
+                    <input type="hidden" name="trBgColor" value="FAF5F0" />
+                    <input type="hidden" name="trTextColor" value="2D5016" />
+                    <input type="hidden" name="trButtonColor" value="8B5E3C" />
+                    <input type="hidden" name="buttonLabel" value="Start Free Trial" />
+                    <input type="hidden" name="google_pay" value="1" />
+
+                    {/* פרטי לקוח שיוצגו במסוף */}
+                    <input
+                      type="hidden"
+                      name="contact"
+                      value={[firstName.trim(), lastName.trim()].filter(Boolean).join(' ')}
+                    />
+                    <input type="hidden" name="email" value={email.trim()} />
+                    <input type="hidden" name="phone" value={phone.trim()} />
+                    <input type="hidden" name="pdesc" value={`Yaya ${urlParams.plan} - 7 Day Trial (USD)`} />
+                    <input type="hidden" name="company" value="Yaya Assistant" />
+
+                    {/* שדות פנימיים/דדופליקציה */}
+                    <input type="hidden" name="uid" value={urlParams.code} />
+                    <input type="hidden" name="u1" value={urlParams.code} />
+                    <input type="hidden" name="u2" value={urlParams.plan} />
+                    <input type="hidden" name="u3" value={urlParams.billing} />
+                    <input type="hidden" name="u4" value={urlParams.price} />
+
+                    {/* 3DS V2 בכפייה רק אם נדרש ע"י טרנזילה:
+                    <input type="hidden" name="newprocess" value="1" /> */}
+                  </form>
+
+                  <iframe
+                    key={iframeKey}
+                    name="tranzila_iframe"
+                    src="about:blank"
+                    style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
+                    title="Secure Payment Form"
+                    allow="payment"
+                    sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+                  />
+                </>
               )}
             </div>
 
