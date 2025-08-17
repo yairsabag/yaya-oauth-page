@@ -88,13 +88,13 @@ export default function CheckoutPage() {
   // בסיס ה-iframe (לא לשנות)
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // iframe GET params — trial $0 עכשיו עם AK
+  // iframe GET params — trial $0 עכשיו עם AK (לא VK)
   const iframeSrc = useMemo(() => {
     const params = new URLSearchParams({
-      // trial - ניסיון חינם
-      sum: '0',                       // $0 עכשיו (לא urlParams.price)
+      // עסקת trial - $0 עכשיו
+      sum: '0',                       // ← השינוי העיקרי: 0 במקום urlParams.price
       currency: '2',                  // USD
-      tranmode: 'AK',                 // עסקה רגילה עם טוקן
+      tranmode: 'AK',                 // עסקה רגילה עם טוקן (כמו בלינק העובד שלך)
       cred_type: '1',                 // אשראי רגיל
 
       // חיוב חודשי החל בעוד 7 ימים
@@ -123,7 +123,7 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - 7 Day Free Trial (USD)`,
 
-      // כתובות חזרה/notify עם פרמטרים דינמיים
+      // כתובות חזרה/notify מעודכנות
       success_url_address: `https://www.yayagent.com/payment/success?plan=${urlParams.plan}&email=${encodeURIComponent(email.trim())}&price=${urlParams.price}&code=${urlParams.code}&firstName=${encodeURIComponent(firstName.trim())}&lastName=${encodeURIComponent(lastName.trim())}`,
       fail_url_address: `https://www.yayagent.com/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
       notify_url_address: `https://n8n-TD2y.silplane.app/webhook/update-user-plan`,
@@ -375,6 +375,7 @@ export default function CheckoutPage() {
                   src={iframeSrc}
                   title="Secure Payment Form"
                   allow="payment"
+                  sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
                   style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
                 />
               )}
