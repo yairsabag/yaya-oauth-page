@@ -14,20 +14,18 @@ type UrlParams = {
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState<UrlParams>({
     plan: 'executive',
-    price: '5',               // '5' או '14'
+    price: '5',               // 5 או 14
     billing: 'monthly',
     code: 'F75CEJ',
     planName: 'Executive Plan',
   })
 
-  // פרטי לקוח (יעברו למסוף; ה-iframe נטען גם בלעדיהם)
   const [firstName, setFirstName] = useState('')
   const [lastName,  setLastName]  = useState('')
   const [email,     setEmail]     = useState('')
   const [phone,     setPhone]     = useState('')
 
   const [isMobile, setIsMobile]   = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
@@ -45,12 +43,7 @@ export default function CheckoutPage() {
     const onResize = () => setIsMobile(window.innerWidth < 940)
     onResize()
     window.addEventListener('resize', onResize)
-
-    const t = setTimeout(() => setIsLoading(false), 400)
-    return () => {
-      window.removeEventListener('resize', onResize)
-      clearTimeout(t)
-    }
+    return () => window.removeEventListener('resize', onResize)
   }, [])
 
   const planDetails = {
@@ -78,48 +71,54 @@ export default function CheckoutPage() {
     planDetails[(urlParams.plan as keyof typeof planDetails) || 'executive'] ||
     planDetails.executive
 
-  // התחלת חיוב חוזר בעוד 7 ימים (YYYY-MM-DD)
+  // חיוב מנוי יתחיל בעוד 7 ימים (YYYY-MM-DD)
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
     return d.toISOString().slice(0, 10)
   }, [])
 
-  // בסיס ה-iframe (לא לשנות)
+  // בסיס עמוד התשלום של טרנזילה
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // iframe GET params — trial $0 עכשיו עם AK (לא VK)
-  const iframeSrc = useMemo(() => {
-    const params = new URLSearchParams({
-      // trial - ניסיון חינם
-      sum: '0',                       // $0 עכשיו (trial חינם)
-      currency: '2',                  // USD
-      tranmode: 'AK',                 // עסקה רגילה עם טוקן (לא אימות VK)
-      cred_type: '1',                 // אשראי רגיל
+  // URL ל-Redirect:
+  // sum=0 + tranmode=VK (אימות), דרישת שדות CVV ות"ז (cvv=1, myid=1),
+  // מנוי שיופעל אוטומטית בעוד 7 ימים.
+  const tranzilaUrl = useMemo(() => {
+    const success = `https://www.yayagent.com/payment/success`
+    const fail    = `https://www.yayagent.com/payment/fail`
+    const notify  = `https://n8n-TD2y.sliplane.app/webhook/update-user-plan` // תיקנתי את הכתובת
 
-      // חיוב חודשי החל בעוד 7 ימים
-      recur_sum: urlParams.price,            // 5 או 14
-      recur_transaction: '4_approved',       // חודשי (ללא בחירת לקוח)
+    const params = new URLSearchParams({
+      // ניסיון חינם כעת (ללא אישור סולק)
+      sum: '0',
+      currency: '2',              // USD
+      tranmode: 'VK',             // חשוב! אימות ל-sum=0
+      cred_type: '1',
+
+      // דרישת שדות חובה בטופס (כדי למנוע 418 על CVV/ת"ז)
+      cvv: '1',
+      myid: '1',
+
+      // מנוי
+      recur_sum: urlParams.price,       // 5 או 14
+      recur_transaction: '4_approved',  // חודשי, ללא בחירת לקוח
       recur_start_date: recurStartDate,
 
-      // פרטי לקוח שיופיעו במסוף
+      // פרטי לקוח (מוצגים בטופס/נשמרים במסוף)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // עיצוב דומה לעיצוב שלך (ללא שפה)
-      nologo: '1',                    // הסרת הלוגו של טרנזילה
-      trBgColor: 'FAF5F0',           // רקע זהוב כמו שלך
-      trTextColor: '2D5016',         // צבע טקסט ירוק כהה
-      trButtonColor: '8B5E3C',       // כפתור חום
+      // עיצוב
+      nologo: '1',
+      trBgColor: 'FAF5F0',
+      trTextColor: '2D5016',
+      trButtonColor: '8B5E3C',
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
-      
-      // עיצוב נוסף (ללא שפה)
-      trTextSize: '14',              // גודל טקסט
-      trButtonTextColor: 'FFFFFF',   // צבע טקסט לבן בכפתור
 
-      // מזהים ותיאור
+      // תיאור ומזהים פנימיים
       uid: urlParams.code,
       u1: urlParams.code,
       u2: urlParams.plan,
@@ -127,22 +126,21 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - 7 Day Free Trial (USD)`,
 
-      // כתובות חזרה/notify עם פרמטרים דינמיים
-      success_url_address: `https://www.yayagent.com/payment/success?plan=${urlParams.plan}&email=${encodeURIComponent(email.trim())}&price=${urlParams.price}&code=${urlParams.code}&firstName=${encodeURIComponent(firstName.trim())}&lastName=${encodeURIComponent(lastName.trim())}`,
-      fail_url_address: `https://www.yayagent.com/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
-      notify_url_address: `https://n8n-TD2y.silplane.app/webhook/update-user-plan`,
+      // דפי חזרה + notify
+      success_url_address: `${success}?plan=${urlParams.plan}&price=${urlParams.price}&code=${urlParams.code}`,
+      fail_url_address:    `${fail}?plan=${urlParams.plan}&code=${urlParams.code}`,
+      notify_url_address:  notify,
     })
 
     return `${TRZ_BASE}?${params.toString()}`
   }, [urlParams.plan, urlParams.price, urlParams.billing, urlParams.code, firstName, lastName, email, phone, recurStartDate])
 
-  // פונקציה למעבר לסליקה
   const handlePaymentRedirect = () => {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      alert('Please fill in all required fields (Name and Email)')
+      alert('Please fill in all required fields (First/Last name and Email)')
       return
     }
-    window.location.href = iframeSrc
+    window.location.href = tranzilaUrl
   }
 
   return (
@@ -210,7 +208,7 @@ export default function CheckoutPage() {
             alignItems: 'start',
           }}
         >
-          {/* ORDER SUMMARY (שמאל) */}
+          {/* ORDER SUMMARY */}
           <section
             style={{
               background: 'white',
@@ -295,13 +293,13 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          {/* תשלום (ימין) */}
+          {/* תשלום */}
           <section>
             <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>
               Complete Your Order
             </h2>
 
-            {/* טופס פרטי לקוח (לא חוסם את ה-iframe) */}
+            {/* טופס פרטי לקוח */}
             <div
               style={{
                 marginTop: 12,
@@ -359,11 +357,11 @@ export default function CheckoutPage() {
               </div>
 
               <p style={{ marginTop: 8, color: '#7a6a5f', fontSize: '.9rem' }}>
-                The secure payment form is already loaded below.
+                You’ll be redirected to our secure payment page.
               </p>
             </div>
 
-            {/* כפתור תשלום במקום IFRAME */}
+            {/* כפתור Redirect */}
             <div
               style={{
                 marginTop: 12,
@@ -375,74 +373,29 @@ export default function CheckoutPage() {
                 textAlign: 'center',
               }}
             >
-              <div style={{ marginBottom: 24 }}>
-                <Shield size={48} style={{ color: '#8B5E3C', marginBottom: 16 }} />
-                <h3 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.3rem' }}>
-                  Ready to Complete Your Payment
-                </h3>
-                <p style={{ margin: '8px 0 0', color: '#7a6a5f', fontSize: '1rem' }}>
-                  You'll be redirected to our secure payment processor
-                </p>
-              </div>
-
-              <div style={{ 
-                background: '#FBFAF8', 
-                border: '1px solid #E5DDD5', 
-                borderRadius: 12, 
-                padding: 16, 
-                marginBottom: 24,
-                textAlign: 'left'
-              }}>
-                <h4 style={{ margin: '0 0 12px 0', color: '#8B5E3C', fontSize: '1rem' }}>
-                  Payment Summary:
-                </h4>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ color: '#6b7280' }}>Plan:</span>
-                  <span style={{ fontWeight: 600, color: '#2d5016' }}>{currentPlan.name}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ color: '#6b7280' }}>Free Trial:</span>
-                  <span style={{ fontWeight: 600, color: '#16a34a' }}>$0.00 (7 days)</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <span style={{ color: '#6b7280' }}>Then Monthly:</span>
-                  <span style={{ fontWeight: 600, color: '#2d5016' }}>${urlParams.price}/month</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid #E5DDD5' }}>
-                  <span style={{ color: '#6b7280' }}>Email:</span>
-                  <span style={{ fontWeight: 600, color: '#2d5016' }}>{email || 'Please enter email'}</span>
-                </div>
-              </div>
-
               <button
                 onClick={handlePaymentRedirect}
                 disabled={!firstName.trim() || !lastName.trim() || !email.trim()}
                 style={{
                   width: '100%',
                   padding: '16px 24px',
-                  background: (!firstName.trim() || !lastName.trim() || !email.trim()) ? '#cccccc' : 'linear-gradient(135deg, #8B5E3C 0%, #A0673F 100%)',
+                  background: (!firstName.trim() || !lastName.trim() || !email.trim())
+                    ? '#cccccc'
+                    : 'linear-gradient(135deg, #8B5E3C 0%, #A0673F 100%)',
                   color: 'white',
                   border: 'none',
                   borderRadius: 12,
                   fontSize: '1.1rem',
                   fontWeight: 700,
-                  cursor: (!firstName.trim() || !lastName.trim() || !email.trim()) ? 'not-allowed' : 'pointer',
+                  cursor: (!firstName.trim() || !lastName.trim() || !email.trim())
+                    ? 'not-allowed'
+                    : 'pointer',
                   transition: 'all 0.3s ease',
                   boxShadow: '0 4px 12px rgba(139, 94, 60, 0.3)',
                 }}
-                onMouseOver={(e) => {
-                  if (firstName.trim() && lastName.trim() && email.trim()) {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(139, 94, 60, 0.4)'
-                  }
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0px)'
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 94, 60, 0.3)'
-                }}
               >
-                {(!firstName.trim() || !lastName.trim() || !email.trim()) 
-                  ? 'Please fill required fields' 
+                {(!firstName.trim() || !lastName.trim() || !email.trim())
+                  ? 'Please fill required fields'
                   : 'Start 7-Day Free Trial'
                 }
               </button>
@@ -454,17 +407,9 @@ export default function CheckoutPage() {
                 </span>
               </div>
             </div>
-
-            <p style={{ marginTop: 12, color: '#6b7280', fontSize: '.9rem', textAlign: 'center' }}>
-              Your payment information is encrypted and secure. We never store your credit card details.
-            </p>
           </section>
         </div>
       </main>
-
-      <style jsx>{`
-        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
-      `}</style>
     </div>
   )
 }
@@ -483,22 +428,4 @@ const inputStyle: React.CSSProperties = {
   border: '1px solid #E5DDD5',
   outline: 'none',
   fontSize: '.95rem',
-}
-
-const loaderWrap: React.CSSProperties = {
-  minHeight: 650,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexDirection: 'column',
-  gap: 10,
-}
-
-const spinner: React.CSSProperties = {
-  width: 50,
-  height: 50,
-  border: '4px solid #E5DDD5',
-  borderTopColor: '#8B5E3C',
-  borderRadius: '50%',
-  animation: 'spin 1s linear infinite',
 }
