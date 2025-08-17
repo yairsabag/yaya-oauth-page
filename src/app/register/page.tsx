@@ -24,48 +24,47 @@ export default function RegisterPage() {
   }, [])
 
   const plans = {
-  executive: {
-    name: 'Executive Plan',
-    monthlyPrice: 5,
-    yearlyPrice: 4,
-    popular: true,
-    features: [
-      'Unlimited messages',
-      'Unlimited one-time reminders',
-      '100+ languages supported',
-      'ChatGPT',
-      '100 Voice Notes / Month',
-      'Create Lists',
-      'Send/Receive reminders with friends',
-      'Google Calendar',
-      'Expense tracking',
-      'Repeat reminders',
-      '20 Image Analysis / Month',
-      '20 Internet Searches'
-    ]
-  },
-  ultimate: {
-    name: 'Ultimate Plan',
-    monthlyPrice: 14,
-    yearlyPrice: 13,
-    popular: false,
-    features: [
-      'Unlimited messages',
-      'Unlimited one-time reminders',
-      '100+ languages supported',
-      'ChatGPT',
-      '500 Voice Notes / Month',
-      'Create Lists',
-      'Send/Receive reminders with friends',
-      'Google Calendar',
-      'Expense tracking',
-      'Repeat reminders',
-      'Food Tracking (Calories)',
-      '100 Image Analysis / Month',
-      '100 Internet Searches'
-    ]
+    executive: {
+      name: 'Executive Plan',
+      monthlyPrice: 5,
+      yearlyPrice: 4,
+      popular: true,
+      features: [
+        'Unlimited messages',
+        'Unlimited one-time reminders',
+        '100+ languages supported',
+        'ChatGPT',
+        'Repeat reminders',
+        'Google / Outlook Calendar',
+        '100 Voice Notes / Month',
+        '20 Image Analysis / Month',
+        '20 Internet Searches',
+        'Send/Receive reminders with friends',
+        'AI Memory of You',
+        'Create Lists'
+      ]
+    },
+    ultimate: {
+      name: 'Ultimate Plan',
+      monthlyPrice: 14,
+      yearlyPrice: 13,
+      popular: false,
+      features: [
+        'Unlimited messages',
+        'Unlimited one-time reminders',
+        '100+ languages supported',
+        'ChatGPT',
+        'Repeat reminders',
+        'Google / Outlook Calendar',
+        '500 Voice Notes / Month',
+        '100 Image Analysis / Month',
+        '100 Internet Searches',
+        'Send/Receive reminders with friends',
+        'AI Memory of You',
+        'Create Lists'
+      ]
+    }
   }
-}
 
   useEffect(() => {
     const code = searchParams.get('code')
