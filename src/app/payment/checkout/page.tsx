@@ -14,7 +14,7 @@ type UrlParams = {
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState<UrlParams>({
     plan: 'executive',
-    price: '5',              // משנה ל- "14" אם Ultimate דרך ה-URL
+    price: '5',
     billing: 'monthly',
     code: 'F75CEJ',
     planName: 'Executive Plan',
@@ -26,7 +26,6 @@ export default function CheckoutPage() {
   const [phone,     setPhone]     = useState('')
 
   const [isMobile, setIsMobile]   = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
@@ -44,12 +43,7 @@ export default function CheckoutPage() {
     const onResize = () => setIsMobile(window.innerWidth < 940)
     onResize()
     window.addEventListener('resize', onResize)
-
-    const t = setTimeout(() => setIsLoading(false), 400)
-    return () => {
-      window.removeEventListener('resize', onResize)
-      clearTimeout(t)
-    }
+    return () => window.removeEventListener('resize', onResize)
   }, [])
 
   const planDetails = {
@@ -84,32 +78,31 @@ export default function CheckoutPage() {
     return d.toISOString().slice(0, 10)
   }, [])
 
-  // בסיס ה-iframe של טרנזילה
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // iframe GET params — עסקה רגילה (AK) + חיוב חוזר
-  const iframeSrc = useMemo(() => {
+  // URL Redirect מלא ל-Tranzila (AK רגיל, ללא iframe)
+  const tranzilaUrl = useMemo(() => {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
     const params = new URLSearchParams({
-      // תשלום ראשון עכשיו (עבד לך כך; אם תרצה Trial 0$ החלף ל-sum=0 ועבר ל-VK בהתאם להגדרות אצל טרנזילה)
+      // תשלום ראשון עכשיו (עבד אצלך)
       sum: urlParams.price,
-      currency: '2',                  // USD
-      tranmode: 'AK',                 // עסקה רגילה עם טוקן
-      cred_type: '1',                 // אשראי רגיל
+      currency: '2',          // USD
+      tranmode: 'AK',         // עסקה רגילה
+      cred_type: '1',         // אשראי רגיל
 
-      // חיוב חודשי החל בעוד 7 ימים
+      // Recurring חודשי החל בעוד 7 ימים
       recur_sum: urlParams.price,
       recur_transaction: '4_approved',
       recur_start_date: recurStartDate,
 
-      // פרטי לקוח שיופיעו במסוף
+      // פרטי לקוח (לא חובה אבל נחמד שייכנס למסוף)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // UI
+      // UI בסיסי
       nologo: '1',
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
@@ -125,13 +118,15 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
 
-      // כתובות חזרה / notify
+      // Success/Fail (חוזר לדפי האתר)
       success_url_address: `https://www.yayagent.com/payment/success?plan=${urlParams.plan}&email=${encodeURIComponent(
         email.trim()
       )}&price=${urlParams.price}&code=${urlParams.code}&billing=${urlParams.billing}&firstName=${encodeURIComponent(
         firstName.trim()
       )}&lastName=${encodeURIComponent(lastName.trim())}`,
       fail_url_address: `${origin}/api/tranzila/fail-bridge`,
+
+      // Webhook (אם אתה משתמש)
       notify_url_address: `https://n8n-td2y.sliplane.app/webhook/update-user-plan`,
     })
 
@@ -147,6 +142,15 @@ export default function CheckoutPage() {
     phone,
     recurStartDate,
   ])
+
+  const handlePay = () => {
+    if (!email.trim()) {
+      alert('Please enter an email so we can send your receipt.')
+      return
+    }
+    // Redirect מלא – טרנזילה תטפל בתשלום ואז תעשה redirect ל-success
+    window.location.href = tranzilaUrl
+  }
 
   return (
     <div
@@ -304,7 +308,6 @@ export default function CheckoutPage() {
               Complete Your Order
             </h2>
 
-            {/* טופס פרטי לקוח (לא חוסם את ה-iframe) */}
             <div
               style={{
                 marginTop: 12,
@@ -361,49 +364,37 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <p style={{ marginTop: 8, color: '#7a6a5f', fontSize: '.9rem' }}>
-                The secure payment form is already loaded below.
+              <p style={{ marginTop: 10, color: '#7a6a5f', fontSize: '.9rem' }}>
+                When you’re ready, click the button below to pay securely via Tranzila.
               </p>
-            </div>
 
-            {/* IFRAME – עם הרשאות sandbox שמאפשרות ניווט לטופ־וינדו (Google OAuth) */}
-            <div
-              style={{
-                marginTop: 12,
-                background: 'white',
-                borderRadius: 20,
-                overflow: 'hidden',
-                border: '1px solid rgba(0,0,0,0.06)',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
-                minHeight: 650,
-              }}
-            >
-              {isLoading ? (
-                <div style={loaderWrap}>
-                  <div style={spinner} />
-                  <p style={{ color: '#8B5E3C', fontSize: '.95rem', marginTop: 8 }}>
-                    Loading secure payment form...
-                  </p>
-                </div>
-              ) : (
-                <iframe
-                  key={iframeSrc}
-                  src={iframeSrc}
-                  title="Secure Payment Form"
-                  style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
-                  allow="payment"
-                  // *** זה התיקון הקריטי: מוסיף הרשאות ניווט לטופ וינדו ויציאה מה-sandbox בפופאפים ***
-                  sandbox="
-                    allow-scripts
-                    allow-forms
-                    allow-same-origin
-                    allow-popups
-                    allow-top-navigation
-                    allow-top-navigation-by-user-activation
-                    allow-popups-to-escape-sandbox
-                  "
-                />
-              )}
+              <button
+                onClick={handlePay}
+                style={{
+                  marginTop: 12,
+                  width: '100%',
+                  padding: '16px 24px',
+                  background: 'linear-gradient(135deg, #8B5E3C 0%, #A0673F 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 12,
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(139, 94, 60, 0.3)',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(139, 94, 60, 0.4)'
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0px)'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 94, 60, 0.3)'
+                }}
+              >
+                Pay Securely
+              </button>
             </div>
 
             <p style={{ marginTop: 12, color: '#6b7280', fontSize: '.9rem', textAlign: 'center' }}>
@@ -412,10 +403,6 @@ export default function CheckoutPage() {
           </section>
         </div>
       </main>
-
-      <style jsx>{`
-        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
-      `}</style>
     </div>
   )
 }
@@ -434,22 +421,4 @@ const inputStyle: React.CSSProperties = {
   border: '1px solid #E5DDD5',
   outline: 'none',
   fontSize: '.95rem',
-}
-
-const loaderWrap: React.CSSProperties = {
-  minHeight: 650,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexDirection: 'column',
-  gap: 10,
-}
-
-const spinner: React.CSSProperties = {
-  width: 50,
-  height: 50,
-  border: '4px solid #E5DDD5',
-  borderTopColor: '#8B5E3C',
-  borderRadius: '50%',
-  animation: 'spin 1s linear infinite',
 }
