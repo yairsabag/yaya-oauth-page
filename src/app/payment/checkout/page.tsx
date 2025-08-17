@@ -14,32 +14,30 @@ type UrlParams = {
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState<UrlParams>({
     plan: 'executive',
-    price: '5',
+    price: '5',               // '5' או '14'
     billing: 'monthly',
     code: 'F75CEJ',
     planName: 'Executive Plan',
   })
 
+  // פרטי לקוח שיועברו למסוף (לא חובה להצגה ראשונית של iframe)
   const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName]   = useState('')
-  const [email, setEmail]         = useState('')
-  const [phone, setPhone]         = useState('')
+  const [lastName,  setLastName]  = useState('')
+  const [email,     setEmail]     = useState('')
+  const [phone,     setPhone]     = useState('')
 
   const [isMobile, setIsMobile]   = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  // קריאת פרמטרים מה-URL, רספונסיביות, וסימול טען
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
     const plan = (p.get('plan') || 'executive').toLowerCase()
-    const billing = (p.get('billing') || 'monthly').toLowerCase()
-    // אם הגיע plan=ultimate ואין price – נניח $14
     const price = p.get('price') || (plan === 'ultimate' ? '14' : '5')
 
     setUrlParams({
       plan,
       price,
-      billing,
+      billing: (p.get('billing') || 'monthly').toLowerCase(),
       code: p.get('code') || 'F75CEJ',
       planName: p.get('planName') || (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan'),
     })
@@ -78,7 +76,7 @@ export default function CheckoutPage() {
   const currentPlan =
     planDetails[urlParams.plan as keyof typeof planDetails] || planDetails.executive
 
-  // להתחיל חיוב חוזר בעוד 7 ימים (YYYY-MM-DD)
+  // להתחלת מנוי בעוד 7 ימים (yyyy-mm-dd)
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
@@ -88,14 +86,10 @@ export default function CheckoutPage() {
     return `${y}-${m}-${day}`
   }, [])
 
-  // נטען iframe רק כשיש מינימום פרטים
-  const readyForIframe =
-    firstName.trim() && lastName.trim() && /\S+@\S+\.\S+/.test(email)
-
-  // *** הכי חשוב: בסיס ה-iframe המדויק – אל תשנה! ***
+  // בסיס ה־iframe (אל תשנה)
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // בניית ה-URL עם GET params (כמו הדוגמה שלהם), על אותו בסיס בדיוק
+  // URL בסגנון הדוגמה של טרנזילה (GET), כולל cred_type + tranmode למניעת 418
   const iframeSrc = useMemo(() => {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com'
@@ -104,25 +98,26 @@ export default function CheckoutPage() {
       // ניסיון: לא מחייבים עכשיו
       sum: '0',
       currency: '2',          // USD
-      tranmode: 'VK',         // recurring/verification path
+      cred_type: '1',         // אשראי רגיל (חובה לפי הדוגמה שעבדה)
+      tranmode: 'AK',         // תואם לדוגמה שלהם; עובד גם עם recurring
 
       // חיוב חודשי החל בעוד 7 ימים
       recur_sum: urlParams.price,            // '5' או '14'
-      recur_transaction: '4_approved',       // monthly (not customer choice)
+      recur_transaction: '4_approved',       // חיוב חודשי אוטומטי
       recur_start_date: recurStartDate,      // yyyy-mm-dd
 
-      // פרטי לקוח (יופיעו במסוף)
+      // פרטי לקוח (יעודכנו אוטומטית כשממלאים בטופס)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // עיצוב ה-iframe
+      // עיצוב ה־iframe
       nologo: '1',
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
       trButtonColor: '8B5E3C',
       buttonLabel: 'Start Free Trial',
-      google_pay: '1', // דרוש SSL בדף שלך
+      google_pay: '1',
 
       // מזהים פנימיים ותיאור
       uid: urlParams.code,
@@ -132,14 +127,14 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - 7 Day Trial (USD)`,
 
-      // כתובות החזרה/notify – עדכן לנתיבים אצלך
+      // כתובות חזרה/notify – עדכן לנתיבים אצלך
       success_url_address: `${origin}/api/tranzila/success-bridge`,
       fail_url_address: `${origin}/api/tranzila/fail-bridge`,
       notify_url_address: `${origin}/api/webhook/update-user-plan`,
     })
 
     return `${TRZ_BASE}?${params.toString()}`
-  }, [TRZ_BASE, urlParams.plan, urlParams.price, urlParams.billing, urlParams.code, firstName, lastName, email, phone, recurStartDate])
+  }, [urlParams.plan, urlParams.price, urlParams.billing, urlParams.code, firstName, lastName, email, phone, recurStartDate])
 
   return (
     <div
@@ -206,7 +201,7 @@ export default function CheckoutPage() {
             alignItems: 'start',
           }}
         >
-          {/* ORDER SUMMARY */}
+          {/* ORDER SUMMARY (שמאל) */}
           <section
             style={{
               background: 'white',
@@ -291,13 +286,13 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          {/* תשלום */}
+          {/* תשלום (ימין) */}
           <section>
             <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>
               Complete Your Order
             </h2>
 
-            {/* פרטי לקוח */}
+            {/* טופס פרטי לקוח */}
             <div
               style={{
                 marginTop: 12,
@@ -316,7 +311,7 @@ export default function CheckoutPage() {
                 }}
               >
                 <div>
-                  <label style={labelStyle}>First name*</label>
+                  <label style={labelStyle}>First name</label>
                   <input
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
@@ -325,7 +320,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Last name*</label>
+                  <label style={labelStyle}>Last name</label>
                   <input
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
@@ -334,7 +329,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Email*</label>
+                  <label style={labelStyle}>Email</label>
                   <input
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -344,7 +339,7 @@ export default function CheckoutPage() {
                   />
                 </div>
                 <div>
-                  <label style={labelStyle}>Phone (optional)</label>
+                  <label style={labelStyle}>Phone</label>
                   <input
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -354,14 +349,12 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {!readyForIframe && (
-                <p style={{ marginTop: 8, color: '#b45309', fontSize: '.9rem' }}>
-                  Please fill first name, last name and a valid email to continue.
-                </p>
-              )}
+              <p style={{ marginTop: 8, color: '#7a6a5f', fontSize: '.9rem' }}>
+                The secure payment form is already loaded below. Filling your details will personalize the checkout.
+              </p>
             </div>
 
-            {/* IFRAME */}
+            {/* IFRAME – מוצג מיידית */}
             <div
               style={{
                 marginTop: 12,
@@ -373,11 +366,11 @@ export default function CheckoutPage() {
                 minHeight: 650,
               }}
             >
-              {isLoading || !readyForIframe ? (
+              {isLoading ? (
                 <div style={loaderWrap}>
                   <div style={spinner} />
                   <p style={{ color: '#8B5E3C', fontSize: '.95rem', marginTop: 8 }}>
-                    {isLoading ? 'Loading secure payment form...' : 'Waiting for your details...'}
+                    Loading secure payment form...
                   </p>
                 </div>
               ) : (
@@ -386,11 +379,6 @@ export default function CheckoutPage() {
                   src={iframeSrc}
                   title="Secure Payment Form"
                   allow="payment"
-                  // תאימות ל-Google Pay:
-                  // חלק מהדפדפנים בודקים גם את המאפיין הבא כבוליאני
-                  // (זה לא מזיק אם הדפדפן מתעלם ממנו)
-                  // @ts-ignore - React לא מכיר את המאפיין הזה כספציפי
-                  allowpaymentrequest="true"
                   sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
                   style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
                 />
