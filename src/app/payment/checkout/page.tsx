@@ -107,7 +107,7 @@ export default function CheckoutPage() {
       email: email.trim(),
       phone: phone.trim(),
 
-      // עיצוב דומה לעיצוב שלך
+      // עיצוב דומה לעיצוב שלך (ללא שפה)
       nologo: '1',                    // הסרת הלוגו של טרנזילה
       trBgColor: 'FAF5F0',           // רקע זהוב כמו שלך
       trTextColor: '2D5016',         // צבע טקסט ירוק כהה
@@ -115,8 +115,7 @@ export default function CheckoutPage() {
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
       
-      // הגדרת שפה ועיצוב נוסף
-      lang: 'en',                    // אנגלית מפורשת
+      // עיצוב נוסף (ללא שפה)
       trTextSize: '14',              // גודל טקסט
       trButtonTextColor: 'FFFFFF',   // צבע טקסט לבן בכפתור
 
