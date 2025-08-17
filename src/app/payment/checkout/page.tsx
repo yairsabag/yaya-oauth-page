@@ -89,7 +89,7 @@ export default function CheckoutPage() {
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
   // iframe GET params — ניסיון $0 עכשיו (VK), חיוב מנוי בעוד 7 ימים
-  // כולל cvv=1 ו-myid=1 כך שהשדות יידרשו ויימלאו בטופס
+  // תיקון הפרמטרים לדרישת CVV ות"ז
   const iframeSrc = useMemo(() => {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com'
@@ -119,9 +119,9 @@ export default function CheckoutPage() {
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
 
-      // דרישת שדות חובה בטופס (כדי למנוע 418 על CVV/ת״ז)
-      cvv: '1',
-      myid: '1', // אצל חלק מהטרמינלים זה נקרא id/cust_id — אם צריך נשנה
+      // דרישת שדות חובה בטופס - התיקון העיקרי
+      ccv: '1',               // דרישת CVV (שם נכון)
+      myid: '1',              // דרישת ת"ז (שם נכון)
 
       // מזהים ותיאור
       uid: urlParams.code,
