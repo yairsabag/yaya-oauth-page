@@ -81,45 +81,56 @@ export default function CheckoutPage() {
   }, [])
 
   const iframeSrc = useMemo(() => {
-    const origin =
-      typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com'
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
     const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
     const params = new URLSearchParams({
-      sum: '0',
-      tranmode: 'VK',
-      currency: '2',
+      // Base transaction parameters (from working Tranzila URL)
+      sum: '0',                    // $0 for free trial
+      cred_type: '1',             // 1 = Credit card
+      currency: '2',              // 2 = USD
+      tranmode: 'AK',             // AK = Standard transaction with token creation
 
-      recur_sum: urlParams.price,
-      recur_transaction: '4_approved',
-      recur_start_date: recurStartDate,
-
+      // Recurring payment parameters
+      recur_sum: urlParams.price,           // Amount to charge monthly after trial
+      recur_transaction: '4',               // 4 = monthly payment (customer choice)
+      recur_start_date: recurStartDate,     // Start charging in 7 days
+      
+      // Customer data
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
+      company: 'Yaya Assistant',
 
-      nologo: '1',
+      // Product description
+      pdesc: `Yaya ${urlParams.planName} - 7 Day Free Trial`,
+
+      // Return URLs
+      success_url_address: `${origin}/api/tranzila/success-bridge`,
+      fail_url_address: `${origin}/api/tranzila/fail-bridge`,
+      notify_url_address: 'https://n8n-TD2y.sliplane.app/webhook/update-user-plan',
+
+      // UI customization
+      buttonLabel: 'Start Free Trial',
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
       trButtonColor: '8B5E3C',
-      buttonLabel: 'Start Free Trial',
+      nologo: '1',
+
+      // Payment options
       google_pay: '1',
 
-      uid: urlParams.code,
-      u1: urlParams.code,
-      u2: urlParams.plan,
-      u3: urlParams.billing,
-      u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - 7 Day Trial (USD)`,
+      // Custom fields for your tracking
+      uid: urlParams.code,        // Registration code
+      remarks: `Plan: ${urlParams.plan}, Billing: ${urlParams.billing}`,
 
-      success_url_address: `${origin}/api/tranzila/success-bridge`,
-      fail_url_address: `${origin}/api/tranzila/fail-bridge`,
-      notify_url_address: `${origin}/api/webhook/update-user-plan`,
+      // Required parameter
+      u71: '1'
     })
+
     return `${base}?${params.toString()}`
   }, [urlParams, recurStartDate, firstName, lastName, email, phone])
 
-  const readyForIframe =
-    firstName.trim() && lastName.trim() && /\S+@\S+\.\S+/.test(email)
+  const readyForIframe = firstName.trim() && lastName.trim() && /\S+@\S+\.\S+/.test(email)
 
   return (
     <div
@@ -130,6 +141,19 @@ export default function CheckoutPage() {
         background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)',
       }}
     >
+      {/* CSS Animation */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes spin { 
+            from { transform: rotate(0deg) } 
+            to { transform: rotate(360deg) } 
+          }
+          .spin-animation {
+            animation: spin 1s linear infinite;
+          }
+        `
+      }} />
+
       {/* Header */}
       <header
         style={{
@@ -355,14 +379,14 @@ export default function CheckoutPage() {
             >
               {isLoading || !readyForIframe ? (
                 <div style={loaderWrap}>
-                  <div style={spinner} />
+                  <div style={spinnerStyle} className="spin-animation" />
                   <p style={{ color: '#8B5E3C', fontSize: '.95rem', marginTop: 8 }}>
                     {isLoading ? 'Loading secure payment form...' : 'Waiting for your details...'}
                   </p>
                 </div>
               ) : (
                 <iframe
-                  key={iframeSrc}
+                  key={iframeSrc /* שירנדר מחדש כשיש פרטים */}
                   src={iframeSrc}
                   style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
                   title="Secure Payment Form"
@@ -378,10 +402,6 @@ export default function CheckoutPage() {
           </section>
         </div>
       </main>
-
-      <style jsx>{`
-        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
-      `}</style>
     </div>
   )
 }
@@ -411,11 +431,10 @@ const loaderWrap: React.CSSProperties = {
   gap: 10,
 }
 
-const spinner: React.CSSProperties = {
+const spinnerStyle: React.CSSProperties = {
   width: 50,
   height: 50,
   border: '4px solid #E5DDD5',
   borderTopColor: '#8B5E3C',
   borderRadius: '50%',
-  animation: 'spin 1s linear infinite',
 }
