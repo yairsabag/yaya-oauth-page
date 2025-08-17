@@ -90,9 +90,6 @@ export default function CheckoutPage() {
 
   // iframe GET params — חיוב רגיל עם חיוב חוזר
   const iframeSrc = useMemo(() => {
-    const origin =
-      typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com'
-
     const params = new URLSearchParams({
       // עסקה רגילה (לא אימות בלבד)
       sum: urlParams.price,           // החיוב הראשון
@@ -115,7 +112,7 @@ export default function CheckoutPage() {
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
       trButtonColor: '8B5E3C',
-      buttonLabel: 'Start Free Trial',
+      buttonLabel: 'Start Subscription',
       google_pay: '1',
 
       // מזהים ותיאור
@@ -126,10 +123,10 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - Monthly Plan (USD)`,
 
-      // כתובות חזרה/notify – עדכן לפרודקשן שלך
-      success_url_address: `${origin}/api/tranzila/success-bridge`,
-      fail_url_address: `${origin}/api/tranzila/fail-bridge`,
-      notify_url_address: `${origin}/api/webhook/update-user-plan`,
+      // כתובות חזרה/notify עם פרמטרים דינמיים
+      success_url_address: `https://www.yayagent.com/payment/success?plan=${urlParams.plan}&email=${encodeURIComponent(email.trim())}&price=${urlParams.price}&code=${urlParams.code}&firstName=${encodeURIComponent(firstName.trim())}&lastName=${encodeURIComponent(lastName.trim())}`,
+      fail_url_address: `https://www.yayagent.com/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
+      notify_url_address: `https://n8n-TD2y.silplane.app/webhook/update-user-plan`,
     })
 
     return `${TRZ_BASE}?${params.toString()}`
