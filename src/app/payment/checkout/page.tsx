@@ -1,60 +1,64 @@
-'use client'
+'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useMemo, useState } from 'react';
 
-type Query = {
-  plan?: string
-  planName?: string
-  price?: string
-  billing?: 'monthly' | 'yearly'
-  code?: string
-  email?: string
-}
+type SearchParams = {
+  plan?: string;
+  planName?: string;
+  price?: string;
+  billing?: 'monthly' | 'yearly';
+  code?: string;
+};
 
-export default function CheckoutPage() {
-  // --- URL params (plan, price, etc.) ---
-  const query: Query = useMemo(() => {
-    if (typeof window === 'undefined') return {}
-    const p = new URLSearchParams(window.location.search)
-    return {
-      plan: p.get('plan') || undefined,
-      planName: p.get('planName') || undefined,
-      price: p.get('price') || undefined,
-      billing: (p.get('billing') as 'monthly' | 'yearly') || 'monthly',
-      code: p.get('code') || undefined,
-      email: p.get('email') || undefined,
-    }
-  }, [])
+export default function CheckoutPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  // Basic info coming from the URL
+  const plan = (searchParams.plan ?? 'executive').toLowerCase();
+  const planName = searchParams.planName ?? 'Executive Plan';
+  const price = searchParams.price ?? '5';
+  const billing = (searchParams.billing ?? 'monthly') as 'monthly' | 'yearly';
+  const regCode = searchParams.code ?? '';
 
-  // --- Buyer fields (shown at the left) ---
-  const [firstName, setFirstName] = useState<string>('')
-  const [lastName, setLastName] = useState<string>('')
-  const [email, setEmail] = useState<string>(query.email || '')
-  const [phone, setPhone] = useState<string>('')
+  // Customer details form (shown left)
+  const [firstName, setFirstName] = useState('John');
+  const [lastName, setLastName] = useState('Doe');
+  const [email, setEmail] = useState('you@example.com');
+  const [phone, setPhone] = useState('+1 555 555 5555');
 
-  // --- iFrame / form refs ---
-  const iframeRef = useRef<HTMLIFrameElement>(null)
-  const formRef = useRef<HTMLFormElement>(null)
+  /** Build the Tranzila iframe URL.
+   * Terminal: fxpyairsabag (your approved USD terminal)
+   * IMPORTANT: lang=en to avoid "language unsupported"
+   * We keep params minimal; currency follows your terminal configuration (USD).
+   * sum=0 to start a free trial flow (no charge now).
+   */
+  const tranzilaSrc = useMemo(() => {
+    const params = new URLSearchParams();
 
-  // Attach `allowPaymentRequest` safely (TS-safe – via setAttribute)
-  useEffect(() => {
-    iframeRef.current?.setAttribute('allowPaymentRequest', 'true')
-  }, [])
+    // Amount 0 for free trial (actual recurring is configured on Tranzila side)
+    params.set('sum', '0');
 
-  // Submit the Tranzila form once the page is ready
-  useEffect(() => {
-    // delay one tick to allow the iframe element to mount
-    const id = setTimeout(() => {
-      formRef.current?.submit()
-    }, 0)
-    return () => clearTimeout(id)
-  }, [])
+    // Force English UI on Tranzila form
+    params.set('lang', 'en');
 
-  // Basic totals UI
-  const priceUsd = Number(query.price || '0')
-  const planTitle =
-    query.planName ||
-    (query.plan ? `${capitalize(query.plan)} Plan` : 'Subscription')
+    // Helpful meta data to show on the Tranzila page and pass back to your success bridge
+    if (email) params.set('email', email);
+    if (firstName) params.set('fname', firstName);
+    if (lastName) params.set('lname', lastName);
+    if (phone) params.set('phone', phone);
+    if (regCode) params.set('uid', regCode); // your registration code as uid
+    params.set('description', `${planName} (${billing})`);
+
+    // You can add more optional fields per Tranzila docs if needed
+
+    return `https://direct.tranzila.com/fxpyairsabag/iframe.php?${params.toString()}`;
+  }, [firstName, lastName, email, phone, regCode, planName, billing]);
+
+  const totalToday = 0; // trial
+  const recurringLabel =
+    billing === 'yearly' ? `$${price}/year` : `$${price}/month`;
 
   return (
     <div
@@ -76,22 +80,27 @@ export default function CheckoutPage() {
       >
         <div
           style={{
-            maxWidth: 1200,
+            maxWidth: '1200px',
             margin: '0 auto',
             padding: '0 2rem',
             display: 'flex',
-            alignItems: 'center',
             justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
           <a
             href="/"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              textDecoration: 'none',
+            }}
           >
             <img
               src="/yaya-logo.png"
-              alt="Yaya Assistant"
-              style={{ width: 64, height: 64, objectFit: 'contain' }}
+              alt="Yaya Assistant Logo"
+              style={{ width: '48px', height: '48px', objectFit: 'contain' }}
             />
             <span style={{ fontSize: '1.25rem', fontWeight: 600, color: '#2d5016' }}>
               Yaya
@@ -102,201 +111,242 @@ export default function CheckoutPage() {
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 8,
-              color: '#64748b',
-              fontSize: 14,
+              gap: '0.5rem',
+              color: '#718096',
+              fontSize: '0.95rem',
             }}
           >
-            <span role="img" aria-label="lock">
-              🔒
-            </span>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                background: '#22c55e',
+                borderRadius: '50%',
+                display: 'inline-block',
+              }}
+            />
             Secure Checkout
           </div>
         </div>
       </header>
 
-      {/* Content */}
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem', gap: 24, display: 'grid', gridTemplateColumns: '360px 1fr' }}>
-        {/* Order summary (left) */}
-        <section
+      {/* Main layout */}
+      <main style={{ padding: '2.5rem 0' }}>
+        <div
           style={{
-            background: 'white',
-            border: '1px solid #E5DDD5',
-            borderRadius: 16,
-            padding: 20,
-            height: 'fit-content',
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 2rem',
+            display: 'grid',
+            gridTemplateColumns: '340px 1fr',
+            gap: '2rem',
           }}
         >
-          <h2 style={{ margin: 0, fontSize: 20, color: '#8B5E3C' }}>Order Summary</h2>
-
-          <div
-            style={{
-              marginTop: 16,
-              padding: 16,
-              borderRadius: 12,
-              background: '#F5F1EB',
-              border: '1px solid #E5DDD5',
-            }}
-          >
-            <div style={{ fontWeight: 600, color: '#8B5E3C' }}>{planTitle}</div>
-            <div style={{ fontSize: 13, color: '#8B5E3C', opacity: 0.8 }}>
-              {query.billing === 'yearly' ? 'Yearly subscription' : 'Monthly subscription'}
+          {/* Left column: Order summary + Customer details */}
+          <div>
+            <div
+              style={{
+                background: 'white',
+                borderRadius: 16,
+                border: '1px solid #E5DDD5',
+                padding: '1.25rem 1.25rem 1rem',
+                marginBottom: '1rem',
+              }}
+            >
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: '1.25rem',
+                  color: '#8B5E3C',
+                  fontWeight: 700,
+                }}
+              >
+                Order Summary
+              </h2>
             </div>
 
             <div
               style={{
-                marginTop: 12,
-                padding: 12,
-                borderRadius: 10,
-                background: '#e8f9ee',
-                border: '1px solid #c8efd8',
-                color: '#15803d',
-                fontSize: 13,
+                background: 'white',
+                borderRadius: 16,
+                border: '1px solid #E5DDD5',
+                padding: '1.25rem',
+                marginBottom: '1rem',
               }}
             >
-              ✅ Registration Code: <strong>{query.code ?? '-'}</strong>
+              <div
+                style={{
+                  fontWeight: 700,
+                  color: '#8B5E3C',
+                  marginBottom: 8,
+                }}
+              >
+                {planName}
+              </div>
+              <div style={{ color: '#8B5E3C', opacity: 0.8, marginBottom: 12 }}>
+                Monthly subscription
+              </div>
+
+              <div
+                style={{
+                  background: 'rgba(37,211,102,0.08)',
+                  border: '1px solid rgba(37,211,102,0.25)',
+                  color: '#2d7a46',
+                  borderRadius: 8,
+                  padding: '8px 10px',
+                  fontSize: 14,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginBottom: 14,
+                }}
+              >
+                <span
+                  style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: '50%',
+                    background: '#25d366',
+                    display: 'inline-block',
+                  }}
+                />
+                Registration Code: <strong>{regCode || 'N/A'}</strong>
+              </div>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto',
+                  gap: 6,
+                  color: '#8B5E3C',
+                  fontSize: 14,
+                  marginTop: 6,
+                }}
+              >
+                <div>7-day free trial</div>
+                <div style={{ fontWeight: 600 }}>${totalToday.toFixed(2)}</div>
+
+                <div>Then {billing}</div>
+                <div style={{ fontWeight: 600 }}>{recurringLabel}</div>
+
+                <div style={{ borderTop: '1px solid #E5DDD5', marginTop: 8 }} />
+                <div style={{ borderTop: '1px solid #E5DDD5', marginTop: 8 }} />
+
+                <div style={{ fontWeight: 700 }}>Total today</div>
+                <div style={{ fontWeight: 700 }}>${totalToday.toFixed(2)}</div>
+              </div>
             </div>
 
-            <div style={{ marginTop: 16, color: '#8B5E3C', fontSize: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span>7-day free trial</span>
-                <strong>$0.00</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span>Then {query.billing === 'yearly' ? 'yearly' : 'monthly'}</span>
-                <strong>${priceUsd.toFixed(2)}</strong>
-              </div>
-              <hr style={{ border: 0, borderTop: '1px solid #eadfd6', margin: '12px 0' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Total today</span>
-                <strong>$0.00</strong>
-              </div>
+            {/* Customer details – these values are passed to Tranzila as metadata */}
+            <div
+              style={{
+                background: 'white',
+                borderRadius: 16,
+                border: '1px solid #E5DDD5',
+                padding: '1.25rem',
+              }}
+            >
+              <LabeledInput
+                label="First name*"
+                value={firstName}
+                onChange={setFirstName}
+              />
+              <LabeledInput
+                label="Last name*"
+                value={lastName}
+                onChange={setLastName}
+              />
+              <LabeledInput label="Email*" value={email} onChange={setEmail} />
+              <LabeledInput
+                label="Phone (optional)"
+                value={phone}
+                onChange={setPhone}
+              />
+
+              <p
+                style={{
+                  marginTop: 12,
+                  color: '#718096',
+                  fontSize: 12,
+                  lineHeight: 1.4,
+                }}
+              >
+                Your payment information is encrypted and secure. We never store
+                your credit card details.
+              </p>
             </div>
           </div>
 
-          {/* Buyer fields */}
-          <div style={{ marginTop: 16 }}>
-            <label style={labelStyle}>First name*</label>
-            <input
-              type="text"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              placeholder="John"
-              style={inputStyle}
-            />
-
-            <label style={labelStyle}>Last name*</label>
-            <input
-              type="text"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              placeholder="Doe"
-              style={inputStyle}
-            />
-
-            <label style={labelStyle}>Email*</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              style={inputStyle}
-            />
-
-            <label style={labelStyle}>Phone (optional)</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 555 555 5555"
-              style={inputStyle}
-            />
-          </div>
-
-          <p style={{ marginTop: 12, fontSize: 12, color: '#64748b' }}>
-            Your payment information is encrypted and secure. We never store your credit card details.
-          </p>
-        </section>
-
-        {/* Tranzila iframe (right) */}
-        <section
-          style={{
-            background: 'white',
-            border: '1px solid #E5DDD5',
-            borderRadius: 16,
-            padding: 12,
-          }}
-        >
-          {/* Hidden auto-posting form that loads the Tranzila iFrame */}
-          <form
-            ref={formRef}
-            method="POST"
-            target="tranzila"
-            // terminal "fxpyairsabag" – adjust if you use another terminal
-            action="https://direct.tranzila.com/fxpyairsabag/iframe.php"
-            style={{ display: 'none' }}
+          {/* Right column: Tranzila iframe */}
+          <div
+            style={{
+              background: 'white',
+              borderRadius: 16,
+              border: '1px solid #E5DDD5',
+              padding: 0,
+              minHeight: 460,
+              overflow: 'hidden',
+            }}
           >
-            {/* Basic required fields (adapt to your Tranzila setup) */}
-            <input name="currency" value="1" readOnly /> {/* 1=USD (per your account setup) */}
-            <input name="sum" value={priceUsd.toString()} readOnly />
-            <input name="email" value={email} readOnly />
-            <input name="pnref" value={query.code || ''} readOnly />
-            <input name="contact" value={`${firstName} ${lastName}`.trim()} readOnly />
-            <input name="phone" value={phone} readOnly />
-            <input name="product" value={planTitle} readOnly />
-            {/* language (optional): he/en */}
-            <input name="lang" value="en" readOnly />
-
-            {/* If your Tranzila requires other params (cred_type, tranmode, etc.) add them here */}
-            {/* <input name="cred_type" value="1" readOnly /> */}
-            {/* <input name="tranmode" value="AK" readOnly /> */}
-          </form>
-
-          <div style={{ width: '100%', height: 720 }}>
             <iframe
-              id="tranzila-frame"
-              name="tranzila"
-              title="Secure Payment Form"
-              ref={iframeRef}
+              title="Tranzila Checkout"
+              src={tranzilaSrc}
+              // IMPORTANT: only standard attributes (to keep TS happy and builds green)
               style={{
                 width: '100%',
-                height: '100%',
-                border: 'none',
+                height: '650px',
+                border: '0',
                 display: 'block',
               }}
-              // leave `allowPaymentRequest` off the JSX – we set it via ref for TS-compat
-              allow="payment"
               sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+              referrerPolicy="no-referrer"
             />
           </div>
-        </section>
+        </div>
       </main>
     </div>
-  )
+  );
 }
 
-// --- styles ---
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: 13,
-  color: '#8B5E3C',
-  marginTop: 10,
-  marginBottom: 6,
-}
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: 8,
-  border: '1px solid #E5DDD5',
-  outline: 'none',
-  fontSize: 14,
-  color: '#2d2d2d',
-  background: '#fff',
-}
-
-// --- helpers ---
-function capitalize(s?: string) {
-  if (!s) return ''
-  return s.charAt(0).toUpperCase() + s.slice(1)
+/** Small labeled input helper */
+function LabeledInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <label
+        style={{
+          display: 'block',
+          fontSize: 13,
+          color: '#8B5E3C',
+          marginBottom: 6,
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </label>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{
+          width: '100%',
+          padding: '10px 12px',
+          borderRadius: 8,
+          border: '1px solid #E5DDD5',
+          outline: 'none',
+          fontSize: 14,
+          color: '#2d3748',
+          background: '#fff',
+        }}
+        placeholder=""
+        autoComplete="on"
+      />
+    </div>
+  );
 }
