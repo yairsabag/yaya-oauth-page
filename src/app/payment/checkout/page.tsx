@@ -24,6 +24,7 @@ export default function CheckoutPage() {
   const [lastName,  setLastName]  = useState('')
   const [email,     setEmail]     = useState('')
   const [phone,     setPhone]     = useState('')
+
   const [isMobile, setIsMobile]   = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -43,11 +44,8 @@ export default function CheckoutPage() {
     const onResize = () => setIsMobile(window.innerWidth < 940)
     onResize()
     window.addEventListener('resize', onResize)
-    const t = setTimeout(() => setIsLoading(false), 400)
-    return () => {
-      window.removeEventListener('resize', onResize)
-      clearTimeout(t)
-    }
+    const t = setTimeout(() => setIsLoading(false), 300)
+    return () => { window.removeEventListener('resize', onResize); clearTimeout(t) }
   }, [])
 
   const planDetails = {
@@ -75,61 +73,54 @@ export default function CheckoutPage() {
     planDetails[(urlParams.plan as keyof typeof planDetails) || 'executive'] ||
     planDetails.executive
 
-  // חיוב חוזר יתחיל בעוד 7 ימים (YYYY-MM-DD)
+  // התשלום החוזר מתחיל בעוד 7 ימים
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
     return d.toISOString().slice(0, 10)
   }, [])
 
-  const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
-
-  // iframe params — חיוב ראשון עכשיו (עבד אצלך), מנוי החל בעוד 7 ימים
+  // קישור ל־Tranzila iframe — נסיון = $0 היום (trial) וחיוב חודשי החל בעוד 7 ימים
   const iframeSrc = useMemo(() => {
-    const siteBase =
-      typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
-
-    const qp = new URLSearchParams({
-      // חיוב ראשון (עכשיו) — זה עבד אצלך
-      sum: urlParams.price,
-      currency: '2',           // USD
-      tranmode: 'AK',          // עסקה רגילה + יצירת טוקן
+    const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
+    const params = new URLSearchParams({
+      // היום $0 (טוקניזציה/עסקה 0), ואז חיוב חודשי
+      sum: '0',
+      currency: '2',                 // USD
+      tranmode: 'AK',                // עסקה רגילה (עם טוקן), sum=0 מאושר ע"י טרנזילה
       cred_type: '1',
 
-      // חיוב חודשי שיתחיל אחרי 7 ימים
-      recur_sum: urlParams.price,
+      recur_sum: urlParams.price,    // 5 או 14
       recur_transaction: '4_approved',
       recur_start_date: recurStartDate,
 
-      // פרטי לקוח (יוחזרו אליך ב-POST)
+      // פרטי לקוח (יופיעו במסוף)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // מזהי משתמש שלך (יוחזרו אליך ב-POST)
-      uid: urlParams.code,
-      u1: urlParams.code,      // registration_code
-      u2: urlParams.plan,      // plan
-      u3: urlParams.billing,   // billing
-      u4: urlParams.price,     // price
-      pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
-
-      // עיצוב
+      // UI
       nologo: '1',
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
       trButtonColor: '8B5E3C',
-      buttonLabel: 'Pay and Start',
+      buttonLabel: 'Start Free Trial',
       google_pay: '1',
+
+      // מזהים ותיאור
+      uid: urlParams.code,
+      u1: urlParams.code,
+      u2: urlParams.plan,
+      u3: urlParams.billing,
+      u4: urlParams.price,
+      pdesc: `Yaya ${urlParams.plan} - 7 Day Free Trial (USD)`,
+
+      // חזרה והודעה (אפשר להשאיר כפי שהיה)
+      success_url_address: `https://www.yayagent.com/payment/success?plan=${urlParams.plan}&email=${encodeURIComponent(email.trim())}&price=${urlParams.price}&code=${urlParams.code}&billing=${urlParams.billing}`,
+      fail_url_address: `https://www.yayagent.com/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
+      notify_url_address: `https://n8n-TD2y.sliplane.app/webhook/update-user-plan`,
     })
-
-    // חשוב: success/fail ל-BRIDGE בלי query בכלל
-    qp.set('success_url_address', `${siteBase}/api/tranzila/success-bridge`)
-    qp.set('fail_url_address',    `${siteBase}/api/tranzila/fail-bridge`)
-    // notify ישירות ל-n8n (לא חובה)
-    qp.set('notify_url_address',  `https://n8n-TD2y.sliplane.app/webhook/update-user-plan`)
-
-    return `${TRZ_BASE}?${qp.toString()}`
+    return `${base}?${params.toString()}`
   }, [urlParams.plan, urlParams.price, urlParams.billing, urlParams.code, firstName, lastName, email, phone, recurStartDate])
 
   return (
@@ -197,7 +188,7 @@ export default function CheckoutPage() {
             alignItems: 'start',
           }}
         >
-          {/* ORDER SUMMARY (שמאל) */}
+          {/* ORDER SUMMARY */}
           <section
             style={{
               background: 'white',
@@ -251,10 +242,11 @@ export default function CheckoutPage() {
                 ))}
               </ul>
 
+              {/* כאן מציגים $0 היום */}
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>First payment (today)</span>
-                  <span>${urlParams.price}</span>
+                  <span>7-day free trial (today)</span>
+                  <span style={{ color: '#16a34a' }}>$0.00</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
@@ -271,7 +263,7 @@ export default function CheckoutPage() {
                   }}
                 >
                   <span>Total today</span>
-                  <span style={{ color: '#8B5E3C' }}>${urlParams.price}</span>
+                  <span style={{ color: '#16a34a' }}>$0.00</span>
                 </div>
               </div>
 
@@ -282,13 +274,13 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          {/* תשלום (ימין) */}
+          {/* תשלום */}
           <section>
             <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>
               Complete Your Order
             </h2>
 
-            {/* פרטי לקוח (אופציונלי) */}
+            {/* טופס פרטי לקוח */}
             <div
               style={{
                 marginTop: 12,
@@ -329,7 +321,7 @@ export default function CheckoutPage() {
               </p>
             </div>
 
-            {/* IFRAME */}
+            {/* IFRAME – מוצג מיידית */}
             <div
               style={{
                 marginTop: 12,
@@ -359,10 +351,6 @@ export default function CheckoutPage() {
                 />
               )}
             </div>
-
-            <p style={{ marginTop: 12, color: '#6b7280', fontSize: '.9rem', textAlign: 'center' }}>
-              Your payment information is encrypted and secure. We never store your credit card details.
-            </p>
           </section>
         </div>
       </main>
@@ -380,7 +368,6 @@ const labelStyle: React.CSSProperties = {
   color: '#6b7280',
   marginBottom: 6,
 }
-
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '10px 12px',
@@ -389,7 +376,6 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
   fontSize: '.95rem',
 }
-
 const loaderWrap: React.CSSProperties = {
   minHeight: 650,
   display: 'flex',
@@ -398,7 +384,6 @@ const loaderWrap: React.CSSProperties = {
   flexDirection: 'column',
   gap: 10,
 }
-
 const spinner: React.CSSProperties = {
   width: 50,
   height: 50,
