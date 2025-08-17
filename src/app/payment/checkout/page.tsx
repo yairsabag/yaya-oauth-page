@@ -1,44 +1,130 @@
-// /src/app/payment/checkout/page.tsx
-'use client';
+'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react'
+import { CheckCircle, Shield } from 'lucide-react'
 
-export default function CheckoutPage(props: any) {
-  const sp: Record<string, string | undefined> = props?.searchParams ?? {};
+type UrlParams = {
+  plan: string
+  price: string
+  billing: string
+  code: string
+  planName: string
+}
 
-  const plan      = (sp.plan ?? 'executive').toLowerCase(); // 'executive' | 'ultimate'
-  const planName  = sp.planName ?? (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan');
-  const billing   = (sp.billing ?? 'monthly') as 'monthly' | 'yearly';
-  const regCode   = sp.code ?? ''; // registration code from URL
+export default function CheckoutPage() {
+  const [urlParams, setUrlParams] = useState<UrlParams>({
+    plan: 'executive',
+    price: '5',
+    billing: 'monthly',
+    code: 'F75CEJ',
+    planName: 'Executive Plan',
+  })
 
-  // $/month by plan
-  const priceNum  = plan === 'ultimate' ? 14 : 5;
-  const priceStr  = String(priceNum);
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
 
-  // Customer (metadata only – NOT card fields)
-  const [firstName, setFirstName] = useState('John');
-  const [lastName,  setLastName]  = useState('Doe');
-  const [email,     setEmail]     = useState('you@example.com');
-  const [phone,     setPhone]     = useState('+1 555 555 5555');
+  const [isMobile, setIsMobile] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const siteBase =
-    process.env.NEXT_PUBLIC_BASE_URL ??
-    (typeof window !== 'undefined' ? window.location.origin : 'https://yayagent.com');
-
-  // start recurring in 7 days
-  const recurStartDate = useMemo(() => {
-    const d = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    return d.toISOString().slice(0, 10); // yyyy-mm-dd
-  }, []);
-
-  // auto-submit POST into iframe
-  const formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    formRef.current?.submit();
-  }, [planName, billing, priceNum, recurStartDate, email, phone, firstName, lastName, regCode, siteBase]);
+    const p = new URLSearchParams(window.location.search)
+    setUrlParams({
+      plan: p.get('plan') || 'executive',
+      price: p.get('price') || '5',
+      billing: p.get('billing') || 'monthly',
+      code: p.get('code') || 'F75CEJ',
+      planName: p.get('planName') || 'Executive Plan',
+    })
+    const onResize = () => setIsMobile(window.innerWidth < 940)
+    onResize()
+    window.addEventListener('resize', onResize)
+    const t = setTimeout(() => setIsLoading(false), 400)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      clearTimeout(t)
+    }
+  }, [])
 
-  const totalToday = 0;
-  const recurringLabel = `$${priceStr}/month`;
+  const planDetails = {
+    executive: {
+      name: 'Executive Plan',
+      features: [
+        'Google Calendar integration',
+        'Expense tracking',
+        'Contact management',
+        'Recurring reminders',
+      ],
+    },
+    ultimate: {
+      name: 'Ultimate Plan',
+      features: [
+        'All Executive features',
+        'Food & calorie tracking',
+        'Advanced analytics',
+        'Priority support',
+      ],
+    },
+  }
+  const currentPlan =
+    planDetails[urlParams.plan as keyof typeof planDetails] || planDetails.executive
+
+  // start recurring in 7 days (YYYY-MM-DD)
+  const recurStartDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 7)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }, [])
+
+  const iframeSrc = useMemo(() => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
+    const params = new URLSearchParams({
+      // ניסיון + טוקן (אין חיוב עכשיו)
+      sum: '0',
+      tranmode: 'VK',
+      currency: '2', // USD
+
+      // Recurring: חודשי, החל בעוד 7 ימים
+      recur_sum: urlParams.price,
+      recur_transaction: '4_approved',
+      recur_start_date: recurStartDate,
+
+      // פרטי לקוח (מועברים למסוף)
+      contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
+      email: email.trim(),
+      phone: phone.trim(),
+
+      // UI
+      nologo: '1',
+      trBgColor: 'FAF5F0',
+      trTextColor: '2D5016',
+      trButtonColor: '8B5E3C',
+      buttonLabel: 'Start Free Trial',
+
+      // שדות משלך
+      u1: urlParams.code,
+      u2: urlParams.plan,
+      u3: urlParams.billing,
+      u4: urlParams.price,
+      pdesc: `Yaya ${urlParams.plan} - 7 Day Trial (USD)`,
+
+      // החזרות
+      success_url_address: `${origin}/api/tranzila/success-bridge`,
+      fail_url_address: `${origin}/api/tranzila/fail-bridge`,
+
+      // notify (אופציונלי – אם אתה מעדיף ב־settings במסוף, אפשר להסיר מכאן)
+      notify_url_address: 'https://n8n-TD2y.sliplane.app/webhook/update-user-plan',
+    })
+
+    return `${base}?${params.toString()}`
+  }, [urlParams, recurStartDate, firstName, lastName, email, phone])
+
+  const readyForIframe = firstName.trim() && lastName.trim() && /\S+@\S+\.\S+/.test(email)
 
   return (
     <div
@@ -60,9 +146,9 @@ export default function CheckoutPage(props: any) {
       >
         <div
           style={{
-            maxWidth: '1200px',
+            maxWidth: 1200,
             margin: '0 auto',
-            padding: '0 2rem',
+            padding: isMobile ? '0 1rem' : '0 2rem',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -73,288 +159,268 @@ export default function CheckoutPage(props: any) {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.75rem',
+              gap: '.75rem',
               textDecoration: 'none',
             }}
           >
             <img
               src="/yaya-logo.png"
-              alt="Yaya Assistant Logo"
-              style={{ width: 48, height: 48, objectFit: 'contain' }}
+              alt="Yaya Assistant"
+              style={{ width: 72, height: 72, objectFit: 'contain' }}
             />
-            <span style={{ fontSize: '1.25rem', fontWeight: 600, color: '#2d5016' }}>
+            <span style={{ fontSize: '1.5rem', fontWeight: 600, color: '#2d5016' }}>
               Yaya
             </span>
           </a>
-
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              color: '#718096',
-              fontSize: '0.95rem',
-            }}
-          >
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                background: '#22c55e',
-                borderRadius: '50%',
-                display: 'inline-block',
-              }}
-            />
-            Secure Checkout
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#4a5568' }}>
+            <Shield size={16} />
+            {!isMobile && <span style={{ fontSize: '.9rem' }}>Secure Checkout</span>}
           </div>
         </div>
       </header>
 
-      {/* Main */}
-      <main style={{ padding: '2.5rem 0' }}>
+      <main style={{ padding: isMobile ? '1.5rem 0' : '3rem 0' }}>
         <div
           style={{
-            maxWidth: '1200px',
+            maxWidth: 1200,
             margin: '0 auto',
-            padding: '0 2rem',
+            padding: isMobile ? '0 1rem' : '0 2rem',
             display: 'grid',
-            gridTemplateColumns: '340px 1fr',
-            gap: '2rem',
+            gridTemplateColumns: isMobile ? '1fr' : '380px 1fr',
+            gap: '1.5rem',
+            alignItems: 'start',
           }}
         >
-          {/* Left: Summary + Details */}
-          <div>
-            <div
-              style={{
-                background: 'white',
-                borderRadius: 16,
-                border: '1px solid #E5DDD5',
-                padding: '1.25rem 1.25rem 1rem',
-                marginBottom: '1rem',
-              }}
-            >
-              <h2
-                style={{
-                  margin: 0,
-                  fontSize: '1.25rem',
-                  color: '#8B5E3C',
-                  fontWeight: 700,
-                }}
-              >
-                Order Summary
-              </h2>
-            </div>
+          {/* ORDER SUMMARY (שמאל) */}
+          <section
+            style={{
+              background: 'white',
+              borderRadius: 20,
+              padding: '1.25rem',
+              border: '1px solid rgba(0,0,0,0.06)',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+              position: 'sticky',
+              top: 24,
+            }}
+          >
+            <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>
+              Order Summary
+            </h2>
 
             <div
               style={{
-                background: 'white',
-                borderRadius: 16,
+                marginTop: 16,
+                padding: 16,
                 border: '1px solid #E5DDD5',
-                padding: '1.25rem',
-                marginBottom: '1rem',
+                borderRadius: 12,
+                background: '#FBFAF8',
               }}
             >
-              <div style={{ fontWeight: 700, color: '#8B5E3C', marginBottom: 8 }}>
-                {planName}
-              </div>
-              <div style={{ color: '#8B5E3C', opacity: 0.8, marginBottom: 12 }}>
+              <h3 style={{ margin: 0, color: '#8B5E3C', fontWeight: 700 }}>
+                {currentPlan.name}
+              </h3>
+              <p style={{ margin: '6px 0 0', color: '#7a6a5f', fontSize: '.9rem' }}>
                 Monthly subscription
-              </div>
+              </p>
 
-              <div
-                style={{
-                  background: 'rgba(37,211,102,0.08)',
-                  border: '1px solid rgba(37,211,102,0.25)',
-                  color: '#2d7a46',
-                  borderRadius: 8,
-                  padding: '8px 10px',
-                  fontSize: 14,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  marginBottom: 14,
-                }}
-              >
+              <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <CheckCircle size={16} style={{ color: '#22c55e' }} />
                 <span
                   style={{
-                    width: 16,
-                    height: 16,
-                    borderRadius: '50%',
-                    background: '#25d366',
-                    display: 'inline-block',
+                    fontSize: '.85rem',
+                    padding: '6px 10px',
+                    borderRadius: 8,
+                    background: 'rgba(34,197,94,.1)',
+                    border: '1px solid rgba(34,197,94,.25)',
+                    color: '#166534',
                   }}
-                />
-                Registration Code: <strong>{regCode || 'N/A'}</strong>
+                >
+                  Registration Code: {urlParams.code}
+                </span>
               </div>
 
+              <ul style={{ margin: '14px 0 0 16px', padding: 0, color: '#6b7280', fontSize: '.9rem' }}>
+                {currentPlan.features.map((f, i) => (
+                  <li key={i} style={{ marginBottom: 6 }}>{f}</li>
+                ))}
+              </ul>
+
+              <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span>7-day free trial</span>
+                  <span style={{ color: '#16a34a' }}>$0.00</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span>Then monthly</span>
+                  <span>${urlParams.price}/month</span>
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginTop: 10,
+                    paddingTop: 10,
+                    borderTop: '1px dashed #E5DDD5',
+                    fontWeight: 700,
+                  }}
+                >
+                  <span>Total today</span>
+                  <span style={{ color: '#16a34a' }}>$0.00</span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6, color: '#7a6a5f' }}>
+                <Shield size={14} />
+                <span style={{ fontSize: '.85rem' }}>SSL Secured • PCI Compliant</span>
+              </div>
+            </div>
+          </section>
+
+          {/* תשלום (ימין) */}
+          <section>
+            <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>
+              Complete Your Order
+            </h2>
+
+            {/* טופס פרטי לקוח */}
+            <div
+              style={{
+                marginTop: 12,
+                background: 'white',
+                borderRadius: 20,
+                padding: '1rem',
+                border: '1px solid rgba(0,0,0,0.06)',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+              }}
+            >
               <div
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '1fr auto',
-                  gap: 6,
-                  color: '#8B5E3C',
-                  fontSize: 14,
+                  gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                  gap: 12,
                 }}
               >
-                <div>7-day free trial</div>
-                <div style={{ fontWeight: 600 }}>${totalToday.toFixed(2)}</div>
-
-                <div>Then {billing}</div>
-                <div style={{ fontWeight: 600 }}>{recurringLabel}</div>
-
-                <div style={{ borderTop: '1px solid #E5DDD5', marginTop: 8 }} />
-                <div style={{ borderTop: '1px solid #E5DDD5', marginTop: 8 }} />
-
-                <div style={{ fontWeight: 700 }}>Total today</div>
-                <div style={{ fontWeight: 700 }}>${totalToday.toFixed(2)}</div>
+                <div>
+                  <label style={labelStyle}>First name*</label>
+                  <input
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="John"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Last name*</label>
+                  <input
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Doe"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Email*</label>
+                  <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="john@example.com"
+                    type="email"
+                    style={inputStyle}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle}>Phone (optional)</label>
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+1 555 123 4567"
+                    style={inputStyle}
+                  />
+                </div>
               </div>
+
+              {!readyForIframe && (
+                <p style={{ marginTop: 8, color: '#b45309', fontSize: '.9rem' }}>
+                  Please fill first name, last name and a valid email to continue.
+                </p>
+              )}
             </div>
 
-            {/* Customer details (metadata only) */}
+            {/* IFRAME */}
             <div
               style={{
+                marginTop: 12,
                 background: 'white',
-                borderRadius: 16,
-                border: '1px solid #E5DDD5',
-                padding: '1.25rem',
+                borderRadius: 20,
+                overflow: 'hidden',
+                border: '1px solid rgba(0,0,0,0.06)',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+                minHeight: 650,
               }}
             >
-              <LabeledInput label="First name*" value={firstName} onChange={setFirstName} />
-              <LabeledInput label="Last name*" value={lastName} onChange={setLastName} />
-              <LabeledInput label="Email*" value={email} onChange={setEmail} />
-              <LabeledInput label="Phone (optional)" value={phone} onChange={setPhone} />
-
-              <p
-                style={{
-                  marginTop: 12,
-                  color: '#718096',
-                  fontSize: 12,
-                  lineHeight: 1.4,
-                }}
-              >
-                Your payment information is encrypted and secure. We never store your
-                credit card details.
-              </p>
+              {isLoading || !readyForIframe ? (
+                <div style={loaderWrap}>
+                  <div style={spinner} />
+                  <p style={{ color: '#8B5E3C', fontSize: '.95rem', marginTop: 8 }}>
+                    {isLoading ? 'Loading secure payment form...' : 'Waiting for your details...'}
+                  </p>
+                </div>
+              ) : (
+                <iframe
+                  key={iframeSrc /* שירנדר מחדש כשיש פרטים */}
+                  src={iframeSrc}
+                  style={{ width: '100%', height: 700, border: 'none', display: 'block' }}
+                  title="Secure Payment Form"
+                  allow="payment"
+                  sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+                />
+              )}
             </div>
-          </div>
 
-          {/* Right: Tranzila iframe + auto-submitting POST form */}
-          <div
-            style={{
-              background: 'white',
-              borderRadius: 16,
-              border: '1px solid #E5DDD5',
-              padding: 0,
-              minHeight: 460,
-              overflow: 'hidden',
-            }}
-          >
-            {/* Hidden form posting into the iframe */}
-            <form
-              ref={formRef}
-              action="https://direct.tranzila.com/fxpyairsabag/iframenew.php"
-              method="POST"
-              target="tranzila_iframe"
-              style={{ display: 'none' }}
-              noValidate
-              autoComplete="off"
-            >
-              {/* Amount now: $0 (trial) */}
-              <input type="hidden" name="currency" value="2" />
-              <input type="hidden" name="sum" value="0" />
-
-              {/* Recurring config */}
-              <input type="hidden" name="recur_sum" value={priceStr} />
-              <input type="hidden" name="recur_transaction" value="4_approved" />
-              <input type="hidden" name="recur_start_date" value={recurStartDate} />
-              {/* אם רוצים ללא הגבלה, לא לשים recur_payments. */}
-
-              {/* Returns/webhooks */}
-              <input
-                type="hidden"
-                name="success_url_address"
-                value={`${siteBase}/api/tranzila/success-bridge`}
-              />
-              <input
-                type="hidden"
-                name="fail_url_address"
-                value={`${siteBase}/api/tranzila/fail-bridge`}
-              />
-              <input
-                type="hidden"
-                name="notify_url_address"
-                value={`${siteBase}/api/webhook/update-user-plan`}
-              />
-
-              {/* UI / payment options */}
-              <input type="hidden" name="buttonLabel" value="Start Free Trial" />
-              <input type="hidden" name="google_pay" value="1" />
-              {/* <input type="hidden" name="nologo" value="1" /> */}
-
-              {/* Metadata to appear in Tranzila */}
-              <input type="hidden" name="email" value={email} />
-              <input type="hidden" name="phone" value={phone} />
-              <input type="hidden" name="contact" value={`${firstName} ${lastName}`.trim()} />
-              <input type="hidden" name="company" value="Yaya Assistant" />
-              <input type="hidden" name="pdesc" value={`${planName} (${billing})`} />
-              <input type="hidden" name="uid" value={regCode} />
-
-              {/* 3DS V2 בכפייה רק אם צריך: */}
-              {/* <input type="hidden" name="newprocess" value="1" /> */}
-            </form>
-
-            <iframe
-              name="tranzila_iframe"
-              title="Tranzila Checkout"
-              allow="payment"
-              style={{ width: '100%', height: '680px', border: 0, display: 'block' }}
-              sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
-              referrerPolicy="no-referrer"
-            />
-          </div>
+            <p style={{ marginTop: 12, color: '#6b7280', fontSize: '.9rem', textAlign: 'center' }}>
+              Your payment information is encrypted and secure. We never store your credit card details.
+            </p>
+          </section>
         </div>
       </main>
+
+      <style jsx>{`
+        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+      `}</style>
     </div>
-  );
+  )
 }
 
-function LabeledInput({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div style={{ marginBottom: 12 }}>
-      <label
-        style={{
-          display: 'block',
-          fontSize: 13,
-          color: '#8B5E3C',
-          marginBottom: 6,
-          fontWeight: 600,
-        }}
-      >
-        {label}
-      </label>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={{
-          width: '100%',
-          padding: '10px 12px',
-          borderRadius: 8,
-          border: '1px solid #E5DDD5',
-          outline: 'none',
-          fontSize: 14,
-          color: '#2d3748',
-          background: '#fff',
-        }}
-        autoComplete="on"
-      />
-    </div>
-  );
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '.85rem',
+  color: '#6b7280',
+  marginBottom: 6,
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 12px',
+  borderRadius: 10,
+  border: '1px solid #E5DDD5',
+  outline: 'none',
+  fontSize: '.95rem',
+}
+
+const loaderWrap: React.CSSProperties = {
+  minHeight: 650,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexDirection: 'column',
+  gap: 10,
+}
+
+const spinner: React.CSSProperties = {
+  width: 50,
+  height: 50,
+  border: '4px solid #E5DDD5',
+  borderTopColor: '#8B5E3C',
+  borderRadius: '50%',
+  animation: 'spin 1s linear infinite',
 }
