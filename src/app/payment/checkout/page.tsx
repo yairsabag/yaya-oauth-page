@@ -52,19 +52,19 @@ export default function CheckoutPage() {
   } as const
   const currentPlan = plans[(urlParams.plan as keyof typeof plans) || 'executive'] || plans.executive
 
-  // תאריך התחלת החיוב החודשי – עוד 7 ימים
+  // תאריך התחלת החיוב החוזר – בעוד 7 ימים (YYYY-MM-DD)
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
     return d.toISOString().slice(0, 10)
   }, [])
 
-  // === זה החלק היחיד ששיניתי כדי לקבל Today=$0 + Monthly=$X, ועיצוב עם הלוגואים ===
+  // בניית לינק ה-redirect ל-Tranzila
   const tranzilaUrl = useMemo(() => {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
-    // מה שנרצה שיעבור ל-success ב-GET
+    // מה שיחזור אל דף ה-Success כ-GET
     const successQuery = new URLSearchParams({
       plan: urlParams.plan,
       email: email.trim(),
@@ -78,45 +78,44 @@ export default function CheckoutPage() {
     const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
     const params = new URLSearchParams({
-      // ===== Trial: תשלום מיידי $0 =====
-      sum: '0',                // זה מבטיח "Total due today $0.00"
-      currency: '2',           // USD
+      // ===== ניסוי חינם — $0 היום =====
+      sum: '0',
+      currency: '2',   // USD
       tranmode: 'AK',
       cred_type: '1',
 
-      // ===== חיוב חודשי לאחר 7 ימים =====
-      recur_sum: urlParams.price, // 5 או 14
-      recur_interval: 'M',        // Monthly (חשוב לכיתוב “Monthly”)
-      recur_start_date: recurStartDate,
-      // בחלק מהחשבונות צריך גם:
-      // recur_transaction: '4_approved', // אפשר להשאיר אם נדרש אצלך במסוף
+      // ===== חיוב חוזר (כדי שיופיע "In addition Monthly of $X") =====
+      recur_sum: urlParams.price,         // למשל "5" או "14"
+      recur_transaction: '4_approved',    // חודשי
+      recur_start_date: recurStartDate,   // בעוד 7 ימים
+      // אופציונלי: תדירות (יש מסופים שזה עוזר להם להציג טקסט נכון)
+      recur_frequency: '1',
 
-      // ===== פרטי לקוח (לא חובה) =====
+      // ===== פרטי לקוח (אופציונלי) =====
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // ===== עיצוב תואם Yaya + הצגת הלוגו/אייקונים =====
-      // לא שולחים nologo – כדי להציג לוגו ואייקונים
+      // ===== 🎨 עיצוב מותאם — עם לוגו/אייקונים של טרנזילה =====
+      // לא שולחים nologo — רוצים לראות לוגו ואייקונים
       trBgColor: 'FAF5F0',         // רקע
       trTextColor: '2D5016',       // טקסט
-      trButtonColor: '8B5E3C',     // צבע כפתור
-      trButtonTextColor: 'FFFFFF', // צבע טקסט בכפתור
+      trButtonColor: '8B5E3C',     // כפתור
+      trButtonTextColor: 'FFFFFF', // טקסט כפתור (אם נתמך)
       trTextSize: '16',
       buttonLabel: 'Pay and Start',
-      // אל תשלח lang כדי לא לקבל "language unsupported"
 
-      // ===== מזהי עסקה ותיאור =====
+      // ===== מזהים ותיאור =====
       uid: urlParams.code,
       u1: urlParams.code,
       u2: urlParams.plan,
       u3: urlParams.billing,
       u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - 7 Day Free Trial (USD)`,
+      pdesc: `Yaya ${urlParams.plan} — 7-day free trial ($0 today), then $${urlParams.price}/month`,
 
-      // ===== חזרה לאחר תשלום =====
+      // ===== חזרה ישירה =====
       success_url_address: `${origin}/payment/success?${successQuery}`,
-      fail_url_address: `${origin}/payment/fail`, // אם אין עמוד – תיצור /payment/fail מינימלי
+      fail_url_address: `${origin}/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
     })
 
     return `${base}?${params.toString()}`
@@ -124,7 +123,6 @@ export default function CheckoutPage() {
     urlParams.plan, urlParams.price, urlParams.billing, urlParams.code,
     firstName, lastName, email, phone, recurStartDate
   ])
-  // === סוף השינוי ===
 
   const handleRedirectToTranzila = () => {
     if (!email.trim()) {
@@ -193,14 +191,16 @@ export default function CheckoutPage() {
 
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>First payment (today)</span><span>$0.00</span>
+                  <span>First payment (today)</span>
+                  <span style={{ color: '#16a34a', fontWeight: 600 }}>$0.00</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
                   <span>${urlParams.price}/month</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTop: '1px dashed #E5DDD5', fontWeight: 700 }}>
-                  <span>Total today</span><span style={{ color: '#8B5E3C' }}>$0.00</span>
+                  <span>Total today</span>
+                  <span style={{ color: '#16a34a' }}>$0.00</span>
                 </div>
               </div>
             </div>
