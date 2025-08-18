@@ -20,13 +20,14 @@ export default function CheckoutPage() {
     planName: 'Executive Plan',
   })
 
-  // פרטי לקוח להצגה בלבד/העברה ל-Tranzila (לא חובה לטעינת הדף)
+  // פרטי לקוח להצגה ולשליחה ל-Tranzila
   const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
+  const [lastName,  setLastName]  = useState('')
+  const [email,     setEmail]     = useState('')
+  const [phone,     setPhone]     = useState('')
+  const [nationalId, setNationalId] = useState('') // ⬅️ חדש: ת"ז למילוי אוטומטי ב-Tranzila
 
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile]   = useState(false)
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
@@ -79,16 +80,16 @@ export default function CheckoutPage() {
     return d.toISOString().slice(0, 10)
   }, [])
 
-  // בסיס התשלום (ללא nologo כדי שיופיעו לוגו/אייקוני אבטחה של טרנזילה)
+  // בסיס ה-Redirect ל-Tranzila (לא iframe)
   const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-  // URL ל־Tranzila: היום $0 + חיוב חודשי החל מהתאריך שמעל
+  // כתובת התשלום המלאה ל-Tranzila (Trial = $0, ואז חיוב חודשי)
   const tranzilaUrl = useMemo(() => {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
     const params = new URLSearchParams({
-      // ===== חיוב מיידי – $0 (תחילת טרייל) =====
+      // ===== חיוב מיידי – $0 (Trial) =====
       sum: '0',
       currency: '2',          // USD
       tranmode: 'AK',
@@ -99,20 +100,20 @@ export default function CheckoutPage() {
       recur_transaction: '4_approved', // חודשי
       recur_start_date: recurStartDate,
 
-      // ===== פרטי לקוח (אופציונלי) =====
+      // ===== פרטי לקוח שיופיעו במסוף =====
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
+      // ⬇️ זה הפרמטר שממלא את שדה ה-ID בעמוד של Tranzila
+     
 
-      // ===== עיצוב (צבעי Yaya) =====
-      // לא שולחים nologo => הלוגו/אייקונים מוצגים
+      // ===== עיצוב בצבעים של האתר (ללא nologo כדי לראות לוגו ואייקונים) =====
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
       trButtonColor: '8B5E3C',
       trButtonTextColor: 'FFFFFF',
       trTextSize: '16',
       buttonLabel: 'Pay and Start',
-      
 
       // ===== מזהים ותיאור =====
       uid: urlParams.code,
@@ -122,7 +123,7 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - 7 Day Free Trial (USD)`,
 
-      // ===== החזרות =====
+      // ===== כתובות חזרה/notify =====
       success_url_address:
         `https://www.yayagent.com/payment/success?` +
         `plan=${urlParams.plan}` +
@@ -146,6 +147,7 @@ export default function CheckoutPage() {
     lastName,
     email,
     phone,
+    nationalId,
     recurStartDate,
   ])
 
@@ -154,7 +156,7 @@ export default function CheckoutPage() {
       alert('Please enter an email so we can send your receipt.')
       return
     }
-    // Redirect מלא ל־Tranzila
+    // Redirect מלא – Tranzila תטפל בתשלום ואז תחזיר ל-success
     window.location.href = tranzilaUrl
   }
 
@@ -277,18 +279,15 @@ export default function CheckoutPage() {
                 ))}
               </ul>
 
-              {/* סכומים: היום $0, אז חודשי */}
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span>First payment (today)</span>
                   <span style={{ color: '#16a34a', fontWeight: 600 }}>$0.00</span>
                 </div>
-
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
                   <span>${urlParams.price}/month</span>
                 </div>
-
                 <div
                   style={{
                     display: 'flex',
@@ -368,6 +367,17 @@ export default function CheckoutPage() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="+1 555 123 4567"
+                    style={inputStyle}
+                  />
+                </div>
+                {/* ⬇️ חדש: קלט ת"ז כדי שנמלא אוטומטית את שדה ה-ID ב-Tranzila */}
+                <div>
+                  <label style={labelStyle}>ID (National ID)</label>
+                  <input
+                    value={nationalId}
+                    onChange={(e) => setNationalId(e.target.value.replace(/\D/g, ''))}
+                    placeholder="9 digits"
+                    maxLength={9}
                     style={inputStyle}
                   />
                 </div>
