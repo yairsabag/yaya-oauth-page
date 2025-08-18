@@ -153,7 +153,7 @@ const tranzilaUrl = useMemo(() => {
   email,
   phone,
   recurStartDate,
-]);
+])
 
   const handlePay = () => {
     if (!email.trim()) {
