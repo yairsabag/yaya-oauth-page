@@ -62,7 +62,7 @@ export default function CheckoutPage() {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
-    // מה שנרצה שיגיע ל-success ישירות דרך GET
+    // פרמטרים שנחזיר ל-success ב-GET
     const successQuery = new URLSearchParams({
       plan: urlParams.plan,
       email: email.trim(),
@@ -75,8 +75,8 @@ export default function CheckoutPage() {
 
     const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
     const params = new URLSearchParams({
-      // עסקה רגילה (כמו הלינק שעבד לך)
-      sum: urlParams.price,
+      // ===== שינוי #1: היום $0 (ניסוי חינם) =====
+      sum: '0',
       currency: '2',
       tranmode: 'AK',
       cred_type: '1',
@@ -85,18 +85,19 @@ export default function CheckoutPage() {
       recur_sum: urlParams.price,
       recur_transaction: '4_approved',
       recur_start_date: recurStartDate,
+      // (לא חובה אבל משלים את הכיתוב "Monthly")
+      recur_interval: 'M',
 
-      // פרטי לקוח למסוף (לא חובה, אבל נוח)
+      // פרטי לקוח למסוף (לא חובה)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // ===== 🎨 עיצוב – עם לוגו ואייקונים של Tranzila =====
-      // שים לב: לא שולחים nologo – כדי שהלוגו/אייקונים יוצגו
-      trBgColor: 'FAF5F0',         // רקע
-      trTextColor: '2D5016',       // טקסט
-      trButtonColor: '8B5E3C',     // כפתור
-      trButtonTextColor: 'FFFFFF', // טקסט הכפתור (אם נתמך; יתעלם אם לא)
+      // עיצוב – עם לוגו/אייקונים של Tranzila (לא שולחים nologo)
+      trBgColor: 'FAF5F0',
+      trTextColor: '2D5016',
+      trButtonColor: '8B5E3C',
+      trButtonTextColor: 'FFFFFF',
       trTextSize: '16',
       buttonLabel: 'Pay and Start',
       google_pay: '1',
@@ -109,9 +110,10 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
 
-      // חזרה ישירה לעמוד הצלחה/כישלון (במסוף Tranzila שהחזרה תוגדר GET)
+      // חזרה לאחר תשלום
       success_url_address: `${origin}/payment/success?${successQuery}`,
-      fail_url_address: `${origin}/payment/fail`,
+      // ===== שינוי #2: לעמוד הכשל הנכון =====
+      fail_url_address: `${origin}/payment/failed`,
     })
 
     return `${base}?${params.toString()}`
@@ -187,14 +189,14 @@ export default function CheckoutPage() {
 
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>First payment (today)</span><span>${urlParams.price}</span>
+                  <span>First payment (today)</span><span>$0.00</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
                   <span>${urlParams.price}/month</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTop: '1px dashed #E5DDD5', fontWeight: 700 }}>
-                  <span>Total today</span><span style={{ color: '#8B5E3C' }}>${urlParams.price}</span>
+                  <span>Total today</span><span style={{ color: '#8B5E3C' }}>$0.00</span>
                 </div>
               </div>
             </div>
