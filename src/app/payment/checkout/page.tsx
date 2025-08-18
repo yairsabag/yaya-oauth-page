@@ -185,15 +185,12 @@ export default function CheckoutPage() {
 
               {/* שים לב: שאר התצוגה נשארת כמו אצלך (אם תרצה נעדכן ל-$0 רק ב־UI) */}
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>First payment (today)</span><span>${urlParams.price}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
-                  <span>${urlParams.price}/month</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTop: '1px dashed #E5DDD5', fontWeight: 700 }}>
-                  <span>Total today</span><span style={{ color: '#8B5E3C' }}>${urlParams.price}</span>
+                <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                 <span>Total due today:</span><span>$0.00</span>
+               </div>
+               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                 <span>Total after trial:</span><span>${urlParams.price}.00/month</span>
                 </div>
               </div>
             </div>
