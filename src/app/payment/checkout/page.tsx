@@ -91,11 +91,13 @@ export default function CheckoutPage() {
       email: email.trim(),
       phone: phone.trim(),
 
-      // עיצוב
-      nologo: '1',
-      trBgColor: 'FAF5F0',
-      trTextColor: '2D5016',
-      trButtonColor: '8B5E3C',
+      // ===== 🎨 עיצוב – עם לוגו ואייקונים של Tranzila =====
+      // שים לב: לא שולחים nologo – כדי שהלוגו/אייקונים יוצגו
+      trBgColor: 'FAF5F0',         // רקע
+      trTextColor: '2D5016',       // טקסט
+      trButtonColor: '8B5E3C',     // כפתור
+      trButtonTextColor: 'FFFFFF', // טקסט הכפתור (אם נתמך; יתעלם אם לא)
+      trTextSize: '16',
       buttonLabel: 'Pay and Start',
       google_pay: '1',
 
@@ -107,7 +109,7 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
 
-      // חזרה ישירה לעמוד הצלחה/כישלון (חשוב: במסוף Tranzila שהחזרה תוגדר GET)
+      // חזרה ישירה לעמוד הצלחה/כישלון (במסוף Tranzila שהחזרה תוגדר GET)
       success_url_address: `${origin}/payment/success?${successQuery}`,
       fail_url_address: `${origin}/payment/fail`,
     })
