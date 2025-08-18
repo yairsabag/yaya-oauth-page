@@ -78,70 +78,82 @@ export default function CheckoutPage() {
     return d.toISOString().slice(0, 10)
   }, [])
 
-  const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
+  // בסיס ה-iframe/Redirect
+const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php';
 
-  // URL Redirect מלא ל-Tranzila (AK רגיל, ללא iframe)
-  const tranzilaUrl = useMemo(() => {
-    const origin =
-      typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
+// התחלת חיוב חוזר בעוד 7 ימים (YYYY-MM-DD)
+const recurStartDate = useMemo(() => {
+  const d = new Date();
+  d.setDate(d.getDate() + 7);
+  return d.toISOString().slice(0, 10);
+}, []);
 
-    const params = new URLSearchParams({
-      // תשלום ראשון עכשיו (עבד אצלך)
-      sum: urlParams.price,
-      currency: '2',          // USD
-      tranmode: 'AK',         // עסקה רגילה
-      cred_type: '1',         // אשראי רגיל
+const tranzilaUrl = useMemo(() => {
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com';
 
-      // Recurring חודשי החל בעוד 7 ימים
-      recur_sum: urlParams.price,
-      recur_transaction: '4_approved',
-      recur_start_date: recurStartDate,
+  const params = new URLSearchParams({
+    // ===== Trial $0 (חיוב מיידי) =====
+    sum: '0',
+    currency: '2',          // USD
+    tranmode: 'AK',
+    cred_type: '1',
 
-      // פרטי לקוח (לא חובה אבל נחמד שייכנס למסוף)
-      contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
-      email: email.trim(),
-      phone: phone.trim(),
+    // ===== חיוב חוזר =====
+    recur_sum: urlParams.price,      // "5" או "14"
+    recur_transaction: '4_approved', // חודשי
+    recur_start_date: recurStartDate,
 
-      // UI בסיסי
-      nologo: '1',
-      trBgColor: 'FAF5F0',
-      trTextColor: '2D5016',
-      trButtonColor: '8B5E3C',
-      buttonLabel: 'Pay and Start',
-      google_pay: '1',
+    // ===== פרטי לקוח (אופציונלי) =====
+    contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
+    email: email.trim(),
+    phone: phone.trim(),
 
-      // מזהים ותיאור
-      uid: urlParams.code,
-      u1: urlParams.code,
-      u2: urlParams.plan,
-      u3: urlParams.billing,
-      u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
+    // ===== עיצוב בצבעים שלך =====
+    // שים לב: לא שולחים nologo => הלוגו והאייקונים מוצגים!
+    trBgColor: 'FAF5F0',           // רקע
+    trTextColor: '2D5016',         // טקסט
+    trButtonColor: '8B5E3C',       // כפתור
+    trButtonTextColor: 'FFFFFF',   // טקסט הכפתור
+    trTextSize: '16',
+    buttonLabel: 'Pay and Start',
+    lang: 'en',
 
-      // Success/Fail (חוזר לדפי האתר)
-      success_url_address: `https://www.yayagent.com/payment/success?plan=${urlParams.plan}&email=${encodeURIComponent(
-        email.trim()
-      )}&price=${urlParams.price}&code=${urlParams.code}&billing=${urlParams.billing}&firstName=${encodeURIComponent(
-        firstName.trim()
-      )}&lastName=${encodeURIComponent(lastName.trim())}`,
-      fail_url_address: `${origin}/api/tranzila/fail-bridge`,
+    // ===== מזהים ותיאור =====
+    uid: urlParams.code,
+    u1: urlParams.code,
+    u2: urlParams.plan,
+    u3: urlParams.billing,
+    u4: urlParams.price,
+    pdesc: `Yaya ${urlParams.plan} - 7 Day Free Trial (USD)`,
 
-      // Webhook (אם אתה משתמש)
-      notify_url_address: `https://n8n-td2y.sliplane.app/webhook/update-user-plan`,
-    })
+    // ===== החזרות =====
+    success_url_address:
+      `https://www.yayagent.com/payment/success?` +
+      `plan=${urlParams.plan}` +
+      `&email=${encodeURIComponent(email.trim())}` +
+      `&price=${urlParams.price}` +
+      `&code=${urlParams.code}` +
+      `&firstName=${encodeURIComponent(firstName.trim())}` +
+      `&lastName=${encodeURIComponent(lastName.trim())}` +
+      `&billing=${urlParams.billing}`,
 
-    return `${TRZ_BASE}?${params.toString()}`
-  }, [
-    urlParams.plan,
-    urlParams.price,
-    urlParams.billing,
-    urlParams.code,
-    firstName,
-    lastName,
-    email,
-    phone,
-    recurStartDate,
-  ])
+    fail_url_address: `${origin}/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
+    notify_url_address: `https://n8n-TD2y.sliplane.app/webhook/update-user-plan`,
+  });
+
+  return `${TRZ_BASE}?${params.toString()}`;
+}, [
+  urlParams.plan,
+  urlParams.price,
+  urlParams.billing,
+  urlParams.code,
+  firstName,
+  lastName,
+  email,
+  phone,
+  recurStartDate,
+]);
 
   const handlePay = () => {
     if (!email.trim()) {
