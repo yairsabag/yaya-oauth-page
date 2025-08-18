@@ -20,12 +20,13 @@ export default function CheckoutPage() {
     planName: 'Executive Plan',
   })
 
+  // פרטי לקוח להצגה בלבד/העברה ל-Tranzila (לא חובה לטעינת הדף)
   const [firstName, setFirstName] = useState('')
-  const [lastName,  setLastName]  = useState('')
-  const [email,     setEmail]     = useState('')
-  const [phone,     setPhone]     = useState('')
+  const [lastName, setLastName] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
 
-  const [isMobile, setIsMobile]   = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
@@ -78,89 +79,82 @@ export default function CheckoutPage() {
     return d.toISOString().slice(0, 10)
   }, [])
 
-  // בסיס ה-iframe/Redirect
-const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php';
+  // בסיס התשלום (ללא nologo כדי שיופיעו לוגו/אייקוני אבטחה של טרנזילה)
+  const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
 
-// התחלת חיוב חוזר בעוד 7 ימים (YYYY-MM-DD)
-const recurStartDate = useMemo(() => {
-  const d = new Date();
-  d.setDate(d.getDate() + 7);
-  return d.toISOString().slice(0, 10);
-}, []);
+  // URL ל־Tranzila: היום $0 + חיוב חודשי החל מהתאריך שמעל
+  const tranzilaUrl = useMemo(() => {
+    const origin =
+      typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
-const tranzilaUrl = useMemo(() => {
-  const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com';
+    const params = new URLSearchParams({
+      // ===== חיוב מיידי – $0 (תחילת טרייל) =====
+      sum: '0',
+      currency: '2',          // USD
+      tranmode: 'AK',
+      cred_type: '1',
 
-  const params = new URLSearchParams({
-    // ===== Trial $0 (חיוב מיידי) =====
-    sum: '0',
-    currency: '2',          // USD
-    tranmode: 'AK',
-    cred_type: '1',
+      // ===== חיוב חוזר =====
+      recur_sum: urlParams.price,      // "5" או "14"
+      recur_transaction: '4_approved', // חודשי
+      recur_start_date: recurStartDate,
 
-    // ===== חיוב חוזר =====
-    recur_sum: urlParams.price,      // "5" או "14"
-    recur_transaction: '4_approved', // חודשי
-    recur_start_date: recurStartDate,
+      // ===== פרטי לקוח (אופציונלי) =====
+      contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
+      email: email.trim(),
+      phone: phone.trim(),
 
-    // ===== פרטי לקוח (אופציונלי) =====
-    contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
-    email: email.trim(),
-    phone: phone.trim(),
+      // ===== עיצוב (צבעי Yaya) =====
+      // לא שולחים nologo => הלוגו/אייקונים מוצגים
+      trBgColor: 'FAF5F0',
+      trTextColor: '2D5016',
+      trButtonColor: '8B5E3C',
+      trButtonTextColor: 'FFFFFF',
+      trTextSize: '16',
+      buttonLabel: 'Pay and Start',
+      lang: 'en',
 
-    // ===== עיצוב בצבעים שלך =====
-    // שים לב: לא שולחים nologo => הלוגו והאייקונים מוצגים!
-    trBgColor: 'FAF5F0',           // רקע
-    trTextColor: '2D5016',         // טקסט
-    trButtonColor: '8B5E3C',       // כפתור
-    trButtonTextColor: 'FFFFFF',   // טקסט הכפתור
-    trTextSize: '16',
-    buttonLabel: 'Pay and Start',
-    lang: 'en',
+      // ===== מזהים ותיאור =====
+      uid: urlParams.code,
+      u1: urlParams.code,
+      u2: urlParams.plan,
+      u3: urlParams.billing,
+      u4: urlParams.price,
+      pdesc: `Yaya ${urlParams.plan} - 7 Day Free Trial (USD)`,
 
-    // ===== מזהים ותיאור =====
-    uid: urlParams.code,
-    u1: urlParams.code,
-    u2: urlParams.plan,
-    u3: urlParams.billing,
-    u4: urlParams.price,
-    pdesc: `Yaya ${urlParams.plan} - 7 Day Free Trial (USD)`,
+      // ===== החזרות =====
+      success_url_address:
+        `https://www.yayagent.com/payment/success?` +
+        `plan=${urlParams.plan}` +
+        `&email=${encodeURIComponent(email.trim())}` +
+        `&price=${urlParams.price}` +
+        `&code=${urlParams.code}` +
+        `&firstName=${encodeURIComponent(firstName.trim())}` +
+        `&lastName=${encodeURIComponent(lastName.trim())}` +
+        `&billing=${urlParams.billing}`,
+      fail_url_address: `${origin}/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
+      notify_url_address: `https://n8n-TD2y.sliplane.app/webhook/update-user-plan`,
+    })
 
-    // ===== החזרות =====
-    success_url_address:
-      `https://www.yayagent.com/payment/success?` +
-      `plan=${urlParams.plan}` +
-      `&email=${encodeURIComponent(email.trim())}` +
-      `&price=${urlParams.price}` +
-      `&code=${urlParams.code}` +
-      `&firstName=${encodeURIComponent(firstName.trim())}` +
-      `&lastName=${encodeURIComponent(lastName.trim())}` +
-      `&billing=${urlParams.billing}`,
-
-    fail_url_address: `${origin}/payment/fail?plan=${urlParams.plan}&code=${urlParams.code}`,
-    notify_url_address: `https://n8n-TD2y.sliplane.app/webhook/update-user-plan`,
-  });
-
-  return `${TRZ_BASE}?${params.toString()}`;
-}, [
-  urlParams.plan,
-  urlParams.price,
-  urlParams.billing,
-  urlParams.code,
-  firstName,
-  lastName,
-  email,
-  phone,
-  recurStartDate,
-])
+    return `${TRZ_BASE}?${params.toString()}`
+  }, [
+    urlParams.plan,
+    urlParams.price,
+    urlParams.billing,
+    urlParams.code,
+    firstName,
+    lastName,
+    email,
+    phone,
+    recurStartDate,
+  ])
 
   const handlePay = () => {
     if (!email.trim()) {
       alert('Please enter an email so we can send your receipt.')
       return
     }
-    // Redirect מלא – טרנזילה תטפל בתשלום ואז תעשה redirect ל-success
+    // Redirect מלא ל־Tranzila
     window.location.href = tranzilaUrl
   }
 
@@ -283,33 +277,32 @@ const tranzilaUrl = useMemo(() => {
                 ))}
               </ul>
 
+              {/* סכומים: היום $0, אז חודשי */}
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
-  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-    <span>First payment (today)</span>
-    <span style={{ color: '#16a34a', fontWeight: 600 }}>$0.00</span>
-  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span>First payment (today)</span>
+                  <span style={{ color: '#16a34a', fontWeight: 600 }}>$0.00</span>
+                </div>
 
-  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-    <span>
-      Then monthly (from {new Date(recurStartDate).toLocaleDateString()})
-    </span>
-    <span>${urlParams.price}/month</span>
-  </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
+                  <span>${urlParams.price}/month</span>
+                </div>
 
-  <div
-    style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      marginTop: 10,
-      paddingTop: 10,
-      borderTop: '1px dashed #E5DDD5',
-      fontWeight: 700,
-    }}
-  >
-    <span>Total today</span>
-    <span style={{ color: '#16a34a' }}>$0.00</span>
-  </div>
-</div>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginTop: 10,
+                    paddingTop: 10,
+                    borderTop: '1px dashed #E5DDD5',
+                    fontWeight: 700,
+                  }}
+                >
+                  <span>Total today</span>
+                  <span style={{ color: '#16a34a' }}>$0.00</span>
+                </div>
+              </div>
 
               <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6, color: '#7a6a5f' }}>
                 <Shield size={14} />
