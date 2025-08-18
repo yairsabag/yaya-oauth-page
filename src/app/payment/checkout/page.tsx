@@ -62,7 +62,6 @@ export default function CheckoutPage() {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
-    // פרמטרים שנחזיר ל-success ב-GET
     const successQuery = new URLSearchParams({
       plan: urlParams.plan,
       email: email.trim(),
@@ -75,25 +74,23 @@ export default function CheckoutPage() {
 
     const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
     const params = new URLSearchParams({
-      // ===== שינוי #1: היום $0 (ניסוי חינם) =====
-      sum: '0',
+      // ← חוזר למה שהיה בבסיס (זה מה שמבטיח redirect תקין ל-success אצלך)
+      sum: urlParams.price,
       currency: '2',
       tranmode: 'AK',
       cred_type: '1',
 
-      // חיוב חוזר החל בעוד 7 ימים
+      // חיוב חוזר לאחר 7 ימים – כמו אצלך בבסיס
       recur_sum: urlParams.price,
       recur_transaction: '4_approved',
       recur_start_date: recurStartDate,
-      // (לא חובה אבל משלים את הכיתוב "Monthly")
-      recur_interval: 'M',
 
-      // פרטי לקוח למסוף (לא חובה)
+      // פרטי לקוח (אופציונלי)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // עיצוב – עם לוגו/אייקונים של Tranzila (לא שולחים nologo)
+      // *** שיפור עיצוב בלבד – לא נוגע לזרימה/לוגיקה ***
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
       trButtonColor: '8B5E3C',
@@ -110,10 +107,9 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
 
-      // חזרה לאחר תשלום
+      // החזרות – בדיוק כמו בבסיס
       success_url_address: `${origin}/payment/success?${successQuery}`,
-      // ===== שינוי #2: לעמוד הכשל הנכון =====
-      fail_url_address: `${origin}/payment/failed`,
+      fail_url_address: `${origin}/payment/fail`,
     })
 
     return `${base}?${params.toString()}`
@@ -187,16 +183,17 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
+              {/* שים לב: שאר התצוגה נשארת כמו אצלך (אם תרצה נעדכן ל-$0 רק ב־UI) */}
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>First payment (today)</span><span>$0.00</span>
+                  <span>First payment (today)</span><span>${urlParams.price}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
                   <span>${urlParams.price}/month</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTop: '1px dashed #E5DDD5', fontWeight: 700 }}>
-                  <span>Total today</span><span style={{ color: '#8B5E3C' }}>$0.00</span>
+                  <span>Total today</span><span style={{ color: '#8B5E3C' }}>${urlParams.price}</span>
                 </div>
               </div>
             </div>
