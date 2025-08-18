@@ -75,8 +75,8 @@ export default function CheckoutPage() {
 
     const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
     const params = new URLSearchParams({
-      // עסקה רגילה - 0 במקום המחיר המלא
-      sum: '0',
+      // עסקה רגילה (כמו הלינק שעבד לך)
+      sum: urlParams.price,
       currency: '2',
       tranmode: 'AK',
       cred_type: '1',
