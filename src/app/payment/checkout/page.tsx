@@ -62,6 +62,7 @@ export default function CheckoutPage() {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
+    // מה שנרצה שיגיע ל-success ישירות דרך GET
     const successQuery = new URLSearchParams({
       plan: urlParams.plan,
       email: email.trim(),
@@ -74,27 +75,27 @@ export default function CheckoutPage() {
 
     const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
     const params = new URLSearchParams({
-      // ← חוזר למה שהיה בבסיס (זה מה שמבטיח redirect תקין ל-success אצלך)
+      // עסקה רגילה (כמו הלינק שעבד לך)
       sum: urlParams.price,
       currency: '2',
       tranmode: 'AK',
       cred_type: '1',
 
-      // חיוב חוזר לאחר 7 ימים – כמו אצלך בבסיס
+      // חיוב חוזר החל בעוד 7 ימים
       recur_sum: urlParams.price,
       recur_transaction: '4_approved',
       recur_start_date: recurStartDate,
 
-      // פרטי לקוח (אופציונלי)
+      // פרטי לקוח למסוף (לא חובה, אבל נוח)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // *** שיפור עיצוב בלבד – לא נוגע לזרימה/לוגיקה ***
-      trBgColor: 'FAF5F0',
-      trTextColor: '2D5016',
-      trButtonColor: '8B5E3C',
-      trButtonTextColor: 'FFFFFF',
+      // ===== 🎨 עיצוב – עם לוגו ואייקונים של Tranzila =====
+      trBgColor: 'FAF5F0',         // רקע
+      trTextColor: '2D5016',       // טקסט
+      trButtonColor: '8B5E3C',     // כפתור
+      trButtonTextColor: 'FFFFFF', // טקסט הכפתור
       trTextSize: '16',
       buttonLabel: 'Pay and Start',
       google_pay: '1',
@@ -107,7 +108,7 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
 
-      // החזרות – בדיוק כמו בבסיס
+      // חזרה ישירה לעמוד הצלחה/כישלון
       success_url_address: `${origin}/payment/success?${successQuery}`,
       fail_url_address: `${origin}/payment/fail`,
     })
@@ -183,14 +184,13 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
-              {/* שים לב: שאר התצוגה נשארת כמו אצלך (אם תרצה נעדכן ל-$0 רק ב־UI) */}
+              {/* 🔹 כאן השינוי היחיד בתצוגה 🔹 */}
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
-                <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
-                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                 <span>Total due today:</span><span>$0.00</span>
-               </div>
-               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                 <span>Total after trial:</span><span>${urlParams.price}.00/month</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span>Total due today:</span><span>$0.00</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span>Total after trial:</span><span>${urlParams.price}.00/month</span>
                 </div>
               </div>
             </div>
