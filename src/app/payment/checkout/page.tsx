@@ -272,28 +272,32 @@ export default function CheckoutPage() {
               </ul>
 
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>First payment (today)</span>
-                  <span>${urlParams.price}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
-                  <span>${urlParams.price}/month</span>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginTop: 10,
-                    paddingTop: 10,
-                    borderTop: '1px dashed #E5DDD5',
-                    fontWeight: 700,
-                  }}
-                >
-                  <span>Total today</span>
-                  <span style={{ color: '#8B5E3C' }}>${urlParams.price}</span>
-                </div>
-              </div>
+  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+    <span>First payment (today)</span>
+    <span style={{ color: '#16a34a', fontWeight: 600 }}>$0.00</span>
+  </div>
+
+  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+    <span>
+      Then monthly (from {new Date(recurStartDate).toLocaleDateString()})
+    </span>
+    <span>${urlParams.price}/month</span>
+  </div>
+
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      marginTop: 10,
+      paddingTop: 10,
+      borderTop: '1px dashed #E5DDD5',
+      fontWeight: 700,
+    }}
+  >
+    <span>Total today</span>
+    <span style={{ color: '#16a34a' }}>$0.00</span>
+  </div>
+</div>
 
               <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 6, color: '#7a6a5f' }}>
                 <Shield size={14} />
