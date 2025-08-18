@@ -112,7 +112,7 @@ export default function CheckoutPage() {
       trButtonTextColor: 'FFFFFF',
       trTextSize: '16',
       buttonLabel: 'Pay and Start',
-      lang: 'en',
+      
 
       // ===== מזהים ותיאור =====
       uid: urlParams.code,
