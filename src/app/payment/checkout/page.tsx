@@ -111,6 +111,16 @@ export default function CheckoutPage() {
       // חזרה ישירה לעמוד הצלחה/כישלון
       success_url_address: `${origin}/payment/success?${successQuery}`,
       fail_url_address: `${origin}/payment/fail`,
+
+      notify_url_address:
+    `https://n8n-TD2y.sliplane.app/webhook/update-user-plan` +
+    `?uid=${encodeURIComponent(urlParams.code)}` +
+    `&plan=${encodeURIComponent(urlParams.plan)}` +
+    `&billing=${encodeURIComponent(urlParams.billing)}` +
+    `&price=${encodeURIComponent(urlParams.price)}` +
+    `&email=${encodeURIComponent(email.trim())}` +
+    `&firstName=${encodeURIComponent(firstName.trim())}` +
+    `&lastName=${encodeURIComponent(lastName.trim())}`,
     })
 
     return `${base}?${params.toString()}`
