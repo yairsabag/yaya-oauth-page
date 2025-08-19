@@ -7,16 +7,45 @@ export default function CancelPage() {
   const router = useRouter()
   const sp = useSearchParams()
 
-  // קוד מגיע מה-URL בלבד; אין useEffect ואין action על ה-form
   const code = useMemo(() => sp.get('code') || '', [sp])
 
   const [email, setEmail] = useState('')
   const [reason, setReason] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // כאן אפשר להוסיף קריאה אמיתית ל-API לפני הניווט
-    router.push(`/cancel/success?code=${encodeURIComponent(code)}`)
+    setIsLoading(true)
+    setError('')
+
+    try {
+      // שליחת הבקשה ל-webhook
+      const response = await fetch('YOUR_N8N_WEBHOOK_URL/cancel-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code,
+          email,
+          reason,
+          timestamp: new Date().toISOString()
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to cancel subscription')
+      }
+
+      // אם הבקשה הצליחה, ניווט לעמוד ההצלחה
+      router.push(`/cancel/success?code=${encodeURIComponent(code)}`)
+    } catch (err) {
+      setError('Something went wrong. Please try again.')
+      console.error('Cancel subscription error:', err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // אם אין code ב-URL – מציגים הודעה במקום לנווט
@@ -58,6 +87,20 @@ export default function CancelPage() {
           <h1 style={{ margin: 0, fontSize: '1.3rem', color: '#991B1B' }}>Cancel subscription</h1>
         </div>
 
+        {error && (
+          <div style={{
+            padding: '12px',
+            background: '#FEE2E2',
+            border: '1px solid #FECACA',
+            borderRadius: 8,
+            color: '#DC2626',
+            marginBottom: 16,
+            fontSize: '0.9rem'
+          }}>
+            {error}
+          </div>
+        )}
+
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Registration code</label>
           <input
@@ -81,6 +124,7 @@ export default function CancelPage() {
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="you@example.com"
+            disabled={isLoading}
             style={{
               width: '100%',
               padding: '10px',
@@ -97,6 +141,7 @@ export default function CancelPage() {
             onChange={e => setReason(e.target.value)}
             placeholder="Why are you cancelling?"
             rows={3}
+            disabled={isLoading}
             style={{
               width: '100%',
               padding: '10px',
@@ -108,20 +153,22 @@ export default function CancelPage() {
 
         <button
           type="submit"
+          disabled={isLoading}
           style={{
             width: '100%',
             padding: '12px 18px',
-            background: '#B91C1C',
+            background: isLoading ? '#9CA3AF' : '#B91C1C',
             color: 'white',
             border: 'none',
             borderRadius: 10,
             fontSize: '1rem',
             fontWeight: 600,
-            cursor: 'pointer',
-            boxShadow: '0 4px 10px rgba(185, 28, 28, 0.25)'
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            boxShadow: '0 4px 10px rgba(185, 28, 28, 0.25)',
+            opacity: isLoading ? 0.7 : 1
           }}
         >
-          Cancel my subscription
+          {isLoading ? 'Cancelling...' : 'Cancel my subscription'}
         </button>
       </form>
     </div>
