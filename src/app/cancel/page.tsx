@@ -1,21 +1,36 @@
 'use client'
 
-import { useSearchParams, useRouter } from 'next/navigation'
-import React, { useEffect, useMemo } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import React, { useMemo, useState } from 'react'
 
-export default function CancelSuccessPage() {
-  const sp = useSearchParams()
+export default function CancelPage() {
   const router = useRouter()
+  const sp = useSearchParams()
 
+  // קוד מגיע מה-URL בלבד; אין useEffect ואין action על ה-form
   const code = useMemo(() => sp.get('code') || '', [sp])
 
-  // redirect אחרי 5 שניות
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      router.push('/')
-    }, 5000)
-    return () => clearTimeout(timer)
-  }, [router])
+  const [email, setEmail] = useState('')
+  const [reason, setReason] = useState('')
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // כאן אפשר להוסיף קריאה אמיתית ל-API לפני הניווט
+    router.push(`/cancel/success?code=${encodeURIComponent(code)}`)
+  }
+
+  // אם אין code ב-URL – מציגים הודעה במקום לנווט
+  if (!code) {
+    return (
+      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#FAF5F0',padding:'2rem'}}>
+        <div style={{background:'#fff',border:'1px solid #eee',borderRadius:16,padding:'1.5rem',maxWidth:460,width:'100%',textAlign:'center'}}>
+          <h1 style={{marginTop:0,color:'#8B5E3C'}}>Cancel subscription</h1>
+          <p style={{color:'#374151'}}>Missing <code>code</code> in the URL. Try the link you got from Yaya.</p>
+          <a href="/" style={{display:'inline-block',marginTop:12,background:'#2d5016',color:'#fff',padding:'10px 16px',borderRadius:10,textDecoration:'none',fontWeight:600}}>Back to Home</a>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{
@@ -26,51 +41,89 @@ export default function CancelSuccessPage() {
       justifyContent: 'center',
       padding: '2rem'
     }}>
-      <div style={{
-        width: '100%',
-        maxWidth: 480,
-        background: 'white',
-        borderRadius: 16,
-        border: '1px solid rgba(0,0,0,0.06)',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
-        padding: '1.5rem',
-        textAlign: 'center'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, justifyContent: 'center' }}>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          width: '100%',
+          maxWidth: 480,
+          background: 'white',
+          borderRadius: 16,
+          border: '1px solid rgba(0,0,0,0.06)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+          padding: '1.5rem'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
           <img src="/yaya-logo.png" alt="Yaya" width={32} height={32} style={{ borderRadius: 6 }} />
-          <h1 style={{ margin: 0, fontSize: '1.3rem', color: '#166534' }}>Subscription cancelled</h1>
+          <h1 style={{ margin: 0, fontSize: '1.3rem', color: '#991B1B' }}>Cancel subscription</h1>
         </div>
 
-        <p style={{ margin: '0 0 20px', color: '#374151', lineHeight: 1.5 }}>
-          Your subscription has been successfully cancelled.  
-          {code && (
-            <> (Code: <strong>{code}</strong>)</>
-          )}
-        </p>
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Registration code</label>
+          <input
+            type="text"
+            value={code}
+            disabled
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: 8,
+              border: '1px solid #d1d5db',
+              background: '#f9fafb'
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Email (optional)</label>
+          <input
+            type="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: 8,
+              border: '1px solid #d1d5db'
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>Reason (optional)</label>
+          <textarea
+            value={reason}
+            onChange={e => setReason(e.target.value)}
+            placeholder="Why are you cancelling?"
+            rows={3}
+            style={{
+              width: '100%',
+              padding: '10px',
+              borderRadius: 8,
+              border: '1px solid #d1d5db'
+            }}
+          />
+        </div>
 
         <button
-          onClick={() => router.push('/')}
+          type="submit"
           style={{
             width: '100%',
             padding: '12px 18px',
-            background: '#166534',
+            background: '#B91C1C',
             color: 'white',
             border: 'none',
             borderRadius: 10,
             fontSize: '1rem',
             fontWeight: 600,
             cursor: 'pointer',
-            boxShadow: '0 4px 10px rgba(22, 101, 52, 0.25)',
-            marginBottom: 10
+            boxShadow: '0 4px 10px rgba(185, 28, 28, 0.25)'
           }}
         >
-          Back to Home
+          Cancel my subscription
         </button>
-
-        <p style={{ marginTop: 14, fontSize: '.9rem', color: '#6b7280' }}>
-          Redirecting you automatically in 5 seconds...
-        </p>
-      </div>
+      </form>
     </div>
   )
 }
