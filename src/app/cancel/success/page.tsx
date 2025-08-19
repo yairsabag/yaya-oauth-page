@@ -1,13 +1,21 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 
 export default function CancelSuccessPage() {
   const sp = useSearchParams()
   const router = useRouter()
 
   const code = useMemo(() => sp.get('code') || '', [sp])
+
+  // redirect אחרי 5 שניות
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.push('/')
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [router])
 
   return (
     <div style={{
@@ -25,9 +33,10 @@ export default function CancelSuccessPage() {
         borderRadius: 16,
         border: '1px solid rgba(0,0,0,0.06)',
         boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
-        padding: '1.5rem'
+        padding: '1.5rem',
+        textAlign: 'center'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, justifyContent: 'center' }}>
           <img src="/yaya-logo.png" alt="Yaya" width={32} height={32} style={{ borderRadius: 6 }} />
           <h1 style={{ margin: 0, fontSize: '1.3rem', color: '#166534' }}>Subscription cancelled</h1>
         </div>
@@ -51,14 +60,15 @@ export default function CancelSuccessPage() {
             fontSize: '1rem',
             fontWeight: 600,
             cursor: 'pointer',
-            boxShadow: '0 4px 10px rgba(22, 101, 52, 0.25)'
+            boxShadow: '0 4px 10px rgba(22, 101, 52, 0.25)',
+            marginBottom: 10
           }}
         >
           Back to Home
         </button>
 
-        <p style={{ marginTop: 14, fontSize: '.9rem', color: '#6b7280', textAlign: 'center' }}>
-          Changed your mind? You can always resubscribe through WhatsApp anytime 💛
+        <p style={{ marginTop: 14, fontSize: '.9rem', color: '#6b7280' }}>
+          Redirecting you automatically in 5 seconds...
         </p>
       </div>
     </div>
