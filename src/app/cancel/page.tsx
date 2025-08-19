@@ -21,7 +21,7 @@ export default function CancelPage() {
 
     try {
       // שליחת הבקשה ל-webhook
-      const response = await fetch('YOUR_N8N_WEBHOOK_URL/cancel-subscription', {
+      const response = await fetch('https://n8n-TD2y.sliplane.app/webhook/cancel-subscription', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
