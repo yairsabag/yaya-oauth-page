@@ -2,17 +2,18 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { CheckCircle, Shield } from 'lucide-react'
+import { Shield, CheckCircle } from 'lucide-react'
 
 type UrlParams = {
-  plan: string
-  price: string
-  billing: string
+  plan: 'executive' | 'ultimate'
+  price: string            // "5" | "14"
+  billing: 'monthly' | 'yearly' | string
   code: string
   planName: string
 }
 
 export default function CheckoutPage() {
+  // ----- URL params + שדות משתמש -----
   const [urlParams, setUrlParams] = useState<UrlParams>({
     plan: 'executive',
     price: '5',
@@ -30,7 +31,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
-    const plan = (p.get('plan') || 'executive').toLowerCase()
+    const plan  = (p.get('plan') || 'executive').toLowerCase() as UrlParams['plan']
     const price = p.get('price') || (plan === 'ultimate' ? '14' : '5')
 
     setUrlParams({
@@ -38,7 +39,9 @@ export default function CheckoutPage() {
       price,
       billing: (p.get('billing') || 'monthly').toLowerCase(),
       code: p.get('code') || 'F75CEJ',
-      planName: p.get('planName') || (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan'),
+      planName:
+        p.get('planName') ||
+        (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan'),
     })
 
     const onResize = () => setIsMobile(window.innerWidth < 940)
@@ -49,22 +52,17 @@ export default function CheckoutPage() {
 
   const plans = {
     executive: { name: 'Executive Plan' },
-    ultimate: { name: 'Ultimate Plan' },
+    ultimate:  { name: 'Ultimate Plan'  },
   } as const
-  const currentPlan = plans[(urlParams.plan as keyof typeof plans) || 'executive'] || plans.executive
+  const currentPlan =
+    plans[(urlParams.plan as keyof typeof plans) || 'executive'] || plans.executive
 
-  // רק להצגה (Total after trial), לא משתמשים בו מול טרנזילה בשלב הטוקן
-  const recurStartDateDisplay = useMemo(() => {
-    const d = new Date()
-    d.setDate(d.getDate() + 7)
-    return d.toISOString().slice(0, 10)
-  }, [])
-
+  // ----- בניית קישור טרנזילה למסוף טוקנים (מינימום עובד) -----
   const tranzilaUrl = useMemo(() => {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
-    // מה שיעבור ל-success (רק להצגה/מעקב)
+    // מה שנחזיר ל-success ב-GET (שימושי לעדכון UI/אנליטיקס בדף ההצלחה)
     const successQuery = new URLSearchParams({
       plan: urlParams.plan,
       email: email.trim(),
@@ -73,57 +71,57 @@ export default function CheckoutPage() {
       billing: urlParams.billing,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      // שים לב: אין כאן מידע רגיש. זה רק מידע תצוגה.
     }).toString()
 
-    // 🔐 מסוף טוקנים
+    // כתובת ה-webhook שלך שתקבל אירוע "נוצר טוקן" מהמסוף
+    // ממליץ להעביר לפחות registration_code כדי לשייך את המשתמש
+    const notifyParams = new URLSearchParams({
+      registration_code: urlParams.code,
+      plan: urlParams.plan,
+      billing: urlParams.billing,
+      price: urlParams.price,
+      email: email.trim(),
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      source: 'token_page',
+    }).toString()
+
     const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php'
-
-    // ❗ שלב הטוקן בלבד: אין recur_*, אין חיוב
     const params = new URLSearchParams({
-      sum: '0',            // אין חיוב עכשיו
-      currency: '2',       // USD
-      tranmode: 'VK',      // Verify + Tokenize
-      cred_type: '1',      // סוג כרטיס (ישרכארט למשל) – כפי שהיה אצלך
-      // אפשר להוסיף myid/cvv=1 אם נדרש במסוף שלך
+      // סכום 0 — אנחנו לא מחייבים כרגע, רק טוקן
+      sum: '0',
+      // ILS בלבד במסוף הטוקנים — USD יגרום לעתים ל-500
+      currency: '1',
 
-      // פרטי לקוח (נוח למסוף)
+      // V=Verify, K=create token
+      tranmode: 'VK',
+
+      // cred_type יכול לגרום ל-500 במסופים מסוימים; אם תראה 500, נסה להסיר
+      cred_type: '1',
+
+      // שדות לא רגישים — תצוגה/שיוך
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // UI (כמו שהיה)
-      trBgColor: 'FAF5F0',
-      trTextColor: '2D5016',
-      trButtonColor: '8B5E3C',
-      trButtonTextColor: 'FFFFFF',
-      trTextSize: '16',
-      buttonLabel: 'Start Free Trial',
-      google_pay: '1',
-
-      // מזהים (נשתמש ב-code שלך כמפתח)
+      // מזהים שימושיים — חוזרים בדו"חות מסוף
       uid: urlParams.code,
       u1: urlParams.code,
       u2: urlParams.plan,
       u3: urlParams.billing,
       u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - Tokenization Only (USD)`,
+      pdesc: `Yaya ${urlParams.plan} - Tokenization only`,
 
-      // חזרה (UI)
+      // חזרה אחרי הצלחה/כישלון
       success_url_address: `${origin}/payment/success?${successQuery}`,
-      fail_url_address: `${origin}/payment/fail`,
+      fail_url_address:    `${origin}/payment/fail`,
 
-      // 📣 webhook ל-n8n – כאן נשמר את ה-Token וה-index
-      notify_url_address:
-        `https://n8n-TD2y.sliplane.app/webhook/token-created` +
-        `?registration_code=${encodeURIComponent(urlParams.code)}` +
-        `&plan=${encodeURIComponent(urlParams.plan)}` +
-        `&billing=${encodeURIComponent(urlParams.billing)}` +
-        `&price=${encodeURIComponent(urlParams.price)}` +
-        `&email=${encodeURIComponent(email.trim())}` +
-        `&firstName=${encodeURIComponent(firstName.trim())}` +
-        `&lastName=${encodeURIComponent(lastName.trim())}`,
+      // ה-webhook שלך ב-n8n לקבלת האירוע מהמסוף (POST)
+      notify_url_address: `https://n8n-TD2y.sliplane.app/webhook/token-created?${notifyParams}`,
     })
 
+    // 🔴 שים לב: אין recur_* ואין google_pay. זה בכוונה.
     return `${base}?${params.toString()}`
   }, [
     urlParams.plan, urlParams.price, urlParams.billing, urlParams.code,
@@ -135,9 +133,11 @@ export default function CheckoutPage() {
       alert('Please enter an email so we can send your receipt.')
       return
     }
+    // הפניה למסוף
     window.location.href = tranzilaUrl
   }
 
+  // ----- UI -----
   return (
     <div style={{
       fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -200,8 +200,7 @@ export default function CheckoutPage() {
                   <span>Total due today:</span><span>$0.00</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>Total after trial (from {new Date(recurStartDateDisplay).toLocaleDateString()}):</span>
-                  <span>${urlParams.price}.00/month</span>
+                  <span>Monthly after trial:</span><span>${urlParams.price}.00</span>
                 </div>
               </div>
             </div>
@@ -232,12 +231,12 @@ export default function CheckoutPage() {
                   boxShadow: '0 4px 12px rgba(139, 94, 60, 0.3)'
                 }}
               >
-                Start Free Trial
+                Continue to Secure Payment
               </button>
             </div>
 
             <p style={{ marginTop: 12, color: '#6b7280', fontSize: '.9rem', textAlign: 'center' }}>
-              Your payment information is encrypted and secure. We never store your credit card details.
+              Your card details are entered on Tranzila’s secure page. We never store your card information.
             </p>
           </section>
         </div>
@@ -246,5 +245,10 @@ export default function CheckoutPage() {
   )
 }
 
-const label: React.CSSProperties = { display: 'block', fontSize: '.85rem', color: '#6b7280', marginBottom: 6 }
-const input:  React.CSSProperties = { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #E5DDD5', outline: 'none', fontSize: '.95rem' }
+const label: React.CSSProperties = {
+  display: 'block', fontSize: '.85rem', color: '#6b7280', marginBottom: 6
+}
+const input:  React.CSSProperties = {
+  width: '100%', padding: '10px 12px', borderRadius: 10,
+  border: '1px solid #E5DDD5', outline: 'none', fontSize: '.95rem'
+}
