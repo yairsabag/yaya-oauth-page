@@ -74,7 +74,7 @@ export default function CheckoutPage() {
       lastName: lastName.trim(),
     }).toString()
 
-    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php' 
+    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php'
     const params = new URLSearchParams({
       // אישור כרטיס בלבד (Verify) + יצירת טוקן
       sum: urlParams.price,
