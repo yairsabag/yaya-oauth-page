@@ -74,12 +74,12 @@ export default function CheckoutPage() {
       lastName: lastName.trim(),
     }).toString()
 
-    const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
+    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php'
     const params = new URLSearchParams({
-      // עסקה רגילה (כמו הלינק שעבד לך)
+      // אישור כרטיס בלבד (Verify) + יצירת טוקן
       sum: urlParams.price,
       currency: '2',
-      tranmode: 'AK',
+      tranmode: 'VK',  // V = Verify, K = create token
       cred_type: '1',
 
       // חיוב חוזר החל בעוד 7 ימים
