@@ -5,17 +5,14 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { CheckCircle, Shield } from 'lucide-react'
 
 type UrlParams = {
-  plan: 'executive' | 'ultimate'
+  plan: string
   price: string
-  billing: 'monthly' | 'yearly'
+  billing: string
   code: string
   planName: string
 }
 
 export default function CheckoutPage() {
-  // ─────────────────────────────────────────────────────────────
-  // URL state
-  // ─────────────────────────────────────────────────────────────
   const [urlParams, setUrlParams] = useState<UrlParams>({
     plan: 'executive',
     price: '5',
@@ -24,7 +21,6 @@ export default function CheckoutPage() {
     planName: 'Executive Plan',
   })
 
-  // Customer fields
   const [firstName, setFirstName] = useState('')
   const [lastName,  setLastName]  = useState('')
   const [email,     setEmail]     = useState('')
@@ -34,14 +30,13 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
-
-    const plan = (p.get('plan') || 'executive').toLowerCase() as UrlParams['plan']
+    const plan = (p.get('plan') || 'executive').toLowerCase()
     const price = p.get('price') || (plan === 'ultimate' ? '14' : '5')
 
     setUrlParams({
       plan,
       price,
-      billing: (p.get('billing') || 'monthly').toLowerCase() as UrlParams['billing'],
+      billing: (p.get('billing') || 'monthly').toLowerCase(),
       code: p.get('code') || 'F75CEJ',
       planName: p.get('planName') || (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan'),
     })
@@ -54,25 +49,22 @@ export default function CheckoutPage() {
 
   const plans = {
     executive: { name: 'Executive Plan' },
-    ultimate:  { name: 'Ultimate Plan' },
+    ultimate: { name: 'Ultimate Plan' },
   } as const
-  const currentPlan = plans[urlParams.plan] || plans.executive
+  const currentPlan = plans[(urlParams.plan as keyof typeof plans) || 'executive'] || plans.executive
 
-  // תאריך לחיוב אחרי 7 ימים – להצגה בלבד (החיוב האמיתי ייעשה ע״י השרת/cron)
-  const trialChargeDate = useMemo(() => {
+  // רק להצגה (Total after trial), לא משתמשים בו מול טרנזילה בשלב הטוקן
+  const recurStartDateDisplay = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
-    return d.toLocaleDateString()
+    return d.toISOString().slice(0, 10)
   }, [])
 
-  // ─────────────────────────────────────────────────────────────
-  // Build Tranzila Token (iframe) URL – Verify + Tokenize ONLY
-  // ─────────────────────────────────────────────────────────────
   const tranzilaUrl = useMemo(() => {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
-    // מה שנחזיר ל-success ב-Query (לנוחות הדף)
+    // מה שיעבור ל-success (רק להצגה/מעקב)
     const successQuery = new URLSearchParams({
       plan: urlParams.plan,
       email: email.trim(),
@@ -81,42 +73,25 @@ export default function CheckoutPage() {
       billing: urlParams.billing,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      source: 'token',  // סימון שהגענו ממסוף הטוקן
     }).toString()
 
-    // כתובות חזרה
-    const successUrl = `${origin}/payment/success?${successQuery}`
-    const failUrl    = `${origin}/payment/fail`
-
-    // ה־notify של n8n – כאן תקבל גם את TranzilaTK/transaction_id/ConfirmationCode
-    // (טרנזילה שולחת אותם אל ה-notify; תשמור ב-DB)
-    const notifyUrl =
-      `https://n8n-TD2y.sliplane.app/webhook/update-user-plan` +
-      `?uid=${encodeURIComponent(urlParams.code)}` +
-      `&plan=${encodeURIComponent(urlParams.plan)}` +
-      `&billing=${encodeURIComponent(urlParams.billing)}` +
-      `&price=${encodeURIComponent(urlParams.price)}` +
-      `&email=${encodeURIComponent(email.trim())}` +
-      `&firstName=${encodeURIComponent(firstName.trim())}` +
-      `&lastName=${encodeURIComponent(lastName.trim())}` +
-      `&source=token`
-
-    // מסוף טוקן
+    // 🔐 מסוף טוקנים
     const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php'
 
-    // ⚠️ חשוב: sum=0 ו-tranmode=VK – Verify + Tokenize בלבד (ללא חיוב)
+    // ❗ שלב הטוקן בלבד: אין recur_*, אין חיוב
     const params = new URLSearchParams({
-      sum: '0',              // אין חיוב עכשיו
-      currency: '2',         // 2 = USD
-      tranmode: 'VK',        // V=Verify, K=Token
-      cred_type: '1',        // יכול להיות 1/2/3/4/6 לפי הכרטיס; 1=ישראכרט (ברירת מחדל)
+      sum: '0',            // אין חיוב עכשיו
+      currency: '2',       // USD
+      tranmode: 'VK',      // Verify + Tokenize
+      cred_type: '1',      // סוג כרטיס (ישרכארט למשל) – כפי שהיה אצלך
+      // אפשר להוסיף myid/cvv=1 אם נדרש במסוף שלך
 
-      // פרטי לקוח לנוחות
+      // פרטי לקוח (נוח למסוף)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // UI (אופציונלי)
+      // UI (כמו שהיה)
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
       trButtonColor: '8B5E3C',
@@ -125,18 +100,28 @@ export default function CheckoutPage() {
       buttonLabel: 'Start Free Trial',
       google_pay: '1',
 
-      // מזהים
+      // מזהים (נשתמש ב-code שלך כמפתח)
       uid: urlParams.code,
       u1: urlParams.code,
       u2: urlParams.plan,
       u3: urlParams.billing,
       u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - 7 Day Trial (USD)`,
+      pdesc: `Yaya ${urlParams.plan} - Tokenization Only (USD)`,
 
-      // כתובות חזרה
-      success_url_address: successUrl,
-      fail_url_address: failUrl,
-      notify_url_address: notifyUrl,
+      // חזרה (UI)
+      success_url_address: `${origin}/payment/success?${successQuery}`,
+      fail_url_address: `${origin}/payment/fail`,
+
+      // 📣 webhook ל-n8n – כאן נשמר את ה-Token וה-index
+      notify_url_address:
+        `https://n8n-TD2y.sliplane.app/webhook/token-created` +
+        `?registration_code=${encodeURIComponent(urlParams.code)}` +
+        `&plan=${encodeURIComponent(urlParams.plan)}` +
+        `&billing=${encodeURIComponent(urlParams.billing)}` +
+        `&price=${encodeURIComponent(urlParams.price)}` +
+        `&email=${encodeURIComponent(email.trim())}` +
+        `&firstName=${encodeURIComponent(firstName.trim())}` +
+        `&lastName=${encodeURIComponent(lastName.trim())}`,
     })
 
     return `${base}?${params.toString()}`
@@ -145,21 +130,14 @@ export default function CheckoutPage() {
     firstName, lastName, email, phone
   ])
 
-  // ─────────────────────────────────────────────────────────────
-  // Actions
-  // ─────────────────────────────────────────────────────────────
   const handleRedirectToTranzila = () => {
     if (!email.trim()) {
       alert('Please enter an email so we can send your receipt.')
       return
     }
-    // הפניה למסוף הטוקן (iframe של טרנזילה)
     window.location.href = tranzilaUrl
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // UI
-  // ─────────────────────────────────────────────────────────────
   return (
     <div style={{
       fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
@@ -217,13 +195,12 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
-              {/* הצגת $0 עכשיו ו-$X אחרי ניסיון */}
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span>Total due today:</span><span>$0.00</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>Total after trial ({trialChargeDate}):</span>
+                  <span>Total after trial (from {new Date(recurStartDateDisplay).toLocaleDateString()}):</span>
                   <span>${urlParams.price}.00/month</span>
                 </div>
               </div>
@@ -239,22 +216,10 @@ export default function CheckoutPage() {
               border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 6px rgba(0,0,0,0.04)'
             }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label style={label}>First name</label>
-                  <input style={input} value={firstName} onChange={e=>setFirstName(e.target.value)} />
-                </div>
-                <div>
-                  <label style={label}>Last name</label>
-                  <input style={input} value={lastName} onChange={e=>setLastName(e.target.value)} />
-                </div>
-                <div>
-                  <label style={label}>Email</label>
-                  <input style={input} type="email" value={email} onChange={e=>setEmail(e.target.value)} />
-                </div>
-                <div>
-                  <label style={label}>Phone</label>
-                  <input style={input} value={phone} onChange={e=>setPhone(e.target.value)} />
-                </div>
+                <div><label style={label}>First name</label><input style={input} value={firstName} onChange={e=>setFirstName(e.target.value)} /></div>
+                <div><label style={label}>Last name</label> <input style={input} value={lastName} onChange={e=>setLastName(e.target.value)} /></div>
+                <div><label style={label}>Email</label>     <input style={input} type="email" value={email} onChange={e=>setEmail(e.target.value)} /></div>
+                <div><label style={label}>Phone</label>     <input style={input} value={phone} onChange={e=>setPhone(e.target.value)} /></div>
               </div>
 
               <button
