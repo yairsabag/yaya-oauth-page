@@ -53,6 +53,7 @@ export default function CheckoutPage() {
   } as const
   const currentPlan = plans[(urlParams.plan as keyof typeof plans) || 'executive'] || plans.executive
 
+  // תאריך תצוגה בלבד (לסיכום הזמנה), לא קשור למסוף הטוקנים
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
@@ -63,7 +64,7 @@ export default function CheckoutPage() {
     const origin =
       typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
-    // מה שנרצה שיגיע ל-success ישירות דרך GET
+    // מה שנרצה שיגיע ל-success ישירות דרך GET (כמו אצלך)
     const successQuery = new URLSearchParams({
       plan: urlParams.plan,
       email: email.trim(),
@@ -74,29 +75,26 @@ export default function CheckoutPage() {
       lastName: lastName.trim(),
     }).toString()
 
+    // === מסוף טוקנים (ללא חיוב מיידי) ===
     const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php'
-    const params = new URLSearchParams({
-      // אישור כרטיס בלבד (Verify) + יצירת טוקן
-      sum: urlParams.price,
-      currency: '2',
-      tranmode: 'VK',  // V = Verify, K = create token
-      cred_type: '1',
 
-      // חיוב חוזר החל בעוד 7 ימים
-      recur_sum: urlParams.price,
-      recur_transaction: '4_approved',
-      recur_start_date: recurStartDate,
+    const params = new URLSearchParams({
+      // ⛔️ אין sum ואין recur_* במצב tokenization
+      // מצב אימות/טוקניזציה
+      tranmode: 'V',      // Verify + יצירת טוקן (כשמסוף הטוקנים פעיל)
+      cred_type: '1',
+      currency: '2',      // USD (לשמירה על עקביות)
 
       // פרטי לקוח למסוף (לא חובה, אבל נוח)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // ===== 🎨 עיצוב – עם לוגו ואייקונים של Tranzila =====
-      trBgColor: 'FAF5F0',         // רקע
-      trTextColor: '2D5016',       // טקסט
-      trButtonColor: '8B5E3C',     // כפתור
-      trButtonTextColor: 'FFFFFF', // טקסט הכפתור
+      // 🎨 עיצוב (כמו שביקשת)
+      trBgColor: 'FAF5F0',
+      trTextColor: '2D5016',
+      trButtonColor: '8B5E3C',
+      trButtonTextColor: 'FFFFFF',
       trTextSize: '16',
       buttonLabel: 'Pay and Start',
       google_pay: '1',
@@ -107,27 +105,28 @@ export default function CheckoutPage() {
       u2: urlParams.plan,
       u3: urlParams.billing,
       u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
+      pdesc: `Yaya ${urlParams.plan} - Tokenization (7-day trial flow)`,
 
-      // חזרה ישירה לעמוד הצלחה/כישלון
+      // חזרה ישירה לעמוד הצלחה/כישלון (כבר מוגדרים אצלך)
       success_url_address: `${origin}/payment/success?${successQuery}`,
       fail_url_address: `${origin}/payment/fail`,
 
+      // כאן רק שומרים טוקן + פרטי עסקה ל-DB (לא עדכון תוכנית בפועל)
       notify_url_address:
-    `https://n8n-TD2y.sliplane.app/webhook/update-user-plan` +
-    `?uid=${encodeURIComponent(urlParams.code)}` +
-    `&plan=${encodeURIComponent(urlParams.plan)}` +
-    `&billing=${encodeURIComponent(urlParams.billing)}` +
-    `&price=${encodeURIComponent(urlParams.price)}` +
-    `&email=${encodeURIComponent(email.trim())}` +
-    `&firstName=${encodeURIComponent(firstName.trim())}` +
-    `&lastName=${encodeURIComponent(lastName.trim())}`,
+        `https://n8n-TD2y.sliplane.app/webhook/store-tranzila-token` +
+        `?uid=${encodeURIComponent(urlParams.code)}` +
+        `&plan=${encodeURIComponent(urlParams.plan)}` +
+        `&billing=${encodeURIComponent(urlParams.billing)}` +
+        `&price=${encodeURIComponent(urlParams.price)}` +
+        `&email=${encodeURIComponent(email.trim())}` +
+        `&firstName=${encodeURIComponent(firstName.trim())}` +
+        `&lastName=${encodeURIComponent(lastName.trim())}`
     })
 
     return `${base}?${params.toString()}`
   }, [
     urlParams.plan, urlParams.price, urlParams.billing, urlParams.code,
-    firstName, lastName, email, phone, recurStartDate
+    firstName, lastName, email, phone
   ])
 
   const handleRedirectToTranzila = () => {
@@ -195,13 +194,17 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
-              {/* 🔹 כאן השינוי היחיד בתצוגה 🔹 */}
+              {/* תצוגה מקצועית של טרייל */}
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span>Total due today:</span><span>$0.00</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span>Total after trial:</span><span>${urlParams.price}.00/month</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, paddingTop: 10, borderTop: '1px dashed #E5DDD5', fontWeight: 700 }}>
+                  <span>Then monthly (from {new Date(recurStartDate).toLocaleDateString()})</span>
+                  <span style={{ color: '#8B5E3C' }}>${urlParams.price}/month</span>
                 </div>
               </div>
             </div>
