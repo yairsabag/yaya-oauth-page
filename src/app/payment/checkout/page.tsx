@@ -76,10 +76,10 @@ export default function CheckoutPage() {
 
     const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php'
     const params = new URLSearchParams({
-      // חיוב 0$ ויצירת טוקן לטריאל
-      sum: '0',
+      // אישור כרטיס בלבד (Verify) + יצירת טוקן
+      sum: urlParams.price,
       currency: '2',
-      tranmode: 'AK',
+      tranmode: 'VK',  // V = Verify, K = create token
       cred_type: '1',
 
       // חיוב חוזר החל בעוד 7 ימים
