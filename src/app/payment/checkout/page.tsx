@@ -74,10 +74,10 @@ export default function CheckoutPage() {
       lastName: lastName.trim(),
     }).toString()
 
-    const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
+    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php'
     const params = new URLSearchParams({
-      // עסקה רגילה (כמו הלינק שעבד לך)
-      sum: urlParams.price,
+      // חיוב 0$ ויצירת טוקן לטריאל
+      sum: '0',
       currency: '2',
       tranmode: 'AK',
       cred_type: '1',
