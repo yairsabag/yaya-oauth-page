@@ -81,15 +81,13 @@ export default function CheckoutPage() {
     }).toString()
 
     // בסיס (iframe.php יציב יותר מ־iframenew.php)
-    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframe.php'
-
-    // בניית פרמטרים – sum=0 ו־tranmode=AK (Token + Approve)
+    const base = 'https://direct.tranzila.com/fxpyairsabag/iframenew.php'
     const params = new URLSearchParams({
-      // 0$ היום – רק אימות + טוקן
-      sum: '0',
-      currency: '2',            // 2 = USD
-      tranmode: 'AK',           // **חשוב**: Token + Approve
-      cred_type: '1',           // יש״כ/ויזה – ערך דורש הפעלה במסוף; אפשר להשאיר 1 כברירת מחדל
+      // אישור כרטיס בלבד (Verify) + יצירת טוקן
+      sum: urlParams.price,
+      currency: '2',
+      tranmode: 'VK',  // V = Verify, K = create token
+      cred_type: '1',
 
       // פרטי לקוח להצגה במסוף (לא חובה)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
