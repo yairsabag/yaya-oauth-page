@@ -2,18 +2,20 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { Shield, CheckCircle } from 'lucide-react'
+import { CheckCircle, Shield } from 'lucide-react'
 
 type UrlParams = {
   plan: 'executive' | 'ultimate'
-  price: string            // "5" | "14"
-  billing: 'monthly' | 'yearly' | string
-  code: string
+  price: string        // "5" | "14"
+  billing: 'monthly'   // לעת עתה רק חודשי
+  code: string         // registration code (uid)
   planName: string
 }
 
+const TRZ_BASE = 'https://direct.tranzila.com/fxpyairsabagtok/iframe.php' // אם 500, אפשר לנסות iframenew.php
+
 export default function CheckoutPage() {
-  // ----- URL params + שדות משתמש -----
+  // פרמטרים מה-URL + ברירות מחדל
   const [urlParams, setUrlParams] = useState<UrlParams>({
     plan: 'executive',
     price: '5',
@@ -22,26 +24,24 @@ export default function CheckoutPage() {
     planName: 'Executive Plan',
   })
 
+  // פרטי לקוח מקומיים
   const [firstName, setFirstName] = useState('')
   const [lastName,  setLastName]  = useState('')
   const [email,     setEmail]     = useState('')
   const [phone,     setPhone]     = useState('')
-
-  const [isMobile, setIsMobile]   = useState(false)
+  const [isMobile,  setIsMobile]  = useState(false)
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
-    const plan  = (p.get('plan') || 'executive').toLowerCase() as UrlParams['plan']
+    const plan = ((p.get('plan') || 'executive').toLowerCase() as UrlParams['plan'])
     const price = p.get('price') || (plan === 'ultimate' ? '14' : '5')
 
     setUrlParams({
       plan,
       price,
-      billing: (p.get('billing') || 'monthly').toLowerCase(),
+      billing: (p.get('billing') || 'monthly').toLowerCase() as UrlParams['billing'],
       code: p.get('code') || 'F75CEJ',
-      planName:
-        p.get('planName') ||
-        (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan'),
+      planName: p.get('planName') || (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan'),
     })
 
     const onResize = () => setIsMobile(window.innerWidth < 940)
@@ -50,20 +50,18 @@ export default function CheckoutPage() {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  const plans = {
-    executive: { name: 'Executive Plan' },
-    ultimate:  { name: 'Ultimate Plan'  },
-  } as const
-  const currentPlan =
-    plans[(urlParams.plan as keyof typeof plans) || 'executive'] || plans.executive
+  // תאריך התחלת חיובים – בעוד 7 ימים (YYYY-MM-DD)
+  const recurStartDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 7)
+    // טרנזילה מצפה לפורמט yyyy-mm-dd
+    return d.toISOString().slice(0, 10)
+  }, [])
 
-  // ----- בניית קישור טרנזילה למסוף טוקנים (מינימום עובד) -----
-  const tranzilaUrl = useMemo(() => {
-    const origin =
-      typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
-
-    // מה שנחזיר ל-success ב-GET (שימושי לעדכון UI/אנליטיקס בדף ההצלחה)
-    const successQuery = new URLSearchParams({
+  // בניית קישורי החזרה
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
+  const successQuery = useMemo(() => {
+    const q = new URLSearchParams({
       plan: urlParams.plan,
       email: email.trim(),
       price: urlParams.price,
@@ -71,61 +69,76 @@ export default function CheckoutPage() {
       billing: urlParams.billing,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      // שים לב: אין כאן מידע רגיש. זה רק מידע תצוגה.
-    }).toString()
+    })
+    return q.toString()
+  }, [urlParams.plan, urlParams.price, urlParams.billing, urlParams.code, firstName, lastName, email])
 
-    // כתובת ה-webhook שלך שתקבל אירוע "נוצר טוקן" מהמסוף
-    // ממליץ להעביר לפחות registration_code כדי לשייך את המשתמש
-    const notifyParams = new URLSearchParams({
-      registration_code: urlParams.code,
-      plan: urlParams.plan,
-      billing: urlParams.billing,
-      price: urlParams.price,
-      email: email.trim(),
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      source: 'token_page',
-    }).toString()
-
-    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php'
+  // כתובת למסוף הטוקנים — אימות + טוקן עכשיו (sum=0) וחיוב מחזורי החל מתאריך היעד
+  const tranzilaUrl = useMemo(() => {
     const params = new URLSearchParams({
-      // סכום 0 — אנחנו לא מחייבים כרגע, רק טוקן
-      sum: '0',
-      // ILS בלבד במסוף הטוקנים — USD יגרום לעתים ל-500
-      currency: '1',
+      // ===== אימות + יצירת טוקן (אין חיוב עכשיו) =====
+      tranmode: 'V',          // אימות. אם אצלך נדרש VK – אפשר להחליף ל-"VK"
+      sum: '0',               // אין חיוב כעת (ניסיון חינמי)
+      currency: '2',          // USD (1=ILS, 2=USD)
+      // cred_type אפשר להשמיט אם גורם ל-500 במסוף. להשאיר רק אם הבנק דורש.
+      // cred_type: '1',
 
-      // V=Verify, K=create token
-      tranmode: 'VK',
+      // ===== חיוב מחזורי אוטומטי =====
+      recur_sum: urlParams.price,           // הסכום לחיוב החודשי
+      recur_transaction: '4_approved',      // חודשי — ללא בחירת לקוח
+      recur_start_date: recurStartDate,     // תאריך התחלת החיובים (בעוד 7 ימים)
+      // recur_payments: '12',              // אופציונלי: להגביל למספר חיובים (להשמיט כדי לחייב עד ביטול)
 
-      // cred_type יכול לגרום ל-500 במסופים מסוימים; אם תראה 500, נסה להסיר
-      cred_type: '1',
-
-      // שדות לא רגישים — תצוגה/שיוך
-      contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
-      email: email.trim(),
-      phone: phone.trim(),
-
-      // מזהים שימושיים — חוזרים בדו"חות מסוף
-      uid: urlParams.code,
+      // ===== זיהוי לקוח/הזמנה =====
+      uid: urlParams.code,                  // מזהה חיצוני (registration code)
       u1: urlParams.code,
       u2: urlParams.plan,
       u3: urlParams.billing,
       u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - Tokenization only`,
 
-      // חזרה אחרי הצלחה/כישלון
+      contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
+      email: email.trim(),
+      phone: phone.trim(),
+      pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
+
+      // ===== חוויית משתמש/עיצוב (אופציונלי) =====
+      trBgColor: 'FAF5F0',
+      trTextColor: '2D5016',
+      trButtonColor: '8B5E3C',
+      trButtonTextColor: 'FFFFFF',
+      trTextSize: '16',
+      buttonLabel: 'Start Free Trial',
+      google_pay: '1',
+
+      // ===== מסכי חזרה =====
       success_url_address: `${origin}/payment/success?${successQuery}`,
-      fail_url_address:    `${origin}/payment/fail`,
+      fail_url_address: `${origin}/payment/fail`,
 
-      // ה-webhook שלך ב-n8n לקבלת האירוע מהמסוף (POST)
-      notify_url_address: `https://n8n-TD2y.sliplane.app/webhook/token-created?${notifyParams}`,
+      // ===== הודעה שרתית (Webhook) =====
+      notify_url_address:
+        'https://n8n-TD2y.sliplane.app/webhook/update-user-plan' +
+        `?uid=${encodeURIComponent(urlParams.code)}` +
+        `&plan=${encodeURIComponent(urlParams.plan)}` +
+        `&billing=${encodeURIComponent(urlParams.billing)}` +
+        `&price=${encodeURIComponent(urlParams.price)}` +
+        `&email=${encodeURIComponent(email.trim())}` +
+        `&firstName=${encodeURIComponent(firstName.trim())}` +
+        `&lastName=${encodeURIComponent(lastName.trim())}`,
     })
 
-    // 🔴 שים לב: אין recur_* ואין google_pay. זה בכוונה.
-    return `${base}?${params.toString()}`
+    return `${TRZ_BASE}?${params.toString()}`
   }, [
-    urlParams.plan, urlParams.price, urlParams.billing, urlParams.code,
-    firstName, lastName, email, phone
+    urlParams.plan,
+    urlParams.price,
+    urlParams.billing,
+    urlParams.code,
+    firstName,
+    lastName,
+    email,
+    phone,
+    recurStartDate,
+    origin,
+    successQuery,
   ])
 
   const handleRedirectToTranzila = () => {
@@ -133,28 +146,40 @@ export default function CheckoutPage() {
       alert('Please enter an email so we can send your receipt.')
       return
     }
-    // הפניה למסוף
+    // טיפ: אם אתה מקבל 500, נסה להחליף ל-iframenew.php, או להסיר cred_type/פרמטרי עיצוב
     window.location.href = tranzilaUrl
   }
 
-  // ----- UI -----
+  // UI
+  const currentPlanName = urlParams.planName || (urlParams.plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan')
+
   return (
-    <div style={{
-      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)',
-    }}>
-      <header style={{
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(0,0,0,0.05)',
-        padding: '1rem 0',
-      }}>
-        <div style={{
-          maxWidth: 1200, margin: '0 auto',
-          padding: isMobile ? '0 1rem' : '0 2rem',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-        }}>
+    <div
+      style={{
+        fontFamily:
+          "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'",
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)',
+      }}
+    >
+      <header
+        style={{
+          background: 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid rgba(0,0,0,0.05)',
+          padding: '1rem 0',
+        }}
+      >
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: isMobile ? '0 1rem' : '0 2rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '.75rem', textDecoration: 'none' }}>
             <img src="/yaya-logo.png" alt="Yaya Assistant" style={{ width: 72, height: 72, objectFit: 'contain' }} />
             <span style={{ fontSize: '1.5rem', fontWeight: 600, color: '#2d5016' }}>Yaya</span>
@@ -167,40 +192,71 @@ export default function CheckoutPage() {
       </header>
 
       <main style={{ padding: isMobile ? '1.5rem 0' : '3rem 0' }}>
-        <div style={{
-          maxWidth: 1200, margin: '0 auto',
-          padding: isMobile ? '0 1rem' : '0 2rem',
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '380px 1fr',
-          gap: '1.5rem', alignItems: 'start'
-        }}>
+        <div
+          style={{
+            maxWidth: 1200,
+            margin: '0 auto',
+            padding: isMobile ? '0 1rem' : '0 2rem',
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '380px 1fr',
+            gap: '1.5rem',
+            alignItems: 'start',
+          }}
+        >
           {/* Order Summary */}
-          <section style={{
-            background: 'white', borderRadius: 20, padding: '1.25rem',
-            border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
-            position: 'sticky', top: 24,
-          }}>
+          <section
+            style={{
+              background: 'white',
+              borderRadius: 20,
+              padding: '1.25rem',
+              border: '1px solid rgba(0,0,0,0.06)',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+              position: 'sticky',
+              top: 24,
+            }}
+          >
             <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>Order Summary</h2>
-            <div style={{ marginTop: 16, padding: 16, border: '1px solid #E5DDD5', borderRadius: 12, background: '#FBFAF8' }}>
-              <h3 style={{ margin: 0, color: '#8B5E3C', fontWeight: 700 }}>{currentPlan.name}</h3>
+            <div
+              style={{
+                marginTop: 16,
+                padding: 16,
+                border: '1px solid #E5DDD5',
+                borderRadius: 12,
+                background: '#FBFAF8',
+              }}
+            >
+              <h3 style={{ margin: 0, color: '#8B5E3C', fontWeight: 700 }}>{currentPlanName}</h3>
               <p style={{ margin: '6px 0 0', color: '#7a6a5f', fontSize: '.9rem' }}>Monthly subscription</p>
 
               <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <CheckCircle size={16} style={{ color: '#22c55e' }} />
-                <span style={{
-                  fontSize: '.85rem', padding: '6px 10px', borderRadius: 8,
-                  background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', color: '#166534'
-                }}>
+                <span
+                  style={{
+                    fontSize: '.85rem',
+                    padding: '6px 10px',
+                    borderRadius: 8,
+                    background: 'rgba(34,197,94,.1)',
+                    border: '1px solid rgba(34,197,94,.25)',
+                    color: '#166534',
+                  }}
+                >
                   Registration Code: {urlParams.code}
                 </span>
               </div>
 
+              {/* הצגת ניסיון חינם וכמה יחויב לאחריו */}
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>Total due today:</span><span>$0.00</span>
+                  <span>Total due today:</span>
+                  <span>$0.00</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>Monthly after trial:</span><span>${urlParams.price}.00</span>
+                  <span>Total after trial:</span>
+                  <span>${urlParams.price}.00/month</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>First charge on:</span>
+                  <span>{recurStartDate}</span>
                 </div>
               </div>
             </div>
@@ -210,33 +266,63 @@ export default function CheckoutPage() {
           <section>
             <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>Complete Your Order</h2>
 
-            <div style={{
-              marginTop: 12, background: 'white', borderRadius: 20, padding: '1rem',
-              border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 6px rgba(0,0,0,0.04)'
-            }}>
+            <div
+              style={{
+                marginTop: 12,
+                background: 'white',
+                borderRadius: 20,
+                padding: '1rem',
+                border: '1px solid rgba(0,0,0,0.06)',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.04)',
+              }}
+            >
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
-                <div><label style={label}>First name</label><input style={input} value={firstName} onChange={e=>setFirstName(e.target.value)} /></div>
-                <div><label style={label}>Last name</label> <input style={input} value={lastName} onChange={e=>setLastName(e.target.value)} /></div>
-                <div><label style={label}>Email</label>     <input style={input} type="email" value={email} onChange={e=>setEmail(e.target.value)} /></div>
-                <div><label style={label}>Phone</label>     <input style={input} value={phone} onChange={e=>setPhone(e.target.value)} /></div>
+                <div>
+                  <label style={label}>First name</label>
+                  <input style={input} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                </div>
+                <div>
+                  <label style={label}>Last name</label>
+                  <input style={input} value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                </div>
+                <div>
+                  <label style={label}>Email</label>
+                  <input
+                    style={input}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                  />
+                </div>
+                <div>
+                  <label style={label}>Phone</label>
+                  <input style={input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="05..." />
+                </div>
               </div>
 
               <button
                 onClick={handleRedirectToTranzila}
                 style={{
-                  marginTop: 12, width: '100%', padding: '16px 24px',
+                  marginTop: 12,
+                  width: '100%',
+                  padding: '16px 24px',
                   background: 'linear-gradient(135deg, #8B5E3C 0%, #A0673F 100%)',
-                  color: 'white', border: 'none', borderRadius: 12,
-                  fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer',
-                  boxShadow: '0 4px 12px rgba(139, 94, 60, 0.3)'
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 12,
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(139, 94, 60, 0.3)',
                 }}
               >
-                Continue to Secure Payment
+                Start Free Trial
               </button>
             </div>
 
             <p style={{ marginTop: 12, color: '#6b7280', fontSize: '.9rem', textAlign: 'center' }}>
-              Your card details are entered on Tranzila’s secure page. We never store your card information.
+              Your payment information is encrypted and secure. We never store your credit card details.
             </p>
           </section>
         </div>
@@ -246,9 +332,16 @@ export default function CheckoutPage() {
 }
 
 const label: React.CSSProperties = {
-  display: 'block', fontSize: '.85rem', color: '#6b7280', marginBottom: 6
+  display: 'block',
+  fontSize: '.85rem',
+  color: '#6b7280',
+  marginBottom: 6,
 }
-const input:  React.CSSProperties = {
-  width: '100%', padding: '10px 12px', borderRadius: 10,
-  border: '1px solid #E5DDD5', outline: 'none', fontSize: '.95rem'
+const input: React.CSSProperties = {
+  width: '100%',
+  padding: '10px 12px',
+  borderRadius: 10,
+  border: '1px solid #E5DDD5',
+  outline: 'none',
+  fontSize: '.95rem',
 }
