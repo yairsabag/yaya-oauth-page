@@ -103,7 +103,7 @@ const params = new URLSearchParams({
   success_url_address: `${origin}/payment/success?${successQuery}`,
   fail_url_address: `${origin}/payment/fail`,
   notify_url_address:
-    'https://n8n-TD2y.sliplane.app/webhook/store-tranzila-token' +
+    'https://yairsabag.app.n8n.cloud/webhook/tranzila' +
     `?uid=${encodeURIComponent(urlParams.code)}` +
     `&plan=${encodeURIComponent(urlParams.plan)}` +
     `&billing=${encodeURIComponent(urlParams.billing)}` +
