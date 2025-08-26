@@ -69,54 +69,50 @@ export default function CheckoutPage() {
     }).toString();
 
     // חשוב: iframe.php (ישן/יציב) – לא iframenew.php
-    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframe.php';
+    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php';
 
-    const params = new URLSearchParams({
-      // יצירת טוקן דרך בדיקה (שומר טוקן, ללא חיוב בפועל)
-      tranmode: 'N',
-      sum: '1',            // חייב להיות 1 – נסתיר אותו ב-UI הפנימי
-      currency: '2',       // USD
-      cred_type: '1',      // לא חובה, אבל בסדר
+const params = new URLSearchParams({
+  // יצירת טוקן דרך בדיקה (J2 + Token)
+  tranmode: 'NK',
+  sum: '1',            // חייב להישאר 1 – אך יוסתר
+  currency: '2',
+  cred_type: '1',
 
-      // 🔒 הסתרת המחיר, שמירת לוגו/אייקונים של טרנזילה
-      hidesum: '1',
+  // הסתרת המחיר + מיתוג
+  hidesum: '1',
+  trBgColor: 'FAF5F0',
+  trTextColor: '2D5016',
+  trButtonColor: '8B5E3C',
+  trButtonTextColor: 'FFFFFF', // אם נתמך במסוף שלך
+  buttonLabel: 'Start Free Trial',
 
-      // 🎨 התאמת צבעים למיתוג שלך (נשמרים גם עם לוגו טרנזילה)
-      trBgColor: 'FAF5F0',
-      trTextColor: '2D5016',
-      trButtonColor: '8B5E3C',
-      trButtonTextColor: 'FFFFFF', // אם נתמך במסוף
-      buttonLabel: 'Start Free Trial',
+  // פרטי לקוח
+  contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
+  email: email.trim(),
+  phone: phone.trim(),
 
-      // פרטי לקוח להצגה
-      contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
-      email: email.trim(),
-      phone: phone.trim(),
+  // מזהים
+  uid: urlParams.code,
+  u1: urlParams.code,
+  u2: urlParams.plan,
+  u3: urlParams.billing,
+  u4: urlParams.price,
+  pdesc: `Yaya ${urlParams.plan} - Trial then ${urlParams.price}$/mo`,
 
-      // מזהי מעקב (מועברים ל-notify)
-      uid: urlParams.code,
-      u1: urlParams.code,
-      u2: urlParams.plan,
-      u3: urlParams.billing,
-      u4: urlParams.price,
-      pdesc: `Yaya ${urlParams.plan} - Trial then ${urlParams.price}$/mo`,
-
-      // חזרה ללקוח
-      success_url_address: `${origin}/payment/success?${successQuery}`,
-      fail_url_address: `${origin}/payment/fail`,
-
-      // Webhook אמיתי לקבלת הטוקן
-      notify_url_address:
-        'https://n8n-TD2y.sliplane.app/webhook/store-tranzila-token' +
-        `?uid=${encodeURIComponent(urlParams.code)}` +
-        `&plan=${encodeURIComponent(urlParams.plan)}` +
-        `&billing=${encodeURIComponent(urlParams.billing)}` +
-        `&price=${encodeURIComponent(urlParams.price)}` +
-        `&email=${encodeURIComponent(email.trim())}` +
-        `&firstName=${encodeURIComponent(firstName.trim())}` +
-        `&lastName=${encodeURIComponent(lastName.trim())}`,
-    });
-
+  // חזרה + webhook
+  success_url_address: `${origin}/payment/success?${successQuery}`,
+  fail_url_address: `${origin}/payment/fail`,
+  notify_url_address:
+    'https://n8n-TD2y.sliplane.app/webhook/store-tranzila-token' +
+    `?uid=${encodeURIComponent(urlParams.code)}` +
+    `&plan=${encodeURIComponent(urlParams.plan)}` +
+    `&billing=${encodeURIComponent(urlParams.billing)}` +
+    `&price=${encodeURIComponent(urlParams.price)}` +
+    `&email=${encodeURIComponent(email.trim())}` +
+    `&firstName=${encodeURIComponent(firstName.trim())}` +
+    `&lastName=${encodeURIComponent(lastName.trim())}`,
+});
+    
     return `${base}?${params.toString()}`;
   }, [urlParams, firstName, lastName, email, phone]);
 
