@@ -75,17 +75,16 @@ export default function CheckoutPage() {
     }).toString()
 
     // מסוף הטוקנים
-    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframe.php'
+    const base = 'https://direct.tranzila.com/fxpyairsabagfxp/iframe.php'
 
     // בניית הפרמטרים
     const params = new URLSearchParams({
       // ===== פעולה: אימות כרטיס + יצירת טוקן =====
       tranmode: 'VK',        // V=Verify, K=Token
-      sum: '0',              // היום לא מחייבים
+      sum: '1',              // היום לא מחייבים
       currency: '2',         // 2 = USD
       cred_type: '1',        // סוג כרטיס (אפשר להשאיר 1)
-      myid: '0',             // לא לדרוש ת"ז (מונע System Error על מספרים לא תקינים)
-
+      
       // ===== חיוב מחזורי (Fixed, לא בחירת לקוח) =====
       // אם תרצה "בחירת לקוח" – השתמש ב- '4' ללא "_approved"
       recur_transaction: '4_approved', // חודשי
