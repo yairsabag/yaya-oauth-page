@@ -1,270 +1,224 @@
-'use client'
+// src/app/payment/checkout/page.tsx
+'use client';
 
-import React, { useMemo, useRef, useState } from 'react'
-import { CheckCircle, Shield } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react';
+import { Shield } from 'lucide-react';
 
 type UrlParams = {
-  plan: 'executive' | 'ultimate'
-  price: '5' | '14'
-  billing: 'monthly'
-  code: string
-  planName: string
-}
+  plan: 'executive' | 'ultimate';
+  price: string;      // "5" | "14"
+  billing: 'monthly' | 'yearly';
+  code: string;       // registration code / uid
+  planName: string;
+};
 
 export default function CheckoutPage() {
-  // -------- URL params (with safe defaults) --------
-  const [urlParams] = useState<UrlParams>(() => {
-    const p = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
-    const plan = (p.get('plan') || 'executive').toLowerCase() as UrlParams['plan']
-    const price = (p.get('price') || (plan === 'ultimate' ? '14' : '5')) as UrlParams['price']
-    return {
+  const [urlParams, setUrlParams] = useState<UrlParams>({
+    plan: 'executive',
+    price: '5',
+    billing: 'monthly',
+    code: 'F75CEJ',
+    planName: 'Executive Plan',
+  });
+
+  const [firstName, setFirstName] = useState('');
+  const [lastName,  setLastName]  = useState('');
+  const [email,     setEmail]     = useState('');
+  const [phone,     setPhone]     = useState('');
+  const [isMobile,  setIsMobile]  = useState(false);
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const plan = ((p.get('plan') || 'executive').toLowerCase() as UrlParams['plan']);
+    const price = p.get('price') || (plan === 'ultimate' ? '14' : '5');
+    const billing = ((p.get('billing') || 'monthly').toLowerCase() as UrlParams['billing']);
+
+    setUrlParams({
       plan,
       price,
-      billing: 'monthly',
-      code: (p.get('code') || 'F75CEJ').toUpperCase(),
+      billing,
+      code: p.get('code') || 'F75CEJ',
       planName: p.get('planName') || (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan'),
-    }
-  })
+    });
 
-  // -------- customer fields (for your records only) --------
-  const [firstName, setFirstName] = useState('')
-  const [lastName,  setLastName]  = useState('')
-  const [email,     setEmail]     = useState('')
-  const [phone,     setPhone]     = useState('')
+    const onResize = () => setIsMobile(window.innerWidth < 940);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
-  // -------- trial start (today + 7) --------
-  const recurStartDate = useMemo(() => {
-    const d = new Date()
-    d.setDate(d.getDate() + 7)
-    // Tranzila expects yyyy-mm-dd
-    const yyyy = d.getFullYear()
-    const mm = String(d.getMonth() + 1).padStart(2, '0')
-    const dd = String(d.getDate()).padStart(2, '0')
-    return `${yyyy}-${mm}-${dd}`
-  }, [])
+  // UI only – “first charge in 7 days”
+  const trialEndDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().slice(0, 10); // yyyy-mm-dd
+  }, []);
 
-  // -------- success/fail/notify URLs --------
-  const origin =
-    typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
+  // === Token terminal URL (Create token ONLY, no charge) ===
+  const tokenIframeUrl = useMemo(() => {
+    const origin =
+      typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com';
 
-  // NOTE: עדיף שה־Return Method במסוף יהיה GET
-  const successUrl = `${origin}/payment/success?plan=${encodeURIComponent(urlParams.plan)}&price=${urlParams.price}&billing=${urlParams.billing}&code=${encodeURIComponent(urlParams.code)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&email=${encodeURIComponent(email)}`
-  const failUrl    = `${origin}/payment/fail?plan=${encodeURIComponent(urlParams.plan)}&price=${urlParams.price}&billing=${urlParams.billing}&code=${encodeURIComponent(urlParams.code)}`
-  const notifyUrl  = `https://yairsabag.app.n8n.cloud/webhook/tranzila`
+    // Data we want on the success page (display only)
+    const successQuery = new URLSearchParams({
+      plan: urlParams.plan,
+      planName: urlParams.planName,
+      price: urlParams.price,
+      billing: urlParams.billing,
+      code: urlParams.code,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim(),
+    }).toString();
 
-  // -------- form ref (we post into the IFRAME) --------
-  const formRef = useRef<HTMLFormElement>(null)
+    // Use iframe.php (stable) on the token terminal
+    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframe.php';
 
-  const handleStartTrial = () => {
+    // Create token only (no amount), hide the "sum" line
+    const params = new URLSearchParams({
+      tranmode: 'K',          // K = Create token only (no verify/charge)
+      sum: '0',
+      currency: '2',          // 2 = USD
+      cred_type: '1',         // optional card type
+
+      // Customer details for the cashier page
+      contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
+      email: email.trim(),
+      phone: phone.trim(),
+
+      // Tracking fields (return via notify)
+      uid: urlParams.code,
+      u1: urlParams.code,
+      u2: urlParams.plan,
+      u3: urlParams.billing,
+      u4: urlParams.price,
+      pdesc: `Yaya ${urlParams.plan} - Trial then ${urlParams.price}$/mo`,
+
+      // Redirects (UI only)
+      success_url_address: `${origin}/payment/success?${successQuery}`,
+      fail_url_address: `${origin}/payment/fail`,
+
+      // Real webhook – where we store the TranzilaTK token
+      notify_url_address:
+        'https://n8n-TD2y.sliplane.app/webhook/store-tranzila-token' +
+        `?uid=${encodeURIComponent(urlParams.code)}` +
+        `&plan=${encodeURIComponent(urlParams.plan)}` +
+        `&billing=${encodeURIComponent(urlParams.billing)}` +
+        `&price=${encodeURIComponent(urlParams.price)}` +
+        `&email=${encodeURIComponent(email.trim())}` +
+        `&firstName=${encodeURIComponent(firstName.trim())}` +
+        `&lastName=${encodeURIComponent(lastName.trim())}`,
+
+      // UI tweaks
+      buttonLabel: 'Start Free Trial',
+      hidesum: '1',           // hide "Total Amount" row completely
+      lang: 'il',             // or 'en' if you prefer
+    });
+
+    return `${base}?${params.toString()}`;
+  }, [urlParams, firstName, lastName, email, phone]);
+
+  const goToTokenIframe = () => {
     if (!email.trim()) {
-      alert('Please enter your email so we can send your receipt.')
-      return
+      alert('Please enter your email so we can send your receipt.');
+      return;
     }
-    // submit the hidden POST to Tranzila
-    formRef.current?.submit()
-    // optional: scroll to iframe area after submit
-    document.getElementById('tranzila-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
-  // ====== UI STYLES ======
-  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 940 : false
-  const brand = {
-    green: '#2d5016',
-    tan:   '#faf5f0',
-    brown: '#8B5E3C',
-    ink:   '#6b7280'
-  }
+    window.location.href = tokenIframeUrl;
+  };
 
   return (
-    <div style={{
-      fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif",
-      minHeight: '100vh',
-      background: `linear-gradient(135deg, ${brand.tan} 0%, #f7f3ed 100%)`
-    }}>
-      {/* Header */}
-      <header style={{
-        background: 'rgba(255,255,255,.9)',
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(0,0,0,.05)'
-      }}>
+    <div style={{ minHeight: '100vh', background: '#FAF5F0', fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif' }}>
+      <header style={{ background: '#fff', borderBottom: '1px solid #eee' }}>
         <div style={{
           maxWidth: 1200, margin: '0 auto', padding: '12px 20px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
         }}>
-          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none' }}>
-            <img alt="Yaya" src="/yaya-logo.png" style={{ width: 56, height: 56, objectFit: 'contain' }}/>
-            <span style={{ color: brand.green, fontSize: 20, fontWeight: 700 }}>Yaya</span>
+          <a href="/" style={{ display: 'flex', gap: 10, alignItems: 'center', textDecoration: 'none' }}>
+            <img src="/yaya-logo.png" width={56} height={56} alt="Yaya" />
+            <strong style={{ color: '#2d5016', fontSize: 20 }}>Yaya</strong>
           </a>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: brand.ink }}>
-            <Shield size={16} />
-            {!isMobile && <span style={{ fontSize: 14 }}>Secure checkout</span>}
-          </div>
+          <span style={{ display: 'flex', gap: 6, alignItems: 'center', color: '#6b7280', fontSize: 14 }}>
+            <Shield size={16} /> Secure checkout
+          </span>
         </div>
       </header>
 
-      {/* Main */}
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '16px' : '32px' }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '360px 1fr',
-          gap: 20,
-          alignItems: 'start'
-        }}>
-          {/* Summary card */}
-          <section style={{
-            background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,.06)',
-            boxShadow: '0 4px 14px rgba(0,0,0,.04)', padding: 16, position: 'sticky', top: 24
-          }}>
-            <h2 style={{ margin: 0, color: brand.green, fontWeight: 800, fontSize: 18 }}>Start Free Trial</h2>
-            <div style={{ marginTop: 14, padding: 14, borderRadius: 12, background: '#FBFAF8', border: '1px solid #E5DDD5' }}>
-              <div style={{ fontWeight: 700, color: brand.brown }}>{urlParams.planName}</div>
-              <div style={{ marginTop: 6, color: '#7a6a5f', fontSize: 14 }}>Monthly subscription</div>
-
-              <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <CheckCircle size={16} color="#22c55e" />
-                <span style={{
-                  fontSize: 12, padding: '4px 8px', borderRadius: 8,
-                  background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', color: '#166534'
-                }}>
-                  Registration Code: {urlParams.code}
-                </span>
-              </div>
-
-              <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>Due today</span><strong>$0.00</strong>
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: 16 }}>
+          {/* Order Summary */}
+          <section style={{ background: '#fff', border: '1px solid #eee', borderRadius: 16, padding: 16 }}>
+            <h2 style={{ margin: 0, color: '#2d5016' }}>Start Free Trial</h2>
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontWeight: 700, color: '#8B5E3C' }}>{urlParams.planName}</div>
+              <div style={{ marginTop: 8, borderTop: '1px solid #eee', paddingTop: 8, display: 'grid', rowGap: 6 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Due today</span><span>$0.00</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>After trial</span><strong>${urlParams.price}.00 / month</strong>
+                  <span>After trial</span><span>${urlParams.price}.00 / month</span>
                 </div>
-                <div style={{ marginTop: 6, fontSize: 12, color: '#94a3b8' }}>
-                  First charge on <strong>{recurStartDate}</strong>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6b7280' }}>
+                  <span>First charge on</span><span>{trialEndDate}</span>
+                </div>
+                <div style={{ marginTop: 8, fontSize: 12, color: '#6b7280' }}>
+                  Registration code: <b>{urlParams.code}</b>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Form + Iframe */}
-          <section>
-            <h2 style={{ margin: 0, color: brand.green, fontWeight: 800, fontSize: 18 }}>Your details</h2>
-
-            <div style={{
-              marginTop: 12, background: '#fff', borderRadius: 16, border: '1px solid rgba(0,0,0,.06)',
-              boxShadow: '0 4px 14px rgba(0,0,0,.04)', padding: 12
-            }}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-                gap: 10
-              }}>
-                <Input label="First name" value={firstName} onChange={setFirstName}/>
-                <Input label="Last name"  value={lastName}  onChange={setLastName}/>
-                <Input label="Email"      value={email}     onChange={setEmail} type="email"/>
-                <Input label="Phone"      value={phone}     onChange={setPhone}/>
-              </div>
-
-              <button
-                onClick={handleStartTrial}
-                style={{
-                  marginTop: 12, width: '100%', padding: '14px 20px',
-                  background: `linear-gradient(135deg, ${brand.brown} 0%, #A0673F 100%)`,
-                  color: '#fff', border: 'none', borderRadius: 12,
-                  fontSize: 16, fontWeight: 800, cursor: 'pointer',
-                  boxShadow: '0 6px 16px rgba(139,94,60,.3)'
-                }}
-              >
-                Continue to Secure Payment
-              </button>
-
-              <p style={{ marginTop: 8, fontSize: 12, color: brand.ink, textAlign: 'center' }}>
-                Encrypted • We don’t store card details. You may see a temporary $1 authorization — it isn’t a charge.
-              </p>
+          {/* Customer + CTA */}
+          <section style={{ background: '#fff', border: '1px solid #eee', borderRadius: 16, padding: 16 }}>
+            <h2 style={{ margin: 0, color: '#2d5016' }}>Your details</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginTop: 12 }}>
+              <Field label="First name"  value={firstName} onChange={setFirstName} />
+              <Field label="Last name"   value={lastName}  onChange={setLastName} />
+              <Field label="Email"       type="email" value={email} onChange={setEmail} />
+              <Field label="Phone"       value={phone} onChange={setPhone} />
             </div>
 
-            {/* Tranzila Form (hidden inputs) that POSTS into the iframe */}
-            <form
-              ref={formRef}
-              action="https://direct.tranzila.com/fxpyairsabagtok/iframenew.php"
-              method="POST"
-              target="tranzila_iframe"
-              style={{ display: 'none' }}
+            <button
+              onClick={goToTokenIframe}
+              style={{
+                marginTop: 12, width: '100%', padding: '14px 18px',
+                background: '#8B5E3C', color: '#fff', border: 'none',
+                borderRadius: 12, fontWeight: 700, cursor: 'pointer'
+              }}
             >
-              {/* ---- amount & currency ---- */}
-              <input name="sum" defaultValue="0" />
-              <input name="currency" defaultValue="2" /> {/* 2 = USD */}
-              <input name="hidesum" defaultValue="1" />   {/* hide $0 from Tranzila UI */}
+              Continue to Secure Payment
+            </button>
 
-              {/* ---- create token + verify (J2). If VK causes issues on your terminal, NK is safest. ---- */}
-              <input name="tranmode" defaultValue="NK" />
-
-              {/* ---- recurring: start in 7 days, monthly, not customer choice ---- */}
-              <input name="recur_sum" defaultValue={urlParams.price} />
-              <input name="recur_transaction" defaultValue="4_approved" />
-              <input name="recur_start_date" defaultValue={recurStartDate} />
-              {/* omit recur_payments => unlimited (until canceled) */}
-
-              {/* ---- customer reference fields (nice to have) ---- */}
-              <input name="contact" defaultValue={[firstName, lastName].filter(Boolean).join(' ').trim()} />
-              <input name="email" defaultValue={email.trim()} />
-              <input name="phone" defaultValue={phone.trim()} />
-              <input name="pdesc" defaultValue={`Yaya ${urlParams.plan} - Monthly Plan USD`} />
-
-              {/* ---- identifiers you’ll get back on success/notify ---- */}
-              <input name="uid" defaultValue={urlParams.code} />
-              <input name="u1" defaultValue={urlParams.code} />
-              <input name="u2" defaultValue={urlParams.plan} />
-              <input name="u3" defaultValue={urlParams.billing} />
-              <input name="u4" defaultValue={urlParams.price} />
-
-              {/* ---- success/fail/notify ---- */}
-              <input name="success_url_address" defaultValue={successUrl} />
-              <input name="fail_url_address" defaultValue={failUrl} />
-              <input name="notify_url_address" defaultValue={notifyUrl} />
-
-              {/* ---- look & feel (optional) ---- */}
-              <input name="trBgColor"         defaultValue="FAF5F0" />
-              <input name="trTextColor"       defaultValue="2D5016" />
-              <input name="trButtonColor"     defaultValue="8B5E3C" />
-              <input name="trButtonTextColor" defaultValue="FFFFFF" />
-              <input name="trTextSize"        defaultValue="16" />
-              <input name="buttonLabel"       defaultValue="Start Free Trial" />
-              <input name="google_pay"        defaultValue="1" />
-            </form>
-
-            {/* IFRAME target (loads the Tranzila page) */}
-            <div id="tranzila-container" style={{ marginTop: 14, borderRadius: 12, overflow: 'hidden',
-              border: '1px solid rgba(0,0,0,.08)', background: '#fff' }}>
-              <iframe
-                name="tranzila_iframe"
-                id="tranzila_iframe"
-                title="Secure payment"
-                src=""
-                allow="payment"
-                allowPaymentRequest
-                style={{ width: '100%', height: 720, border: '0' }}
-              />
-            </div>
+            <p style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>
+              We won’t charge you today. We securely verify your card and create a token.
+              The first charge happens after the 7-day trial.
+            </p>
           </section>
         </div>
       </main>
     </div>
-  )
+  );
 }
 
-// small input helper
-function Input(props: { label: string; value: string; onChange: (v: string) => void; type?: string }) {
+function Field({
+  label,
+  value,
+  onChange,
+  type = 'text',
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+}) {
   return (
-    <label style={{ display: 'grid', gap: 6 }}>
-      <span style={{ fontSize: 12, color: '#6b7280' }}>{props.label}</span>
+    <label style={{ display: 'grid', rowGap: 6, fontSize: 14, color: '#6b7280' }}>
+      {label}
       <input
-        type={props.type || 'text'}
-        value={props.value}
-        onChange={e => props.onChange(e.target.value)}
-        style={{
-          width: '100%', padding: '10px 12px', borderRadius: 10,
-          border: '1px solid #E5DDD5', outline: 'none', fontSize: 15
-        }}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{ padding: '10px 12px', border: '1px solid #E5DDD5', borderRadius: 10, fontSize: 15 }}
       />
     </label>
-  )
+  );
 }
