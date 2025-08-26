@@ -84,7 +84,6 @@ export default function CheckoutPage() {
       hidesum: '1',
 
       // UI למסוף
-      lang: 'en',
       buttonLabel: 'Start Free Trial',
 
       // פרטי לקוח להצגה במסוף
