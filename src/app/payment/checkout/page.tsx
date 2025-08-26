@@ -75,7 +75,7 @@ export default function CheckoutPage() {
     // שולחים רק פרמטרים חוקיים למסוף הטוקנים
     const params = new URLSearchParams({
       // Verify + Token, ללא חיוב (סכום 0)
-      tranmode: 'VK',           // V = Verify; (VK גם עובד בחלק מהמסופים, אבל V הכי יציב)
+      tranmode: 'N',           // V = Verify; (VK גם עובד בחלק מהמסופים, אבל V הכי יציב)
       sum: '1',
       currency: '2',           // 2 = USD
       cred_type: '1',          // סוג הכרטיס (ישראכרט), לא חובה אבל טוב שיהיה
