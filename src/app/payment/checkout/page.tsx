@@ -74,12 +74,13 @@ export default function CheckoutPage() {
 
     const params = new URLSearchParams({
       // === הפעולה ===
-      tranmode: 'N',               // בדיקה (J2) – אצלך זה שומר טוקן ומצליח
+      tranmode: 'NK',               // בדיקה (J2) – אצלך זה שומר טוקן ומצליח
       sum: '1',                    // חייב להיות 1
       currency: '2',               // USD
       cred_type: '1',              // ישראכרט (לא חובה אבל תקין)
 
       // === עיצוב (עם לוגו ואייקוני האבטחה) ===
+      hidesum: '1'
       trBgColor: 'FAF5F0',         // רקע
       trTextColor: '2D5016',       // טקסט
       trButtonColor: '8B5E3C',     // כפתור
