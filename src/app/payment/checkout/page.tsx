@@ -77,8 +77,8 @@ export default function CheckoutPage() {
   const tranzilaUrl = useMemo(() => {
     const params = new URLSearchParams({
       // ===== אימות + יצירת טוקן (אין חיוב עכשיו) =====
-      tranmode: 'V',          // אימות. אם אצלך נדרש VK – אפשר להחליף ל-"VK"
-      sum: '0',               // אין חיוב כעת (ניסיון חינמי)
+      tranmode: 'VK',          // אימות. אם אצלך נדרש VK – אפשר להחליף ל-"VK"
+      sum: '1',               // אין חיוב כעת (ניסיון חינמי)
       currency: '2',          // USD (1=ILS, 2=USD)
       // cred_type אפשר להשמיט אם גורם ל-500 במסוף. להשאיר רק אם הבנק דורש.
       // cred_type: '1',
