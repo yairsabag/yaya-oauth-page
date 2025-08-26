@@ -6,9 +6,9 @@ import { Shield } from 'lucide-react';
 
 type UrlParams = {
   plan: 'executive' | 'ultimate';
-  price: string;           // "5" | "14"
+  price: string;               // "5" | "14"
   billing: 'monthly' | 'yearly';
-  code: string;            // registration code / uid
+  code: string;                // registration code / uid
   planName: string;
 };
 
@@ -29,8 +29,8 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
-    const plan    = ((p.get('plan')    || 'executive').toLowerCase() as UrlParams['plan']);
-    const price   = p.get('price')     || (plan === 'ultimate' ? '14' : '5');
+    const plan = ((p.get('plan') || 'executive').toLowerCase() as UrlParams['plan']);
+    const price = p.get('price') || (plan === 'ultimate' ? '14' : '5');
     const billing = ((p.get('billing') || 'monthly').toLowerCase() as UrlParams['billing']);
 
     setUrlParams({
@@ -47,19 +47,17 @@ export default function CheckoutPage() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // מציג ללקוח: "החיוב הראשון בעוד 7 ימים"
+  // מוצג ללקוח בלבד – “החיוב הראשון בעוד 7 ימים”
   const trialEndDate = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 7);
-    return d.toISOString().slice(0, 10); // yyyy-mm-dd
+    const d = new Date(); d.setDate(d.getDate() + 7);
+    return d.toISOString().slice(0, 10);
   }, []);
 
-  // === URL למסוף יצירת טוקן + בדיקה (ללא הצגת $1 בעמוד של טרנזילה) ===
+  // ====== URL למסוף (בדיקה + טוקן) בעיצוב עם לוגו ואייקוני אבטחה ======
   const tokenIframeUrl = useMemo(() => {
-    const origin =
-      typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com';
 
-    // מה שנוח לנו שישוב ל-success להצגה בלבד
+    // מה שיחזור ל-success רק לצורכי תצוגה
     const successQuery = new URLSearchParams({
       plan: urlParams.plan,
       planName: urlParams.planName,
@@ -71,35 +69,31 @@ export default function CheckoutPage() {
       email: email.trim(),
     }).toString();
 
-    // חשוב: iframe.php (לא iframenew.php)
+    // NOTE: iframe.php (לא iframenew.php)
     const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframe.php';
 
-    // הסבר:
-    // - sum חייב להיות 1 בשביל J2/Verify אצלך
-    // - כדי להסתיר את התצוגה של הסכום בעמוד טרנזילה נשלח hidesum=1
-    // - hidesum=1 תומך רק ב־K/VK/NK, לכן משלבים J2+Token כ־ NK
     const params = new URLSearchParams({
-      tranmode: 'NK',        // N=Verify J2 + K=Token  => מסתיר סכום עם hidesum=1
-      sum: '1',              // חובה אצלך, אבל נסתיר מהעין
-      currency: '2',         // USD
-      cred_type: '1',
+      // === הפעולה ===
+      tranmode: 'N',               // בדיקה (J2) – אצלך זה שומר טוקן ומצליח
+      sum: '1',                    // חייב להיות 1
+      currency: '2',               // USD
+      cred_type: '1',              // ישראכרט (לא חובה אבל תקין)
 
-      // עיצוב עמוד טרנזילה לצבעי Yaya + הסתרת סכום
-      hidesum: '1',
-      trBgColor: 'FAF5F0',
-      trTextColor: '2D5016',
-      trButtonColor: '8B5E3C',
-      // לא בכל מסוף קיים, אבל אם זמין – טוב שיש:
-      trButtonTextColor: 'FFFFFF',
+      // === עיצוב (עם לוגו ואייקוני האבטחה) ===
+      trBgColor: 'FAF5F0',         // רקע
+      trTextColor: '2D5016',       // טקסט
+      trButtonColor: '8B5E3C',     // כפתור
+      trButtonTextColor: 'FFFFFF', // טקסט כפתור (נתמך ב־iframe.php)
+      trTextSize: '16',            // גודל טקסט
       buttonLabel: 'Start Free Trial',
-      nologo: '1',
+      // אל תשלח nologo=1 – כך הלוגו והאייקונים יוצגו כברירת מחדל
 
-      // נתוני לקוח להצגה
+      // === נתוני לקוח להצגה ===
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // מזהי מעקב שיחזרו ב-notify
+      // === מזהי מעקב (יחזרו ב-notify) ===
       uid: urlParams.code,
       u1: urlParams.code,
       u2: urlParams.plan,
@@ -107,11 +101,11 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - Trial then ${urlParams.price}$/mo`,
 
-      // חזרה ללקוח (אפשר להחליף את fail שיפנה גם ל-success עם סטטוס אם אתה רוצה למסך הכל במקום אחד)
+      // === חזרה למשתמש (תצוגה) ===
       success_url_address: `${origin}/payment/success?${successQuery}`,
       fail_url_address: `${origin}/payment/fail`,
 
-      // Webhook אמיתי – קבלת TranzilaTK
+      // === Webhook אמיתי לשמירת הטוקן ===
       notify_url_address:
         'https://n8n-TD2y.sliplane.app/webhook/store-tranzila-token' +
         `?uid=${encodeURIComponent(urlParams.code)}` +
@@ -131,6 +125,7 @@ export default function CheckoutPage() {
       alert('Please enter your email so we can send your receipt.');
       return;
     }
+    // נפתח את ה־iframe בעמוד ייעודי (מומלץ). כאן פשוט מפנים ישירות:
     window.location.href = tokenIframeUrl;
   };
 
@@ -149,22 +144,30 @@ export default function CheckoutPage() {
       </header>
 
       <main style={{maxWidth:1200,margin:'0 auto',padding:'24px 20px'}}>
-        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'380px 1fr',gap:16}}>
-          {/* Summary */}
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'380px 1fr',gap:16,alignItems:'start'}}>
+          {/* תקציר הזמנה */}
           <section style={{background:'#fff',border:'1px solid #eee',borderRadius:16,padding:16}}>
             <h2 style={{margin:0,color:'#2d5016'}}>Start Free Trial</h2>
             <div style={{marginTop:12}}>
               <div style={{fontWeight:700,color:'#8B5E3C'}}>{urlParams.planName}</div>
-              <div style={{marginTop:8,borderTop:'1px solid #eee',paddingTop:8,display:'grid',rowGap:6}}>
-                <div style={{display:'flex',justifyContent:'space-between'}}><span>Due today</span><span>$0.00</span></div>
-                <div style={{display:'flex',justifyContent:'space-between'}}><span>After trial</span><span>${urlParams.price}.00 / month</span></div>
-                <div style={{display:'flex',justifyContent:'space-between',color:'#6b7280'}}><span>First charge on</span><span>{trialEndDate}</span></div>
-                <div style={{marginTop:8,fontSize:12,color:'#6b7280'}}>Registration code: <b>{urlParams.code}</b></div>
+              <p style={{margin:'6px 0 0',color:'#7a6a5f',fontSize:13}}>Monthly subscription</p>
+
+              <div style={{marginTop:10,display:'grid',rowGap:6,borderTop:'1px solid #eee',paddingTop:10}}>
+                <Row left="Due today" right="$0.00" />
+                <Row left="After trial" right={`$${urlParams.price}.00 / month`} />
+                <Row left="First charge on" right={trialEndDate} muted />
+                <div style={{
+                  marginTop:6, fontSize:12, color:'#166534',
+                  background:'rgba(34,197,94,.1)', border:'1px solid rgba(34,197,94,.25)',
+                  borderRadius:8, padding:'6px 10px', width:'fit-content'
+                }}>
+                  Registration code: <b>{urlParams.code}</b>
+                </div>
               </div>
             </div>
           </section>
 
-          {/* Form */}
+          {/* פרטי לקוח וכפתור תשלום */}
           <section style={{background:'#fff',border:'1px solid #eee',borderRadius:16,padding:16}}>
             <h2 style={{margin:0,color:'#2d5016'}}>Your details</h2>
             <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12,marginTop:12}}>
@@ -174,15 +177,13 @@ export default function CheckoutPage() {
               <Field label="Phone"       value={phone} onChange={setPhone}/>
             </div>
 
-            <button
-              onClick={goToTokenIframe}
+            <button onClick={goToTokenIframe}
               style={{
                 marginTop:12,width:'100%',padding:'14px 18px',
-                background:'#8B5E3C',color:'#fff',border:'none',
-                borderRadius:12,fontWeight:700,cursor:'pointer'
-              }}
-            >
-              Start Free Trial
+                background:'#8B5E3C',color:'#fff',border:'none',borderRadius:12,
+                fontWeight:700,cursor:'pointer',boxShadow:'0 6px 16px rgba(139,94,60,.25)'
+              }}>
+              Continue to Secure Payment
             </button>
 
             <p style={{marginTop:10,fontSize:12,color:'#6b7280'}}>
@@ -190,13 +191,31 @@ export default function CheckoutPage() {
             </p>
           </section>
         </div>
+
+        {/* (אופציונלי) אם תרצה להטמיע כאן בעמוד במקום מעבר: */}
+        {/* <div style={{marginTop:20, background:'#fff', border:'1px solid #eee', borderRadius:16, padding:8}}>
+          <iframe
+            name="tranzila"
+            src={tokenIframeUrl}
+            allow="payment"
+            style={{width:'100%', height: 720, border: 0, borderRadius:12}}
+          />
+        </div> */}
       </main>
     </div>
   );
 }
 
+function Row({left,right,muted=false}:{left:string;right:string;muted?:boolean}) {
+  return (
+    <div style={{display:'flex',justifyContent:'space-between',color: muted? '#6b7280' : '#111827'}}>
+      <span>{left}</span><span>{right}</span>
+    </div>
+  );
+}
+
 function Field({
-  label, value, onChange, type = 'text'
+  label, value, onChange, type='text'
 }: { label:string; value:string; onChange:(v:string)=>void; type?:string }) {
   return (
     <label style={{display:'grid',rowGap:6,fontSize:14,color:'#6b7280'}}>
