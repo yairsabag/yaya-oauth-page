@@ -47,19 +47,17 @@ export default function CheckoutPage() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // UI only – “first charge in 7 days”
+  // להמחשה ללקוח: “חיוב ראשון בעוד 7 ימים”
   const trialEndDate = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 7);
+    const d = new Date(); d.setDate(d.getDate() + 7);
     return d.toISOString().slice(0, 10); // yyyy-mm-dd
   }, []);
 
-  // === Token terminal URL (Create token ONLY, no charge) ===
+  // === URL למסוף הטוקנים (Verify + Token) ===
   const tokenIframeUrl = useMemo(() => {
-    const origin =
-      typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com';
 
-    // Data we want on the success page (display only)
+    // מה שנוח שיגיע לעמוד ה-success בתור GET (תצוגה בלבד)
     const successQuery = new URLSearchParams({
       plan: urlParams.plan,
       planName: urlParams.planName,
@@ -71,22 +69,30 @@ export default function CheckoutPage() {
       email: email.trim(),
     }).toString();
 
-    // Use iframe.php (stable) on the token terminal
+    // משתמשים ב iframe.php (הגרסה היציבה)
     const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframe.php';
 
-    // Create token only (no amount), hide the "sum" line
+    // שולחים רק פרמטרים חוקיים למסוף הטוקנים
     const params = new URLSearchParams({
-      tranmode: 'K',          // K = Create token only (no verify/charge)
-      sum: '0',
-      currency: '2',          // 2 = USD
-      cred_type: '1',         // optional card type
+      // Verify + Token (או רק Token אם מחליפים ל-'K')
+      tranmode: 'VK',     // V = Verify; K = Create token. VK = Verify+Token
+      sum: '1',           // חייב להיות 1 — נסתיר אותו עם hidesum
+      currency: '2',      // 2 = USD
+      cred_type: '1',     // סוג הכרטיס (לא חובה, אבל תקין)
 
-      // Customer details for the cashier page
+      // === חשוב: מסתיר את שורת הסכום כך שהמשתמש לא יראה $1 ===
+      hidesum: '1',
+
+      // UI למסוף
+      lang: 'en',
+      buttonLabel: 'Start Free Trial',
+
+      // פרטי לקוח להצגה במסוף
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
-      // Tracking fields (return via notify)
+      // מזהים למעקב – יחזרו ב-notify
       uid: urlParams.code,
       u1: urlParams.code,
       u2: urlParams.plan,
@@ -94,11 +100,11 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - Trial then ${urlParams.price}$/mo`,
 
-      // Redirects (UI only)
+      // Redirect ללקוח (תצוגה בלבד)
       success_url_address: `${origin}/payment/success?${successQuery}`,
       fail_url_address: `${origin}/payment/fail`,
 
-      // Real webhook – where we store the TranzilaTK token
+      // Webhook אמיתי – כאן נקבל את ה-TranzilaTK ונשמור אותו
       notify_url_address:
         'https://n8n-TD2y.sliplane.app/webhook/store-tranzila-token' +
         `?uid=${encodeURIComponent(urlParams.code)}` +
@@ -108,11 +114,6 @@ export default function CheckoutPage() {
         `&email=${encodeURIComponent(email.trim())}` +
         `&firstName=${encodeURIComponent(firstName.trim())}` +
         `&lastName=${encodeURIComponent(lastName.trim())}`,
-
-      // UI tweaks
-      buttonLabel: 'Start Free Trial',
-      hidesum: '1',           // hide "Total Amount" row completely
-      lang: 'il',             // or 'en' if you prefer
     });
 
     return `${base}?${params.toString()}`;
@@ -127,40 +128,37 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAF5F0', fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif' }}>
-      <header style={{ background: '#fff', borderBottom: '1px solid #eee' }}>
-        <div style={{
-          maxWidth: 1200, margin: '0 auto', padding: '12px 20px',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-        }}>
-          <a href="/" style={{ display: 'flex', gap: 10, alignItems: 'center', textDecoration: 'none' }}>
+    <div style={{minHeight:'100vh',background:'#FAF5F0',fontFamily:'system-ui, -apple-system, Segoe UI, sans-serif'}}>
+      <header style={{background:'#fff',borderBottom:'1px solid #eee'}}>
+        <div style={{maxWidth:1200,margin:'0 auto',padding:'12px 20px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <a href="/" style={{display:'flex',gap:10,alignItems:'center',textDecoration:'none'}}>
             <img src="/yaya-logo.png" width={56} height={56} alt="Yaya" />
-            <strong style={{ color: '#2d5016', fontSize: 20 }}>Yaya</strong>
+            <strong style={{color:'#2d5016',fontSize:20}}>Yaya</strong>
           </a>
-          <span style={{ display: 'flex', gap: 6, alignItems: 'center', color: '#6b7280', fontSize: 14 }}>
-            <Shield size={16} /> Secure checkout
+          <span style={{display:'flex',gap:6,alignItems:'center',color:'#6b7280',fontSize:14}}>
+            <Shield size={16}/> Secure checkout
           </span>
         </div>
       </header>
 
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: 16 }}>
+      <main style={{maxWidth:1200,margin:'0 auto',padding:'24px 20px'}}>
+        <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'380px 1fr',gap:16}}>
           {/* Order Summary */}
-          <section style={{ background: '#fff', border: '1px solid #eee', borderRadius: 16, padding: 16 }}>
-            <h2 style={{ margin: 0, color: '#2d5016' }}>Start Free Trial</h2>
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontWeight: 700, color: '#8B5E3C' }}>{urlParams.planName}</div>
-              <div style={{ marginTop: 8, borderTop: '1px solid #eee', paddingTop: 8, display: 'grid', rowGap: 6 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <section style={{background:'#fff',border:'1px solid #eee',borderRadius:16,padding:16}}>
+            <h2 style={{margin:0,color:'#2d5016'}}>Start Free Trial</h2>
+            <div style={{marginTop:12}}>
+              <div style={{fontWeight:700,color:'#8B5E3C'}}>{urlParams.planName}</div>
+              <div style={{marginTop:8,borderTop:'1px solid #eee',paddingTop:8,display:'grid',rowGap:6}}>
+                <div style={{display:'flex',justifyContent:'space-between'}}>
                   <span>Due today</span><span>$0.00</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{display:'flex',justifyContent:'space-between'}}>
                   <span>After trial</span><span>${urlParams.price}.00 / month</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6b7280' }}>
+                <div style={{display:'flex',justifyContent:'space-between',color:'#6b7280'}}>
                   <span>First charge on</span><span>{trialEndDate}</span>
                 </div>
-                <div style={{ marginTop: 8, fontSize: 12, color: '#6b7280' }}>
+                <div style={{marginTop:8,fontSize:12,color:'#6b7280'}}>
                   Registration code: <b>{urlParams.code}</b>
                 </div>
               </div>
@@ -168,28 +166,28 @@ export default function CheckoutPage() {
           </section>
 
           {/* Customer + CTA */}
-          <section style={{ background: '#fff', border: '1px solid #eee', borderRadius: 16, padding: 16 }}>
-            <h2 style={{ margin: 0, color: '#2d5016' }}>Your details</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginTop: 12 }}>
-              <Field label="First name"  value={firstName} onChange={setFirstName} />
-              <Field label="Last name"   value={lastName}  onChange={setLastName} />
-              <Field label="Email"       type="email" value={email} onChange={setEmail} />
-              <Field label="Phone"       value={phone} onChange={setPhone} />
+          <section style={{background:'#fff',border:'1px solid #eee',borderRadius:16,padding:16}}>
+            <h2 style={{margin:0,color:'#2d5016'}}>Your details</h2>
+            <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12,marginTop:12}}>
+              <Field label="First name"  value={firstName} onChange={setFirstName}/>
+              <Field label="Last name"   value={lastName}  onChange={setLastName}/>
+              <Field label="Email"       type="email" value={email} onChange={setEmail}/>
+              <Field label="Phone"       value={phone} onChange={setPhone}/>
             </div>
 
             <button
               onClick={goToTokenIframe}
               style={{
-                marginTop: 12, width: '100%', padding: '14px 18px',
-                background: '#8B5E3C', color: '#fff', border: 'none',
-                borderRadius: 12, fontWeight: 700, cursor: 'pointer'
+                marginTop:12,width:'100%',padding:'14px 18px',
+                background:'#8B5E3C',color:'#fff',border:'none',borderRadius:12,
+                fontWeight:700,cursor:'pointer'
               }}
             >
               Continue to Secure Payment
             </button>
 
-            <p style={{ marginTop: 10, fontSize: 12, color: '#6b7280' }}>
-              We won’t charge you today. We securely verify your card and create a token.
+            <p style={{marginTop:10,fontSize:12,color:'#6b7280'}}>
+              We won’t charge you today. We verify your card and create a secure token.
               The first charge happens after the 7-day trial.
             </p>
           </section>
@@ -200,24 +198,18 @@ export default function CheckoutPage() {
 }
 
 function Field({
-  label,
-  value,
-  onChange,
-  type = 'text',
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
+  label, value, onChange, type='text',
+}:{
+  label:string; value:string; onChange:(v:string)=>void; type?:string;
 }) {
   return (
-    <label style={{ display: 'grid', rowGap: 6, fontSize: 14, color: '#6b7280' }}>
+    <label style={{display:'grid',rowGap:6,fontSize:14,color:'#6b7280'}}>
       {label}
       <input
         type={type}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        style={{ padding: '10px 12px', border: '1px solid #E5DDD5', borderRadius: 10, fontSize: 15 }}
+        onChange={e=>onChange(e.target.value)}
+        style={{padding:'10px 12px',border:'1px solid #E5DDD5',borderRadius:10,fontSize:15}}
       />
     </label>
   );
