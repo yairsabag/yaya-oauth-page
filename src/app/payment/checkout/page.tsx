@@ -1,16 +1,21 @@
 // src/app/payment/checkout/page.tsx
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { CheckCircle, Shield } from 'lucide-react'
 
 type UrlParams = {
-  plan: string
-  price: string
-  billing: string
+  plan: 'executive' | 'ultimate'
+  price: string          // "5" | "14"
+  billing: 'monthly' | 'yearly'
   code: string
   planName: string
 }
+
+const PLANS = {
+  executive: { name: 'Executive Plan', defaultPrice: '5' },
+  ultimate:  { name: 'Ultimate Plan',  defaultPrice: '14' },
+} as const
 
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState<UrlParams>({
@@ -21,27 +26,24 @@ export default function CheckoutPage() {
     planName: 'Executive Plan',
   })
 
-  const [firstName, setFirstName] = useState('Yair')
-  const [lastName,  setLastName]  = useState('Sabag')
-  const [email,     setEmail]     = useState('yairsabag@gmail.com')
-  const [phone,     setPhone]     = useState('0542598700')
+  const [firstName, setFirstName] = useState('')
+  const [lastName,  setLastName]  = useState('')
+  const [email,     setEmail]     = useState('')
+  const [phone,     setPhone]     = useState('')
+  const [isMobile,  setIsMobile]  = useState(false)
 
-  const [isMobile, setIsMobile]   = useState(false)
-
-  // הטופס שאנחנו מגישים ל־Tranzila
-  const tranzilaFormRef = useRef<HTMLFormElement>(null)
-
+  // קלט מה־URL + התאמה למסך קטן
   useEffect(() => {
     const p = new URLSearchParams(window.location.search)
-    const plan = (p.get('plan') || 'executive').toLowerCase()
-    const price = p.get('price') || (plan === 'ultimate' ? '14' : '5')
+    const plan = ((p.get('plan') || 'executive') as UrlParams['plan']).toLowerCase() as UrlParams['plan']
+    const planInfo = PLANS[plan] || PLANS.executive
 
     setUrlParams({
       plan,
-      price,
-      billing: (p.get('billing') || 'monthly').toLowerCase(),
+      price: p.get('price') || planInfo.defaultPrice,
+      billing: ((p.get('billing') || 'monthly') as UrlParams['billing']).toLowerCase() as UrlParams['billing'],
       code: p.get('code') || 'F75CEJ',
-      planName: p.get('planName') || (plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan'),
+      planName: p.get('planName') || planInfo.name,
     })
 
     const onResize = () => setIsMobile(window.innerWidth < 940)
@@ -50,239 +52,159 @@ export default function CheckoutPage() {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  // תאריך התחלת חיוב מחזורי (מידע לתצוגה; את החיוב נעשה בהמשך במסוף הרגיל אחרי 7 ימים)
+  // תאריך התחלת החיוב המחזורי – עוד 7 ימים
   const recurStartDate = useMemo(() => {
     const d = new Date()
     d.setDate(d.getDate() + 7)
-    return d.toISOString().slice(0, 10)
+    return d.toISOString().slice(0, 10) // yyyy-mm-dd
   }, [])
 
-  const currentPlanName = useMemo(() => {
-    return urlParams.planName || (urlParams.plan === 'ultimate' ? 'Ultimate Plan' : 'Executive Plan')
-  }, [urlParams.plan, urlParams.planName])
+  // כתובת למסך ה־iframe של טרנזילה (מסוף טוקנים)
+  const tranzilaUrl = useMemo(() => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com'
 
-  // כתובות חזרה
-  const successUrl = useMemo(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://yayagent.com'
-    const qp = new URLSearchParams({
+    // מה שנוח לנו לקלוט ב-success
+    const successQuery = new URLSearchParams({
       plan: urlParams.plan,
       price: urlParams.price,
       billing: urlParams.billing,
       code: urlParams.code,
+      email: email.trim(),
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+    }).toString()
+
+    // מסוף הטוקנים
+    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframe.php'
+
+    // בניית הפרמטרים
+    const params = new URLSearchParams({
+      // ===== פעולה: אימות כרטיס + יצירת טוקן =====
+      tranmode: 'VK',        // V=Verify, K=Token
+      sum: '0',              // היום לא מחייבים
+      currency: '2',         // 2 = USD
+      cred_type: '1',        // סוג כרטיס (אפשר להשאיר 1)
+      myid: '0',             // לא לדרוש ת"ז (מונע System Error על מספרים לא תקינים)
+
+      // ===== חיוב מחזורי (Fixed, לא בחירת לקוח) =====
+      // אם תרצה "בחירת לקוח" – השתמש ב- '4' ללא "_approved"
+      recur_transaction: '4_approved', // חודשי
+      recur_sum: urlParams.price,      // סכום החיוב החודשי
+      recur_start_date: recurStartDate,
+
+      // פרטי לקוח לתצוגה בממשק
+      contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
+
+      // מזהים כלליים
+      uid: urlParams.code,
+      u1: urlParams.code,
+      u2: urlParams.plan,
+      u3: urlParams.billing,
+      u4: urlParams.price,
+      pdesc: `Yaya ${urlParams.plan} - Monthly Plan USD`,
+
+      // חזרה/נוטיפיקציה
+      success_url_address: `${origin}/payment/success?${successQuery}`,
+      fail_url_address: `${origin}/payment/fail`,
+      notify_url_address:
+        `https://n8n-TD2y.sliplane.app/webhook/update-user-plan` +
+        `?uid=${encodeURIComponent(urlParams.code)}` +
+        `&plan=${encodeURIComponent(urlParams.plan)}` +
+        `&billing=${encodeURIComponent(urlParams.billing)}` +
+        `&price=${encodeURIComponent(urlParams.price)}` +
+        `&email=${encodeURIComponent(email.trim())}` +
+        `&firstName=${encodeURIComponent(firstName.trim())}` +
+        `&lastName=${encodeURIComponent(lastName.trim())}`,
+
+      // UI (אופציונלי)
+      trBgColor: 'FAF5F0',
+      trTextColor: '2D5016',
+      trButtonColor: '8B5E3C',
+      trButtonTextColor: 'FFFFFF',
+      trTextSize: '16',
+      buttonLabel: 'Start Free Trial',
+
+      // בקש שגיאות מפורטות במקום System Error כללי
+      err_code: '1',
     })
-    return `${origin}/payment/success?${qp.toString()}`
-  }, [urlParams, firstName, lastName, email, phone])
 
-  const failUrl = useMemo(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://yayagent.com'
-    return `${origin}/payment/fail`
-  }, [])
+    return `${base}?${params.toString()}`
+  }, [urlParams, email, firstName, lastName, phone, recurStartDate])
 
-  // שלח ל־Tranzila – יצירת טוקן בלבד (VK) + sum=0 + hidesum=1 + חובה לשלוח id כי מופעל במסוף
   const handleRedirectToTranzila = () => {
     if (!email.trim()) {
       alert('Please enter an email so we can send your receipt.')
       return
     }
-    const form = tranzilaFormRef.current
-    if (!form) return
-
-    // נעדכן שדות דינמיים לפני שליחה
-    setHiddenValue(form, 'contact', [firstName.trim(), lastName.trim()].filter(Boolean).join(' '))
-    setHiddenValue(form, 'email', email.trim())
-    setHiddenValue(form, 'phone', phone.trim())
-    setHiddenValue(form, 'uid', urlParams.code) // מזהה לעקיבה (u* לא חובה, uid מועיל לך)
-
-    form.submit()
+    window.location.href = tranzilaUrl
   }
 
-  function setHiddenValue(form: HTMLFormElement, name: string, value: string) {
-    const input = form.querySelector<HTMLInputElement>(`input[name="${name}"]`)
-    if (input) input.value = value
-  }
+  const currentPlan = PLANS[urlParams.plan] || PLANS.executive
 
   return (
-    <div style={{
-      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)',
-      color: '#2d2a26'
-    }}>
-      {/* Header */}
-      <header style={{
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(10px)',
-        borderBottom: '1px solid rgba(0,0,0,0.05)',
-        padding: '1rem 0',
-      }}>
-        <div style={{
-          maxWidth: 1200, margin: '0 auto',
-          padding: isMobile ? '0 1rem' : '0 2rem',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-        }}>
+    <div style={{ fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", minHeight: '100vh', background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)' }}>
+      <header style={{ background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '1rem 0' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 1rem' : '0 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: '.75rem', textDecoration: 'none' }}>
-            <img src="/yaya-logo.png" alt="Yaya Assistant" style={{ width: 56, height: 56, objectFit: 'contain' }} />
-            <span style={{ fontSize: '1.35rem', fontWeight: 700, color: '#2d5016' }}>Yaya</span>
+            <img src="/yaya-logo.png" alt="Yaya Assistant" style={{ width: 72, height: 72, objectFit: 'contain' }} />
+            <span style={{ fontSize: '1.5rem', fontWeight: 600, color: '#2d5016' }}>Yaya</span>
           </a>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#4a5568' }}>
             <Shield size={16} />
-            {!isMobile && <span style={{ fontSize: '.9rem' }}>Secure checkout</span>}
+            {!isMobile && <span style={{ fontSize: '.9rem' }}>Secure Checkout</span>}
           </div>
         </div>
       </header>
 
-      {/* Main */}
       <main style={{ padding: isMobile ? '1.5rem 0' : '3rem 0' }}>
-        <div style={{
-          maxWidth: 1200, margin: '0 auto',
-          padding: isMobile ? '0 1rem' : '0 2rem',
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '360px 1fr',
-          gap: '1.5rem', alignItems: 'start'
-        }}>
-          {/* Summary Card */}
-          <section style={{
-            background: 'white', borderRadius: 20, padding: '1.25rem',
-            border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 20px rgba(0,0,0,0.04)',
-            position: 'sticky', top: 24,
-          }}>
-            <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 800, fontSize: '1.05rem', display:'flex', alignItems:'center', gap:8 }}>
-              <span style={{ display:'inline-flex', width:8, height:8, borderRadius:9999, background:'#22c55e' }} />
-              Start Free Trial
-            </h2>
-
-            <div style={{ marginTop: 16, padding: 16, border: '1px solid #E5DDD5', borderRadius: 14, background: '#FBFAF8' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-                <h3 style={{ margin: 0, color: '#8B5E3C', fontWeight: 800, fontSize:'1rem' }}>{currentPlanName}</h3>
-                <span style={{ fontSize:'.8rem', color:'#6b7280' }}>Monthly subscription</span>
-              </div>
-
-              <div style={{ marginTop: 10, display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 1rem' : '0 2rem', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '380px 1fr', gap: '1.5rem', alignItems: 'start' }}>
+          {/* Order Summary */}
+          <section style={{ background: 'white', borderRadius: 20, padding: '1.25rem', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 6px rgba(0,0,0,0.04)', position: 'sticky', top: 24 }}>
+            <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>Order Summary</h2>
+            <div style={{ marginTop: 16, padding: 16, border: '1px solid #E5DDD5', borderRadius: 12, background: '#FBFAF8' }}>
+              <h3 style={{ margin: 0, color: '#8B5E3C', fontWeight: 700 }}>{currentPlan.name}</h3>
+              <p style={{ margin: '6px 0 0', color: '#7a6a5f', fontSize: '.9rem' }}>Monthly subscription</p>
+              <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <CheckCircle size={16} style={{ color: '#22c55e' }} />
-                <span style={{
-                  fontSize: '.8rem', padding: '6px 10px', borderRadius: 8,
-                  background: 'rgba(34,197,94,.08)', border: '1px solid rgba(34,197,94,.25)', color: '#166534'
-                }}>
+                <span style={{ fontSize: '.85rem', padding: '6px 10px', borderRadius: 8, background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.25)', color: '#166534' }}>
                   Registration Code: {urlParams.code}
                 </span>
               </div>
-
               <div style={{ marginTop: 12, borderTop: '1px solid #E5DDD5', paddingTop: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>Due today:</span><span>$0.00</span>
+                  <span>Total due today:</span><span>$0.00</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span>After trial:</span><span>${urlParams.price}.00 / month</span>
-                </div>
-                <div style={{ fontSize:'.8rem', color:'#8592a1', marginTop:4 }}>
-                  First charge on <strong>{recurStartDate}</strong>
+                  <span>Total after trial:</span><span>${urlParams.price}.00/month</span>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Details + Iframe */}
+          {/* Customer + Pay */}
           <section>
-            <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 800, fontSize: '1.05rem' }}>Your details</h2>
-
-            <div style={{
-              marginTop: 12, background: 'white', borderRadius: 20, padding: '1rem',
-              border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 8px 20px rgba(0,0,0,0.04)'
-            }}>
+            <h2 style={{ margin: 0, color: '#2d5016', fontWeight: 700, fontSize: '1.1rem' }}>Complete Your Order</h2>
+            <div style={{ marginTop: 12, background: 'white', borderRadius: 20, padding: '1rem', border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 4px 6px rgba(0,0,0,0.04)' }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
                 <div><label style={label}>First name</label><input style={input} value={firstName} onChange={e=>setFirstName(e.target.value)} /></div>
                 <div><label style={label}>Last name</label> <input style={input} value={lastName} onChange={e=>setLastName(e.target.value)} /></div>
                 <div><label style={label}>Email</label>     <input style={input} type="email" value={email} onChange={e=>setEmail(e.target.value)} /></div>
                 <div><label style={label}>Phone</label>     <input style={input} value={phone} onChange={e=>setPhone(e.target.value)} /></div>
               </div>
-
               <button
                 onClick={handleRedirectToTranzila}
-                style={{
-                  marginTop: 12, width: '100%', padding: '16px 24px',
-                  background: 'linear-gradient(135deg, #8B5E3C 0%, #A0673F 100%)',
-                  color: 'white', border: 'none', borderRadius: 12,
-                  fontSize: '1.05rem', fontWeight: 800, cursor: 'pointer',
-                  boxShadow: '0 6px 14px rgba(139, 94, 60, 0.28)'
-                }}
+                style={{ marginTop: 12, width: '100%', padding: '16px 24px', background: 'linear-gradient(135deg, #8B5E3C 0%, #A0673F 100%)',
+                  color: 'white', border: 'none', borderRadius: 12, fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(139, 94, 60, 0.3)' }}
               >
-                Continue to Secure Payment
+                Start Free Trial
               </button>
-
-              <p style={{ marginTop: 8, color: '#6b7280', fontSize: '.85rem', textAlign: 'center' }}>
-                Encrypted • We don’t store card details
-              </p>
             </div>
-
-            {/* ===== IFRAME + FORM (POST) ===== */}
-            <div style={{ marginTop: 14, background: 'white', borderRadius: 20, padding: '0.75rem',
-              border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 6px 14px rgba(0,0,0,0.04)' }}>
-              <iframe
-                name="tranzila"
-                id="tranzila-frame"
-                // allowpaymentrequest=true חשוב ל־Google Pay בעתיד; לא מזיק גם עכשיו
-                allow="payment"
-                style={{ width:'100%', height: 640, border: '0', borderRadius: 12 }}
-                title="Secure payment"
-              />
-            </div>
-
-            {/* טופס POST ל־Tranzila — יצירת טוקן בלבד */}
-            <form
-              ref={tranzilaFormRef}
-              method="POST"
-              target="tranzila"
-              action="https://direct.tranzila.com/fxpyairsabagtok/iframenew.php"
-              // אין צורך ב־autoComplete ולא בנראות — זה נסתר
-            >
-              {/* יצירת טוקן בלבד — Verify + Token */}
-              <input type="hidden" name="tranmode" value="VK" />
-              {/* 0$ כדי להראות “Due today: $0” בקופה — sum=0 + hidesum=1 */}
-              <input type="hidden" name="sum" value="0" />
-              <input type="hidden" name="hidesum" value="1" />
-
-              {/* מטבע — במסוף הטוקנים מוגדר ש"ח (1). לטוקן זה לא מהותי, פשוט נשמור עקביות */}
-              <input type="hidden" name="currency" value="1" />
-              {/* סוג כרטיס — ישראכרט=1, ויזה=2 וכו'. לא חובה לטוקן, אפשר להשאיר 1 */}
-              <input type="hidden" name="cred_type" value="1" />
-
-              {/* מסוף דורש ת"ז חובה — אחרת נקבל System Error */}
-              <input type="hidden" name="id" value="000000000" />
-
-              {/* פרטים לנוחות במסוף */}
-              <input type="hidden" name="contact" value="" />
-              <input type="hidden" name="email"   value="" />
-              <input type="hidden" name="phone"   value="" />
-
-              {/* מזהה לעקיבה / u*  */}
-              <input type="hidden" name="uid" value="" />
-              <input type="hidden" name="u1"  value="trial_token" />
-
-              {/* כתובות חזרה */}
-              <input type="hidden" name="success_url_address" value={successUrl} />
-              <input type="hidden" name="fail_url_address"    value={failUrl} />
-
-              {/* אם תרצה טריגר לשרת שלך על סיום (מומלץ) — יש לך כבר במסך ההגדרות Notify קבוע.
-                  אם אתה רוצה לשלוח כאן ספציפי, אפשר לפתוח:
-                  <input type="hidden" name="notify_url_address" value="https://yairsabag.app.n8n.cloud/webhook/tranzila" />
-              */}
-
-              {/* UI של הכפתור בתוך העמוד של טרנזילה */}
-              <input type="hidden" name="buttonLabel" value="Start Free Trial" />
-              {/* עיצוב נעים (לא חובה) */}
-              <input type="hidden" name="trBgColor" value="FAF5F0" />
-              <input type="hidden" name="trTextColor" value="2D5016" />
-              <input type="hidden" name="trButtonColor" value="8B5E3C" />
-              <input type="hidden" name="trButtonTextColor" value="FFFFFF" />
-              <input type="hidden" name="trTextSize" value="16" />
-              {/* אם תרצה לשלב Google Pay בהמשך:
-                 <input type="hidden" name="google_pay" value="1" />
-              */}
-            </form>
+            <p style={{ marginTop: 12, color: '#6b7280', fontSize: '.9rem', textAlign: 'center' }}>
+              Your payment information is encrypted and secure. We never store your credit card details.
+            </p>
           </section>
         </div>
       </main>
