@@ -168,7 +168,7 @@ function PhoneMockup({ messages }: { messages: Array<{ text: string; sender: 'us
 
 // Enhanced WhatsApp Button Component
 function WhatsAppButton({ planType, text, message }: {
-  planType: 'basic' | 'executive' | 'ultimate'
+  planType: 'basic' | 'pro' | 'ultimate'
   text: string
   message: string
 }) {
