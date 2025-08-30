@@ -1,16 +1,28 @@
 // src/app/payment/checkout/page.tsx
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Shield } from 'lucide-react';
 
 type UrlParams = {
   plan: 'executive' | 'ultimate';
-  price: string;            // "5" | "14"
+  price: string;                 // "5" | "14" | ...
   billing: 'monthly' | 'yearly';
-  code: string;             // registration code / uid
+  code: string;                  // registration code / uid
   planName: string;
 };
+
+const TERMINAL = 'fxpyairsabagtok'; // ← החלף אם צריך
+const IFRAME_URL = `https://direct.tranzila.com/${TERMINAL}/iframenew.php`;
+
+// מיפוי billing → recurring code של טרנזילה
+const RECUR_CODE: Record<UrlParams['billing'], '4_approved' | '7_approved'> = {
+  monthly: '4_approved',
+  yearly: '7_approved',
+};
+
+// מטבע: 2 = USD, 1 = ILS, 978 = EUR, 826 = GBP
+const CURRENCY = '2';
 
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState<UrlParams>({
@@ -27,11 +39,13 @@ export default function CheckoutPage() {
   const [phone,     setPhone]     = useState('');
   const [isMobile,  setIsMobile]  = useState(false);
 
+  const formRef = useRef<HTMLFormElement|null>(null);
+
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const plan = ((p.get('plan') || 'executive').toLowerCase() as UrlParams['plan']);
-    const price = p.get('price') || (plan === 'ultimate' ? '14' : '5');
     const billing = ((p.get('billing') || 'monthly').toLowerCase() as UrlParams['billing']);
+    const price = p.get('price') || (plan === 'ultimate' ? '14' : '5');
     setUrlParams({
       plan,
       price,
@@ -46,17 +60,14 @@ export default function CheckoutPage() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // תאריך החיוב הראשון לתצוגה
-  const trialEndDate = useMemo(() => {
-    const d = new Date(); d.setDate(d.getDate() + 7);
-    return d.toISOString().slice(0, 10);
-  }, []);
+  // בניית טופס POST ושיגורו ל-IFRAME
+  const submitToIframe = () => {
+    if (!email.trim()) {
+      alert('Please enter your email so we can send your receipt.');
+      return;
+    }
 
-  // ===== URL למסוף טוקנים: בדיקה + טוקן (N) =====
-  const tokenIframeUrl = useMemo(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com';
-
-    // מה שנוח שיגיע ל-success בתור GET (תצוגה בלבד)
+    const origin = window.location.origin;
     const successQuery = new URLSearchParams({
       plan: urlParams.plan,
       planName: urlParams.planName,
@@ -68,60 +79,73 @@ export default function CheckoutPage() {
       email: email.trim(),
     }).toString();
 
-    // חשוב: iframe.php (ישן/יציב) – לא iframenew.php
-    const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php';
+    // פרמטרים לטרנזילה (חיוב עכשיו + מחזורי אוטומטי)
+    const payload: Record<string, string> = {
+      // סכום לתשלום עכשיו
+      sum: urlParams.price,
+      // חיוב מחזורי באותו סכום
+      recur_sum: urlParams.price,
+      recur_transaction: RECUR_CODE[urlParams.billing],
+      // אם תרצה להגביל מספר חיובים: payload.recur_payments = '12';
 
-const params = new URLSearchParams({
-  // יצירת טוקן דרך בדיקה (J2 + Token)
-  tranmode: 'NK',
-  sum: '1',            // חייב להישאר 1 – אך יוסתר
-  currency: '2',
-  cred_type: '1',
+      currency: CURRENCY,
+      buttonLabel: 'Pay',
 
-  // הסתרת המחיר + מיתוג
-  hidesum: '1',
-  trBgColor: 'FAF5F0',
-  trTextColor: '2D5016',
-  trButtonColor: '8B5E3C',
-  trButtonTextColor: 'FFFFFF', // אם נתמך במסוף שלך
-  buttonLabel: 'Start Free Trial',
+      // שפה + מיתוג (אופציונלי)
+      lang: 'il',
+      trBgColor: 'FAF5F0',
+      trTextColor: '2D5016',
+      trButtonColor: '8B5E3C',
 
-  // פרטי לקוח
-  contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
-  email: email.trim(),
-  phone: phone.trim(),
+      // זיהוי/תיאור
+      uid: urlParams.code,
+      u1: urlParams.code,
+      u2: urlParams.plan,
+      u3: urlParams.billing,
+      u4: urlParams.price,
+      pdesc: `Yaya ${urlParams.planName} - ${urlParams.billing}`,
 
-  // מזהים
-  uid: urlParams.code,
-  u1: urlParams.code,
-  u2: urlParams.plan,
-  u3: urlParams.billing,
-  u4: urlParams.price,
-  pdesc: `Yaya ${urlParams.plan} - Trial then ${urlParams.price}$/mo`,
+      // פרטי לקוח
+      contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
+      email: email.trim(),
+      phone: phone.trim(),
 
-  // חזרה + webhook
-  success_url_address: `${origin}/payment/success?${successQuery}`,
-  fail_url_address: `${origin}/payment/fail`,
-  notify_url_address:
-    'https://yairsabag.app.n8n.cloud/webhook/tranzila' +
-    `?uid=${encodeURIComponent(urlParams.code)}` +
-    `&plan=${encodeURIComponent(urlParams.plan)}` +
-    `&billing=${encodeURIComponent(urlParams.billing)}` +
-    `&price=${encodeURIComponent(urlParams.price)}` +
-    `&email=${encodeURIComponent(email.trim())}` +
-    `&firstName=${encodeURIComponent(firstName.trim())}` +
-    `&lastName=${encodeURIComponent(lastName.trim())}`,
-});
-    
-    return `${base}?${params.toString()}`;
-  }, [urlParams, firstName, lastName, email, phone]);
+      // כתובות חזרה + Notify
+      success_url_address: `${origin}/payment/success?${successQuery}`,
+      fail_url_address: `${origin}/payment/fail`,
+      notify_url_address:
+        'https://yairsabag.app.n8n.cloud/webhook/tranzila' +
+        `?uid=${encodeURIComponent(urlParams.code)}` +
+        `&plan=${encodeURIComponent(urlParams.plan)}` +
+        `&billing=${encodeURIComponent(urlParams.billing)}` +
+        `&price=${encodeURIComponent(urlParams.price)}` +
+        `&email=${encodeURIComponent(email.trim())}` +
+        `&firstName=${encodeURIComponent(firstName.trim())}` +
+        `&lastName=${encodeURIComponent(lastName.trim())}`,
+    };
 
-  const goToTokenIframe = () => {
-    if (!email.trim()) {
-      alert('Please enter your email so we can send your receipt.');
-      return;
-    }
-    window.location.href = tokenIframeUrl;
+    // יוצרים/מנקים טופס נסתר ומגישים ל-IFRAME
+    let form = formRef.current;
+    if (!form) return;
+
+    // נקה אינפוטים קודמים
+    while (form.firstChild) form.removeChild(form.firstChild);
+
+    // קבע יעד וכתובת
+    form.action = IFRAME_URL;
+    form.method = 'POST';
+    form.target = 'tranzila';
+
+    // הוסף שדות חבויים
+    Object.entries(payload).forEach(([name, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    form.submit();
   };
 
   return (
@@ -140,13 +164,12 @@ const params = new URLSearchParams({
         <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'380px 1fr',gap:16}}>
           {/* Summary */}
           <section style={{background:'#fff',border:'1px solid #eee',borderRadius:16,padding:16}}>
-            <h2 style={{margin:0,color:'#2d5016'}}>Start Free Trial</h2>
+            <h2 style={{margin:0,color:'#2d5016'}}>Your plan</h2>
             <div style={{marginTop:12}}>
               <div style={{fontWeight:700,color:'#8B5E3C'}}>{urlParams.planName}</div>
               <div style={{marginTop:8,borderTop:'1px solid #eee',paddingTop:8,display:'grid',rowGap:6}}>
-                <div style={{display:'flex',justifyContent:'space-between'}}><span>Due today</span><span>$0.00</span></div>
-                <div style={{display:'flex',justifyContent:'space-between'}}><span>After trial</span><span>${urlParams.price}.00 / month</span></div>
-                <div style={{display:'flex',justifyContent:'space-between',color:'#6b7280'}}><span>First charge on</span><span>{trialEndDate}</span></div>
+                <div style={{display:'flex',justifyContent:'space-between'}}><span>Due now</span><span>${urlParams.price}.00</span></div>
+                <div style={{display:'flex',justifyContent:'space-between'}}><span>Then</span><span>${urlParams.price}.00 / {urlParams.billing === 'monthly' ? 'month' : 'year'}</span></div>
                 <div style={{marginTop:8,fontSize:12,color:'#6b7280'}}>Registration code: <b>{urlParams.code}</b></div>
               </div>
             </div>
@@ -163,16 +186,34 @@ const params = new URLSearchParams({
             </div>
 
             <button
-              onClick={goToTokenIframe}
+              onClick={submitToIframe}
               style={{marginTop:12,width:'100%',padding:'14px 18px',background:'#8B5E3C',color:'#fff',border:'none',borderRadius:12,fontWeight:700,cursor:'pointer'}}
             >
-              Continue to Secure Payment
+              Pay securely
             </button>
 
             <p style={{marginTop:10,fontSize:12,color:'#6b7280'}}>
-              We won’t charge you today. We’ll only verify your card and create a secure token. Your first charge will occur after the 7-day trial.
+              Your card will be charged now and automatically every {urlParams.billing === 'monthly' ? 'month' : 'year'} for {urlParams.planName}. You can cancel anytime.
             </p>
+
+            {/* טופס נסתר שישוגר אל ה־IFRAME */}
+            <form ref={formRef} style={{display:'none'}} />
           </section>
+        </div>
+
+        {/* IFRAME של טרנזילה (נשארים באותו עמוד) */}
+        <div style={{marginTop:16}}>
+          <div style={{width:'100%',maxWidth:820,height:720}}>
+            <iframe
+              id="tranzila-frame"
+              name="tranzila"
+              src=""
+              allow="payment"
+              allowPaymentRequest
+              style={{width:'100%',height:'100%',border:0,borderRadius:12,background:'#fff'}}
+              title="Secure payment"
+            />
+          </div>
         </div>
       </main>
     </div>
