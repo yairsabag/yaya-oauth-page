@@ -671,7 +671,7 @@ export default function Home() {
             </span>
           </div>
 
-          {/* Pricing Cards */}
+         {/* Pricing Cards */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
@@ -679,259 +679,259 @@ export default function Home() {
             marginBottom: '3rem'
           }}>
             {/* Basic Plan */}
-<div className="animate-on-scroll" style={{
-  background: '#F5F1EB',
-  borderRadius: '20px',
-  padding: '2.5rem 2rem',
-  textAlign: 'left',
-  border: '1px solid #E5DDD5',
-  transition: 'all 0.3s ease'
-}}>
-  <div style={{
-    fontSize: '0.9rem',
-    color: '#8B5E3C',
-    fontWeight: '500',
-    marginBottom: '0.5rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em'
-  }}>
-    BASIC PLAN
-  </div>
-  <div style={{
-    fontSize: '4rem',
-    fontWeight: '300',
-    color: '#8B5E3C',
-    marginBottom: '2rem',
-    lineHeight: '1'
-  }}>
-    FREE
-  </div>
+            <div className="animate-on-scroll" style={{
+              background: '#F5F1EB',
+              borderRadius: '20px',
+              padding: '2.5rem 2rem',
+              textAlign: 'left',
+              border: '1px solid #E5DDD5',
+              transition: 'all 0.3s ease'
+            }}>
+              <div style={{
+                fontSize: '0.9rem',
+                color: '#8B5E3C',
+                fontWeight: '500',
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                BASIC PLAN
+              </div>
+              <div style={{
+                fontSize: '4rem',
+                fontWeight: '300',
+                color: '#8B5E3C',
+                marginBottom: '2rem',
+                lineHeight: '1'
+              }}>
+                FREE
+              </div>
 
-  <div style={{ marginBottom: '2rem' }}>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      100 messages per month
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      10 one-time reminders per month
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      100+ languages supported
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      ChatGPT powered
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      5 voice notes per month
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Shopping list (unlimited)
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Receive reminders from friends
-    </div>
-  </div>
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 messages per month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  10 one-time reminders per month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100+ languages supported
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  ChatGPT powered
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  5 voice notes per month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Shopping list (unlimited)
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Receive reminders from friends
+                </div>
+              </div>
 
-  <WhatsAppButton
-    planType="basic"
-    text="Continue with Assistant"
-    message="היי Yaya, אני מעוניין להתחיל עם המסלול החינמי"
-  />
-</div>
+              <WhatsAppButton
+                planType="basic"
+                text="Continue with Assistant"
+                message="היי Yaya, אני מעוניין להתחיל עם המסלול החינמי"
+              />
+            </div>
 
-{/* Pro Plan */}
-<div className="animate-on-scroll" style={{
-  background: '#F5F1EB',
-  borderRadius: '20px',
-  padding: '2.5rem 2rem',
-  textAlign: 'left',
-  position: 'relative',
-  border: '2px solid #8B5E3C',
-  transition: 'all 0.3s ease'
-}}>
-  <div style={{
-    fontSize: '0.9rem',
-    color: '#8B5E3C',
-    fontWeight: '500',
-    marginBottom: '0.5rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em'
-  }}>
-    PRO PLAN
-  </div>
-  <div style={{
-    fontSize: '4rem',
-    fontWeight: '300',
-    color: '#8B5E3C',
-    marginBottom: '0.5rem',
-    lineHeight: '1',
-    display: 'flex',
-    alignItems: 'baseline',
-    gap: '8px'
-  }}>
-    ${billingType === 'yearly' ? '4' : '5'}<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
-  </div>
+            {/* Pro Plan */}
+            <div className="animate-on-scroll" style={{
+              background: '#F5F1EB',
+              borderRadius: '20px',
+              padding: '2.5rem 2rem',
+              textAlign: 'left',
+              position: 'relative',
+              border: '2px solid #8B5E3C',
+              transition: 'all 0.3s ease'
+            }}>
+              <div style={{
+                fontSize: '0.9rem',
+                color: '#8B5E3C',
+                fontWeight: '500',
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                PRO PLAN
+              </div>
+              <div style={{
+                fontSize: '4rem',
+                fontWeight: '300',
+                color: '#8B5E3C',
+                marginBottom: '0.5rem',
+                lineHeight: '1',
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '8px'
+              }}>
+                ${billingType === 'yearly' ? '4' : '5'}<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
+              </div>
 
-  <div style={{ marginBottom: '2rem' }}>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Unlimited messages
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Unlimited reminders
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Recurring reminders (daily/weekly)
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      100+ languages supported
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      ChatGPT powered
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      100 voice notes per month
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Multiple custom lists
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Send/Receive reminders with friends
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Google Calendar integration
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Expense tracking
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      20 web searches per month
-    </div>
-  </div>
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited messages
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Recurring reminders (daily/weekly)
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100+ languages supported
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  ChatGPT powered
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 voice notes per month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Multiple custom lists
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Send/Receive reminders with friends
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Google Calendar integration
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Expense tracking
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  20 web searches per month
+                </div>
+              </div>
 
-  <WhatsAppButton
-    planType="pro"
-    text="Continue with Assistant"
-    message="היי Yaya, אני מעוניין במסלול Pro"
-  />
+              <WhatsAppButton
+                planType="pro"
+                text="Continue with Assistant"
+                message="היי Yaya, אני מעוניין במסלול Pro"
+              />
 
-  <div style={{
-    textAlign: 'center',
-    fontSize: '0.9rem',
-    color: '#8B5E3C',
-    fontWeight: '400',
-    marginTop: '1rem'
-  }}>
-    4,100+ users loving this plan
-  </div>
-</div>
+              <div style={{
+                textAlign: 'center',
+                fontSize: '0.9rem',
+                color: '#8B5E3C',
+                fontWeight: '400',
+                marginTop: '1rem'
+              }}>
+                4,100+ users loving this plan
+              </div>
+            </div>
 
-{/* Ultimate Plan */}
-<div className="animate-on-scroll" style={{
-  background: '#F5F1EB',
-  borderRadius: '20px',
-  padding: '2.5rem 2rem',
-  textAlign: 'left',
-  position: 'relative',
-  border: '1px solid #E5DDD5',
-  transition: 'all 0.3s ease'
-}}>
-  <div style={{
-    fontSize: '0.9rem',
-    color: '#8B5E3C',
-    fontWeight: '500',
-    marginBottom: '0.5rem',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em'
-  }}>
-    ULTIMATE PLAN
-  </div>
-  <div style={{
-    fontSize: '4rem',
-    fontWeight: '300',
-    color: '#8B5E3C',
-    marginBottom: '0.5rem',
-    lineHeight: '1',
-    display: 'flex',
-    alignItems: 'baseline',
-    gap: '8px'
-  }}>
-    ${billingType === 'yearly' ? '13' : '14'}<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
-  </div>
+            {/* Ultimate Plan */}
+            <div className="animate-on-scroll" style={{
+              background: '#F5F1EB',
+              borderRadius: '20px',
+              padding: '2.5rem 2rem',
+              textAlign: 'left',
+              position: 'relative',
+              border: '1px solid #E5DDD5',
+              transition: 'all 0.3s ease'
+            }}>
+              <div style={{
+                fontSize: '0.9rem',
+                color: '#8B5E3C',
+                fontWeight: '500',
+                marginBottom: '0.5rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                ULTIMATE PLAN
+              </div>
+              <div style={{
+                fontSize: '4rem',
+                fontWeight: '300',
+                color: '#8B5E3C',
+                marginBottom: '0.5rem',
+                lineHeight: '1',
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '8px'
+              }}>
+                ${billingType === 'yearly' ? '13' : '14'}<span style={{ fontSize: '1rem', fontWeight: '400' }}>/MONTH</span>
+              </div>
 
-  <div style={{ marginBottom: '2rem' }}>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Unlimited messages
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Unlimited reminders
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Recurring reminders (all types)
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      100+ languages supported
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      ChatGPT powered
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      500 voice notes per month
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Multiple custom lists
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Send/Receive reminders with friends
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Google Calendar integration
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Expense tracking
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      Food tracking (coming soon)
-    </div>
-    <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-      <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
-      100 web searches per month
-    </div>
-  </div>
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited messages
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Unlimited reminders
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Recurring reminders (all types)
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100+ languages supported
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  ChatGPT powered
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  500 voice notes per month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Multiple custom lists
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Send/Receive reminders with friends
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Google Calendar integration
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Expense tracking
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  Food tracking (coming soon)
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  100 web searches per month
+                </div>
+              </div>
 
-  <WhatsAppButton
-    planType="ultimate"
-    text="Continue with Assistant"
-    message="היי Yaya, אני מעוניין במסלול Ultimate"
-  />
-</div>
+              <WhatsAppButton
+                planType="ultimate"
+                text="Continue with Assistant"
+                message="היי Yaya, אני מעוניין במסלול Ultimate"
+              />
+            </div>
           </div>
 
           {/* Want a custom bot just for you? Contact us! */}
@@ -970,7 +970,7 @@ export default function Home() {
       </footer>
 
       {/* WhatsApp Floating Button */}
-      <a
+      
         title="Chat with Yaya on WhatsApp"
         href={registrationCode
           ? `https://wa.me/972559943649?text=My code: ${registrationCode}`
