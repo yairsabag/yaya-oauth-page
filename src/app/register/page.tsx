@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { CheckCircle, Calendar, Bell, MessageCircle, Shield, CreditCard } from 'lucide-react'
 
 type Step = 'plan' | 'payment' | 'oauth'
-type PlanKey = 'executive' | 'ultimate'
+type PlanKey = 'pro' | 'ultimate'
 type Billing = 'monthly' | 'yearly'
 
 interface Plan {
@@ -17,24 +17,23 @@ interface Plan {
 }
 
 const PLANS: Record<PlanKey, Plan> = {
-  executive: {
-    name: 'Executive Plan',
+  pro: {
+    name: 'Pro Plan',
     monthlyPrice: 5,
     yearlyPrice: 4,
     popular: true,
     features: [
       'Unlimited messages',
-      'Unlimited one-time reminders',
+      'Unlimited reminders',
+      'Recurring reminders (daily/weekly)',
       '100+ languages supported',
-      'ChatGPT',
-      '100 Voice Notes / Month',
-      'Create Lists',
+      'ChatGPT powered',
+      '100 voice notes per month',
+      'Multiple custom lists',
       'Send/Receive reminders with friends',
-      'Google Calendar',
+      'Google Calendar integration',
       'Expense tracking',
-      'Repeat reminders',
-      '20 Image Analysis / Month',
-      '20 Internet Searches'
+      '20 web searches per month'
     ]
   },
   ultimate: {
@@ -44,18 +43,17 @@ const PLANS: Record<PlanKey, Plan> = {
     popular: false,
     features: [
       'Unlimited messages',
-      'Unlimited one-time reminders',
+      'Unlimited reminders',
+      'Recurring reminders (all types)',
       '100+ languages supported',
-      'ChatGPT',
-      '500 Voice Notes / Month',
-      'Create Lists',
+      'ChatGPT powered',
+      '500 voice notes per month',
+      'Multiple custom lists',
       'Send/Receive reminders with friends',
-      'Google Calendar',
+      'Google Calendar integration',
       'Expense tracking',
-      'Repeat reminders',
-      'Food Tracking (Calories)',
-      '100 Image Analysis / Month',
-      '100 Internet Searches'
+      'Food tracking (coming soon)',
+      '100 web searches per month'
     ]
   }
 }
@@ -65,7 +63,7 @@ export default function RegisterPage() {
 
   const [registrationCode, setRegistrationCode] = useState<string>('')
   const [step, setStep] = useState<Step>('plan')
-  const [selectedPlan, setSelectedPlan] = useState<PlanKey>('executive')
+  const [selectedPlan, setSelectedPlan] = useState<PlanKey>('pro')
   const [billingType, setBillingType] = useState<Billing>('monthly')
   const [isLoading, setIsLoading] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -167,7 +165,7 @@ export default function RegisterPage() {
             alignItems: 'center'
           }}
         >
-          <a
+          
             href="/"
             style={{
               display: 'flex',
@@ -330,7 +328,7 @@ export default function RegisterPage() {
                     marginBottom: '2rem'
                   }}
                 >
-                  Select the perfect plan for your needs. Start your 7-day free trial today.
+                  Select the perfect plan for your needs
                 </p>
 
                 <div
@@ -632,20 +630,8 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Trial today = $0 */}
+                {/* Regular pricing */}
                 <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem', marginBottom: '1rem' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      marginBottom: '.5rem',
-                      color: '#8B5E3C',
-                      fontSize: isMobile ? '.875rem' : '1rem'
-                    }}
-                  >
-                    <span>7-day free trial</span>
-                    <span style={{ color: '#25d366', fontWeight: 600 }}>$0.00</span>
-                  </div>
                   <div
                     style={{
                       display: 'flex',
@@ -655,8 +641,7 @@ export default function RegisterPage() {
                     }}
                   >
                     <span>
-                      Then ${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}/
-                      {billingType === 'yearly' ? 'year' : 'month'}
+                      ${billingType === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice}/month
                     </span>
                   </div>
                 </div>
@@ -671,8 +656,13 @@ export default function RegisterPage() {
                       color: '#2d5016'
                     }}
                   >
-                    <span>Total today</span>
-                    <span style={{ color: '#25d366' }}>$0.00</span>
+                    <span>Total</span>
+                    <span>
+                      ${billingType === 'yearly' 
+                        ? plan.yearlyPrice * 12 
+                        : plan.monthlyPrice}/
+                      {billingType === 'yearly' ? 'year' : 'month'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -697,7 +687,7 @@ export default function RegisterPage() {
                 }}
               >
                 <CreditCard size={20} />
-                {isLoading ? 'Processing...' : 'Start Free Trial'}
+                {isLoading ? 'Processing...' : 'Continue to Payment'}
               </button>
 
               <p
@@ -709,8 +699,7 @@ export default function RegisterPage() {
                   opacity: 0.8
                 }}
               >
-                By continuing, you agree to our Terms of Service and Privacy Policy. Your trial
-                starts today and you can cancel anytime before it ends.
+                By continuing, you agree to our Terms of Service and Privacy Policy.
               </p>
             </div>
           )}
