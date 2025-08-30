@@ -68,7 +68,6 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
-  // Detect mobile once on client
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
@@ -76,13 +75,11 @@ export default function RegisterPage() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  // Read code from URL
   useEffect(() => {
     const code = searchParams.get('code')
     if (code) {
       setRegistrationCode(code)
     } else {
-      // אין קוד? נחזיר לדף הבית
       window.location.href = '/'
     }
   }, [searchParams])
@@ -98,7 +95,7 @@ export default function RegisterPage() {
 
       const url = new URL(window.location.origin + '/payment/checkout')
       url.searchParams.set('plan', selectedPlan)
-      url.searchParams.set('price', price)          // זה סכום החיוב החוזר לאחר ה־trial
+      url.searchParams.set('price', price)
       url.searchParams.set('billing', billingType)
       url.searchParams.set('code', registrationCode)
       url.searchParams.set('planName', plan.name)
@@ -146,7 +143,6 @@ export default function RegisterPage() {
         background: 'linear-gradient(135deg, #faf5f0 0%, #f7f3ed 100%)'
       }}
     >
-      {/* Header */}
       <header
         style={{
           background: 'rgba(255,255,255,0.95)',
@@ -212,7 +208,6 @@ export default function RegisterPage() {
 
       <main style={{ padding: isMobile ? '1.5rem 0' : '2rem 0' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: isMobile ? '0 1rem' : '0 2rem' }}>
-          {/* Progress */}
           <div style={{ marginBottom: isMobile ? '2rem' : '3rem', textAlign: 'center' }}>
             <div
               style={{
@@ -305,7 +300,6 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Step 1 – Plan selection */}
           {step === 'plan' && (
             <div style={{ maxWidth: 900, margin: '0 auto' }}>
               <div style={{ textAlign: 'center', marginBottom: isMobile ? '2rem' : '3rem' }}>
@@ -347,7 +341,6 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              {/* Billing toggle */}
               <div
                 style={{
                   display: 'flex',
@@ -392,7 +385,6 @@ export default function RegisterPage() {
                 </span>
               </div>
 
-              {/* Plan cards */}
               <div
                 style={{
                   display: 'grid',
@@ -551,7 +543,6 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Step 2 – Payment (summary & redirect) */}
           {step === 'payment' && (
             <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
               <button
@@ -630,7 +621,6 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Regular pricing */}
                 <div style={{ borderTop: '1px solid #E5DDD5', paddingTop: '1rem', marginBottom: '1rem' }}>
                   <div
                     style={{
@@ -704,7 +694,6 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Step 3 – OAuth */}
           {step === 'oauth' && (
             <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
               <div style={{ marginBottom: '2rem' }}>
