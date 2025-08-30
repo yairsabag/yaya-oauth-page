@@ -8,7 +8,7 @@ type UrlParams = {
   plan: 'executive' | 'ultimate';
   price: string;            // "5" | "14"
   billing: 'monthly' | 'yearly';
-  code: string;             // registration code / uid
+  code: string;
   planName: string;
 };
 
@@ -46,9 +46,10 @@ export default function CheckoutPage() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  // ===== URL למסוף Tranzila =====
-  const tokenIframeUrl = useMemo(() => {
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com';
+  // iframe URL (charge now; no recurring params in iframe)
+  const iframeUrl = useMemo(() => {
+    const origin =
+      typeof window !== 'undefined' ? window.location.origin : 'https://www.yayagent.com';
 
     const successQuery = new URLSearchParams({
       plan: urlParams.plan,
@@ -64,19 +65,24 @@ export default function CheckoutPage() {
     const base = 'https://direct.tranzila.com/fxpyairsabagtok/iframenew.php';
 
     const params = new URLSearchParams({
-      tranmode: 'A',          // חיוב רגיל
-      sum: urlParams.price,   // סכום לפי מסלול
-      currency: '2',          // 2 = דולר
+      // Standard charge (no “recur_” params here)
+      tranmode: 'A',
+      sum: urlParams.price,
+      currency: '2',            // USD
       cred_type: '1',
+
+      // Styling (basic)
       trBgColor: 'FAF5F0',
       trTextColor: '2D5016',
       trButtonColor: '8B5E3C',
       buttonLabel: 'Pay',
 
+      // Payer info (for receipt)
       contact: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
       email: email.trim(),
       phone: phone.trim(),
 
+      // Tracking
       uid: urlParams.code,
       u1: urlParams.code,
       u2: urlParams.plan,
@@ -84,6 +90,7 @@ export default function CheckoutPage() {
       u4: urlParams.price,
       pdesc: `Yaya ${urlParams.plan} - ${urlParams.price}$/mo`,
 
+      // Redirects + notify
       success_url_address: `${origin}/payment/success?${successQuery}`,
       fail_url_address: `${origin}/payment/fail`,
       notify_url_address:
@@ -100,12 +107,14 @@ export default function CheckoutPage() {
     return `${base}?${params.toString()}`;
   }, [urlParams, firstName, lastName, email, phone]);
 
-  const goToTokenIframe = () => {
+  const continueToPayment = () => {
     if (!email.trim()) {
       alert('Please enter your email so we can send your receipt.');
       return;
     }
-    window.location.href = tokenIframeUrl;
+    // מעבירים ישירות למסך התשלום בתוך ה-iframe המשולב
+    const el = document.getElementById('tranzila-frame') as HTMLIFrameElement | null;
+    if (!el) window.location.href = iframeUrl;
   };
 
   return (
@@ -124,23 +133,20 @@ export default function CheckoutPage() {
 
       <main style={{maxWidth:1200,margin:'0 auto',padding:'24px 20px'}}>
         <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'380px 1fr',gap:16}}>
-          {/* Summary */}
-          <section style={{background:'#fff',border:'1px solid #eee',borderRadius:16,padding:16,textAlign:'center'}}>
-            <h2 style={{margin:0,color:'#2d5016'}}>{urlParams.planName}</h2>
+          {/* LEFT: Subscribe — unchanged layout */}
+          <section style={{background:'#fff',border:'1px solid #eee',borderRadius:16,padding:16}}>
+            <h2 style={{margin:0,color:'#2d5016'}}>Subscribe</h2>
             <div style={{marginTop:12}}>
-              <div style={{fontWeight:700,color:'#111',fontSize:28}}>
-                רק ${urlParams.price}
-              </div>
-              <div style={{marginTop:4,fontSize:14,color:'#6b7280'}}>
-                * per month
-              </div>
-              <div style={{marginTop:12,fontSize:12,color:'#6b7280'}}>
-                Registration code: <b>{urlParams.code}</b>
+              <div style={{fontWeight:700,color:'#8B5E3C'}}>{urlParams.planName}</div>
+              <div style={{marginTop:8,borderTop:'1px solid #eee',paddingTop:8,display:'grid',rowGap:6}}>
+                <div style={{display:'flex',justifyContent:'space-between'}}><span>Charged today</span><span>${Number(urlParams.price).toFixed(2)}</span></div>
+                <div style={{display:'flex',justifyContent:'space-between'}}><span>Renews</span><span>${Number(urlParams.price).toFixed(2)} / month</span></div>
+                <div style={{marginTop:8,fontSize:12,color:'#6b7280'}}>Registration code: <b>{urlParams.code}</b></div>
               </div>
             </div>
           </section>
 
-          {/* Form */}
+          {/* RIGHT: form + iframe */}
           <section style={{background:'#fff',border:'1px solid #eee',borderRadius:16,padding:16}}>
             <h2 style={{margin:0,color:'#2d5016'}}>Your details</h2>
             <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:12,marginTop:12}}>
@@ -151,25 +157,24 @@ export default function CheckoutPage() {
             </div>
 
             <button
-              onClick={goToTokenIframe}
+              onClick={continueToPayment}
               style={{marginTop:12,width:'100%',padding:'14px 18px',background:'#8B5E3C',color:'#fff',border:'none',borderRadius:12,fontWeight:700,cursor:'pointer'}}
             >
               Continue to Secure Payment
             </button>
 
-            {/* iframe תשלום */}
             <div style={{marginTop:16,border:'1px solid #eee',borderRadius:12,overflow:'hidden'}}>
               <iframe
                 id="tranzila-frame"
                 name="tranzila"
-                src={tokenIframeUrl}
+                src={iframeUrl}
                 allow="payment"
                 title="Secure payment"
-                style={{width:'100%',height:480,border:0}}
+                style={{width:'100%',height:520,border:0}}
               />
             </div>
 
-            {/* רצועת אמון */}
+            {/* Trust strip (optional, matches your style) */}
             <div
               aria-label="Secure badges"
               style={{
