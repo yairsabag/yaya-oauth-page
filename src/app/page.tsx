@@ -718,6 +718,10 @@ export default function Home() {
                 </div>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                   <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
+                  20 Adds Expense tracking per month
+                </div>
+                <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ color: '#8B5E3C', fontSize: '1rem' }}>•</span>
                   100+ languages supported
                 </div>
                 <div style={{ color: '#8B5E3C', marginBottom: '0.75rem', fontSize: '0.95rem', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
