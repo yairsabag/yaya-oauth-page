@@ -945,7 +945,7 @@ export default function Home() {
             marginTop: '3rem',
             textAlign: 'center'
           }}>
-            Want a custom bot just for you? Contact us!
+            Want a custom bot\assistant just for you? Contact us!
           </div>
         </div>
       </section>
@@ -968,7 +968,7 @@ export default function Home() {
             <a href={getUrlWithCode('/posts')} style={{ color: 'inherit', textDecoration: 'none' }}>Blog</a>
             <a href="https://discord.gg/BRxAAq47xv" style={{ color: 'inherit', textDecoration: 'none' }}>Discord</a>
             <a href="https://x.com/yayagent" style={{ color: 'inherit', textDecoration: 'none' }}>X/Twitter</a>
-            <a href="mailto:info@yayagent.com" style={{ color: 'inherit', textDecoration: 'none' }}>info@yayagent.com</a>
+            <a href="mailto:info@yayagent.com" style={{ color: 'inherit', textDecoration: 'none' }}>support@yayagent.com</a>
           </div>
         </div>
       </footer>
