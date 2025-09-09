@@ -350,7 +350,7 @@ export default function Home() {
             />
             <span style={{ fontSize: '1.5rem', fontWeight: '600', color: '#2d5016' }}>Yaya</span>
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
             <span style={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               color: 'white',
@@ -364,20 +364,6 @@ export default function Home() {
             }}>
               Introducing Multi-Calendar Support 📅
             </span>
-            <a
-              href={getUrlWithCode('/payment')}
-              style={{
-                background: '#2d5016',
-                color: 'white',
-                padding: '8px 20px',
-                borderRadius: '6px',
-                textDecoration: 'none',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                transition: 'all 0.2s ease'
-              }}>
-              Get Started
-            </a>
           </div>
         </div>
       </header>
