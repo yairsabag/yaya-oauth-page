@@ -56,7 +56,7 @@ export default function SuccessPage() {
         expirationDate.setMonth(expirationDate.getMonth() + 1)
       }
 
-      const res = await fetch('https://n8n-TD2y.sliplane.app/webhook/update-user-plan', {
+      const res = await fetch('https://n8n-postgres-fgkwgf.sliplane.app/webhook/update-user-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -83,7 +83,7 @@ export default function SuccessPage() {
     const clientId =
       '314964896562-o93h71h2cpiqgcikaqeg2a34ht2ipl2j.apps.googleusercontent.com'
     const redirectUri =
-      'https://n8n-td2y.sliplane.app/webhook/google-oauth-callback'
+      'https://n8n-postgres-fgkwgf.sliplane.app/webhook/google-oauth-callback'
     const scope = encodeURIComponent('openid email https://www.googleapis.com/auth/calendar')
     const state = encodeURIComponent(urlParams.code || '')
     return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(
