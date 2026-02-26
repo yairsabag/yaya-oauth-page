@@ -1,14 +1,16 @@
 'use client'
-import React, { useEffect, useState, useMemo } from 'react'
-import { CheckCircle } from 'lucide-react'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
-export default function SuccessPage() {
-  const [code, setCode] = useState('')
+export default function PaymentPage() {
+  const router = useRouter()
 
   useEffect(() => {
-    const p = new URLSearchParams(window.location.search)
-    setCode(p.get('code') || '')
-  }, [])
+    router.replace('/payment/checkout')
+  }, [router])
+
+  return null
+}
 
   const googleOAuthUrl = useMemo(() => {
     const clientId = '314964896562-o93h71h2cpiqgcikaqeg2a34ht2ipl2j.apps.googleusercontent.com'
