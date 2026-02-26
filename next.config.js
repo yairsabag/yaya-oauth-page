@@ -1,4 +1,3 @@
-// FILE: next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -16,8 +15,6 @@ const nextConfig = {
       { protocol: "https", hostname: "ugc.same-assets.com", pathname: "/**" },
     ],
   },
-
-  // כותרות אבטחה כדי לאפשר הטמעת iframe של טרנזילה
   async headers() {
     return [
       {
@@ -32,18 +29,16 @@ const nextConfig = {
               "img-src 'self' data: https:",
               "font-src 'self' data: https:",
               "connect-src 'self' https:",
-              "frame-src 'self' https://direct.tranzila.com",
-              "child-src https://direct.tranzila.com",
+              "frame-src 'self' https://direct.tranzila.com https://buy.paddle.com https://checkout.paddle.com",
+              "child-src https://direct.tranzila.com https://buy.paddle.com https://checkout.paddle.com",
               "frame-ancestors 'self'",
             ].join("; "),
           },
-          // אם יש כותרת שונה ב-CDN/שרת – הסר אותה שם או השאר כאן ALLOWALL
           { key: "X-Frame-Options", value: "ALLOWALL" },
-          { key: "Permissions-Policy", value: 'payment=(self "https://direct.tranzila.com")' },
+          { key: "Permissions-Policy", value: 'payment=(self "https://direct.tranzila.com" "https://buy.paddle.com")' },
         ],
       },
     ]
   },
 }
-
 module.exports = nextConfig
