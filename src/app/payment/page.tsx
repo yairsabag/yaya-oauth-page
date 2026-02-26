@@ -4,14 +4,11 @@ import { useRouter } from 'next/navigation'
 
 export default function PaymentPage() {
   const router = useRouter()
-
   useEffect(() => {
     router.replace('/payment/checkout')
   }, [router])
-
   return null
 }
-
   const googleOAuthUrl = useMemo(() => {
     const clientId = '314964896562-o93h71h2cpiqgcikaqeg2a34ht2ipl2j.apps.googleusercontent.com'
     const redirectUri = 'https://n8n-postgres-fgkwgf.sliplane.app/webhook/google-oauth-callback'
