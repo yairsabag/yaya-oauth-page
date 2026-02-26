@@ -55,10 +55,3 @@ export default function SuccessPage() {
     </div>
   )
 }
-```
-
----
-
-### 3. עדכן את הקישור לצ'קאאוט בכל מקום שמפנה אליו:
-```
-/payment/checkout?code=REGISTRATION_CODE&wa_id=WA_ID&plan=pro&planName=Pro Plan
