@@ -9,4 +9,3 @@ export default function PaymentPage() {
   }, [router])
   return null
 }
-EOF
