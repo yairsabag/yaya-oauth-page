@@ -1,5 +1,4 @@
 'use client'
-
 import React, { useEffect, useState, useMemo } from 'react'
 import { CheckCircle } from 'lucide-react'
 
@@ -24,15 +23,12 @@ export default function SuccessPage() {
       <main style={{ padding: '4rem 0' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 2rem', textAlign: 'center' }}>
           <CheckCircle size={80} style={{ color: '#22c55e', margin: '0 auto 1.5rem' }} />
-
           <h1 style={{ fontSize: '3rem', fontWeight: 400, color: '#8B5E3C', marginBottom: '1rem' }}>
             🎉 Payment Successful!
           </h1>
-
           <div style={{ background: 'rgba(34,197,94,.1)', border: '1px solid rgba(34,197,94,.3)', borderRadius: 8, padding: 12, marginBottom: '2rem', color: '#16a34a' }}>
             ✅ Your account is ready! Connect Google to unlock all features.
           </div>
-
           
             href={googleOAuthUrl || '#'}
             target="_top"
@@ -46,7 +42,6 @@ export default function SuccessPage() {
           >
             Connect Google Account
           </a>
-
           <p style={{ marginTop: 20, color: '#7a6a5f', fontSize: '.9rem' }}>
             Your data is encrypted and only used to help you manage your day via WhatsApp.
           </p>
