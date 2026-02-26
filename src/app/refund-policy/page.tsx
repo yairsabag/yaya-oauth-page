@@ -5,7 +5,7 @@ export default function RefundPolicy() {
       <p><em>Last updated: February 26, 2026</em></p>
 
       <h2>Our Plans</h2>
-      <p>Yaya offers a free Basic plan and a paid Pro plan at $5/month. The Basic plan is free forever with no credit card required. The Pro plan unlocks advanced features including unlimited reminders, Google Calendar integration, recurring reminders, and more.</p>
+      <p>Yaya offers a free Basic plan and a paid Pro plan at $5/month and Ultimate plan at $14. The Basic plan is free forever with no credit card required. The Pro and Ultimate plan unlocks advanced features including unlimited reminders, Google Calendar integration, recurring reminders, and more.</p>
 
       <h2>Refund Eligibility</h2>
       <p>If you are charged for a Pro subscription and wish to request a refund, you may do so within 14 days of the charge by contacting us at support@yayagent.com. Refunds are issued at our discretion and typically processed within 5-10 business days.</p>
