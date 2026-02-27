@@ -152,6 +152,8 @@ export default function TermsOfServicePage() {
               13. Contact Us
             </h2>
             <p style={{ marginBottom: '1.5rem' }}>
+              Yaya is operated by Yair Sabag, a sole proprietorship registered in Israel.
+
               If you have any questions about these Terms, please contact us at:
             </p>
             <ul style={{ marginBottom: '2rem', paddingLeft: '1.5rem' }}>
