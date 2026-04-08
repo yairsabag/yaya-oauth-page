@@ -36,10 +36,16 @@ export default function CheckoutPage() {
 
   const priceId = PRICE_IDS[urlParams.plan] || PRICE_IDS.pro;
 
+  const params = new URLSearchParams({
+    'checkout[custom][registration_code]': urlParams.code,
+  });
+
+  if (urlParams.wa_id) {
+    params.append('checkout[custom][wa_id]', urlParams.wa_id);
+  }
+
   window.location.href =
-    `https://sentinel-ai.lemonsqueezy.com/checkout/buy/${priceId}` +
-    `?checkout[custom][registration_code]=${urlParams.code}` +
-    `&checkout[custom][wa_id]=${urlParams.wa_id}`;
+    `https://sentinel-ai.lemonsqueezy.com/checkout/buy/${priceId}?${params.toString()}`;
 };
 
   return (
