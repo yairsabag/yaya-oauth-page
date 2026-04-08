@@ -35,15 +35,11 @@ export default function CheckoutPage() {
   }
 
   const priceId = PRICE_IDS[urlParams.plan] || PRICE_IDS.pro;
-  const redirectUrl = encodeURIComponent(
-    `${window.location.origin}/payment/success?code=${urlParams.code}`
-  );
 
   window.location.href =
     `https://sentinel-ai.lemonsqueezy.com/checkout/buy/${priceId}` +
     `?checkout[custom][registration_code]=${urlParams.code}` +
-    `&checkout[custom][wa_id]=${urlParams.wa_id}` +
-    `&checkout[redirect_url]=${redirectUrl}`;
+    `&checkout[custom][wa_id]=${urlParams.wa_id}`;
 };
 
   return (
