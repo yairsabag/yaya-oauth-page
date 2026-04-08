@@ -19,12 +19,6 @@ export default function CheckoutPage() {
       plan: p.get('plan') || 'pro',
       planName: p.get('planName') || 'Pro Plan',
     });
-
-    // טען LemonSqueezy.js לאוברליי
-    const script = document.createElement('script');
-    script.src = 'https://app.lemonsqueezy.com/js/lemon.js';
-    script.defer = true;
-    document.head.appendChild(script);
   }, []);
 
   const PRICE_IDS: Record<string, string> = {
@@ -41,19 +35,12 @@ export default function CheckoutPage() {
     }
 
     const priceId = PRICE_IDS[urlParams.plan] || PRICE_IDS.pro;
-    const checkoutUrl =
+
+    window.location.href =
       `https://sentinel-ai.lemonsqueezy.com/checkout/buy/${priceId}` +
       `?checkout[custom][registration_code]=${urlParams.code}` +
       `&checkout[custom][wa_id]=${urlParams.wa_id}` +
       `&checkout[redirect_url]=${window.location.origin}/payment/success?code=${urlParams.code}`;
-
-    // @ts-ignore
-    if (window.LemonSqueezy) {
-      // @ts-ignore
-      window.LemonSqueezy.Url.Open(checkoutUrl);
-    } else {
-      window.location.href = checkoutUrl;
-    }
   };
 
   return (
