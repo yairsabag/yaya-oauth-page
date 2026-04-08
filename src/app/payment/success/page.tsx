@@ -29,19 +29,24 @@ export default function SuccessPage() {
   }, [])
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const planData = {
-      plan: params.get('plan') || '',
-      email: params.get('email') || '',
-      price: params.get('price') || '',
-      code: params.get('code') || '',
-      billing: params.get('billing') || 'monthly',
-      firstName: params.get('firstName') || '',
-      lastName: params.get('lastName') || '',
-    }
-    setUrlParams(planData)
-    updateUserPlan(planData)
-  }, [])
+  const params = new URLSearchParams(window.location.search);
+  const planData = {
+    plan: params.get('plan') || localStorage.getItem('plan') || 'pro',
+    email: params.get('email') || '',
+    price: params.get('price') || '',
+    code: params.get('code') || localStorage.getItem('registration_code') || '',
+    billing: params.get('billing') || 'monthly',
+    firstName: params.get('firstName') || '',
+    lastName: params.get('lastName') || '',
+  };
+  setUrlParams(planData);
+  updateUserPlan(planData);
+
+  // נקה אחרי שימוש
+  localStorage.removeItem('registration_code');
+  localStorage.removeItem('plan');
+  localStorage.removeItem('wa_id');
+}, []);
 
   const updateUserPlan = async (planData: typeof urlParams) => {
     if (!planData.code || !planData.plan) {
