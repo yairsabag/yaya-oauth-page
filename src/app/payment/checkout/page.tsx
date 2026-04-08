@@ -3,12 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { Shield } from 'lucide-react';
 
-declare global {
-  interface Window {
-    Paddle: any;
-  }
-}
-
 export default function CheckoutPage() {
   const [urlParams, setUrlParams] = useState({
     code: '',
@@ -16,7 +10,6 @@ export default function CheckoutPage() {
     plan: 'pro',
     planName: 'Pro Plan',
   });
-  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -27,28 +20,19 @@ export default function CheckoutPage() {
       planName: p.get('planName') || 'Pro Plan',
     });
 
-    const onResize = () => setIsMobile(window.innerWidth < 940);
-    onResize();
-    window.addEventListener('resize', onResize);
-
-    // טען Paddle.js
+    // טען LemonSqueezy.js לאוברליי
     const script = document.createElement('script');
-    script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
-    script.onload = () => {
-      window.Paddle.Initialize({
-        token: 'live_0f57a73a8cfdbda0d5507d7e100',
-        eventCallback: (event: any) => {
-          if (event.name === 'checkout.completed') {
-            const code = new URLSearchParams(window.location.search).get('code') || '';
-            window.location.href = `/payment/success?code=${code}`;
-          }
-        }
-      });
-    };
+    script.src = 'https://app.lemonsqueezy.com/js/lemon.js';
+    script.defer = true;
     document.head.appendChild(script);
-
-    return () => window.removeEventListener('resize', onResize);
   }, []);
+
+  const PRICE_IDS: Record<string, string> = {
+    pro: '4eee4e54-3abf-491c-a095-ea5034623913',
+    unlimited: 'UNLIMITED_PRICE_ID_HERE', // ← תחליף עם ה-ID של Unlimited
+  };
+
+  const planPrice = urlParams.plan === 'unlimited' ? '$14.00' : '$5.00';
 
   const openCheckout = () => {
     if (!urlParams.code) {
@@ -56,14 +40,20 @@ export default function CheckoutPage() {
       return;
     }
 
-    window.Paddle.Checkout.open({
-      items: [{ priceId: 'pri_01kjcrg1q1zmkqyn9wswdwknsz', quantity: 1 }],
-      customData: {
-        registration_code: urlParams.code,
-        wa_id: urlParams.wa_id,
-      },
-      successUrl: `${window.location.origin}/payment/success?code=${urlParams.code}`,
-    });
+    const priceId = PRICE_IDS[urlParams.plan] || PRICE_IDS.pro;
+    const checkoutUrl =
+      `https://sentinel-ai.lemonsqueezy.com/checkout/buy/${priceId}` +
+      `?checkout[custom][registration_code]=${urlParams.code}` +
+      `&checkout[custom][wa_id]=${urlParams.wa_id}` +
+      `&checkout[redirect_url]=${window.location.origin}/payment/success?code=${urlParams.code}`;
+
+    // @ts-ignore
+    if (window.LemonSqueezy) {
+      // @ts-ignore
+      window.LemonSqueezy.Url.Open(checkoutUrl);
+    } else {
+      window.location.href = checkoutUrl;
+    }
   };
 
   return (
@@ -83,12 +73,12 @@ export default function CheckoutPage() {
       <main style={{ maxWidth: 600, margin: '60px auto', padding: '0 20px', textAlign: 'center' }}>
         <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: 16, padding: 32 }}>
           <h1 style={{ color: '#2d5016', fontSize: 28, marginBottom: 8 }}>Upgrade to {urlParams.planName}</h1>
-          <p style={{ color: '#6b7280', marginBottom: 24 }}>$5.00 / month • Cancel anytime</p>
+          <p style={{ color: '#6b7280', marginBottom: 24 }}>{planPrice} / month • Cancel anytime</p>
 
           <div style={{ background: '#f9fafb', borderRadius: 12, padding: '16px 20px', marginBottom: 24, textAlign: 'left' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span>Yaya Pro Monthly</span>
-              <strong>$5.00</strong>
+              <span>Yaya {urlParams.planName} Monthly</span>
+              <strong>{planPrice}</strong>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: '#6b7280', fontSize: 14 }}>
               <span>Registration code</span>
@@ -110,7 +100,7 @@ export default function CheckoutPage() {
           </button>
 
           <p style={{ marginTop: 16, fontSize: 12, color: '#9ca3af' }}>
-            Powered by Paddle • PCI DSS Compliant • SSL Encrypted
+            Powered by Lemon Squeezy • PCI DSS Compliant • SSL Encrypted
           </p>
         </div>
       </main>
