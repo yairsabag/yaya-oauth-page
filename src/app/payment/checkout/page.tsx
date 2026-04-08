@@ -34,12 +34,15 @@ export default function CheckoutPage() {
     return;
   }
 
-  const priceId = PRICE_IDS[urlParams.plan] || PRICE_IDS.pro;
+  // שמור לפני המעבר
+  localStorage.setItem('registration_code', urlParams.code);
+  localStorage.setItem('plan', urlParams.plan);
+  localStorage.setItem('wa_id', urlParams.wa_id);
 
+  const priceId = PRICE_IDS[urlParams.plan] || PRICE_IDS.pro;
   const params = new URLSearchParams({
     'checkout[custom][registration_code]': urlParams.code,
   });
-
   if (urlParams.wa_id) {
     params.append('checkout[custom][wa_id]', urlParams.wa_id);
   }
